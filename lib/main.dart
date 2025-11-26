@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:mime/mime.dart';
@@ -39,24 +40,46 @@ class _MyHomePageState extends State<MyHomePage> {
   final _apiKey = Platform.environment['GEMINI_API_KEY'] ?? "no api key";
   final GeminiService newGeminiService = GeminiService();
 
-  final TextEditingController _textController = TextEditingController();
+  String _configLocation = "";
   String _saveLocation = "";
   String geminiResponse = "This is where you will get response from gemini";
 
   @override
   void initState() {
     super.initState();
-    _getDocumentsDirectory();
+    _initializeConfigurations();
     newGeminiService.setApiKey(_apiKey);
   }
 
-  Future<void> _getDocumentsDirectory() async {
+  Future<void> _initializeConfigurations() async {
     try {
       final directory = await getApplicationDocumentsDirectory();
       setState(() {
-        _saveLocation = '${directory.path}\\StudyApp';
-        _textController.text = _saveLocation;
+        _configLocation = '${directory.path}\\StudyApp';
+        _saveLocation = '$_configLocation\\promptDocuments';
       });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+
+    try {
+      Directory configDirectory = Directory('$_configLocation\\config');
+      if (!await configDirectory.exists()) {
+        configDirectory.create(recursive: true);
+      }
+
+      File configFile = File('$_configLocation\\config\\config.json');
+      if (!await configFile.exists()) {
+        configFile.create();
+        createDefaultConfig(configFile);
+      }
+
+      final jsonString = await configFile.readAsString();
+      final Map<String, dynamic> decodedData = await jsonDecode(jsonString);
+
+      if (decodedData.containsKey('saveLocation')) {
+        _saveLocation = decodedData['saveLocation'];
+      }
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -68,13 +91,45 @@ class _MyHomePageState extends State<MyHomePage> {
           await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
       setState(() {
         if (directory != null) {
-          _saveLocation = '$directory\\StudyApp';
+          _saveLocation = '$directory\\StudyApp\\promptDocuments';
+          updateConfig(
+              {"saveLocation": '$directory\\StudyApp\\promptDocuments'});
         } else {
           debugPrint("Couldn't pick folder.");
         }
       });
     } catch (e) {
       debugPrint(e.toString());
+    }
+  }
+
+  Future<void> createDefaultConfig(File configFile) async {
+    Map<String, dynamic> data = {'saveLocation': _saveLocation};
+    String jsonString = jsonEncode(data);
+    try {
+      await configFile.writeAsString(jsonString);
+      debugPrint("Default configurations added.");
+    } catch (e) {
+      debugPrint("Couldn't write default configurations.");
+      debugPrint(e.toString());
+    }
+  }
+
+  Future<void> updateConfig(Map<String, dynamic> data) async {
+    File configFile = File('$_configLocation\\config\\config.json');
+    String sourceJsonString = await configFile.readAsString();
+    Map<String, dynamic> sourceData = await jsonDecode(sourceJsonString);
+
+    data = {...sourceData, ...data};
+
+    String jsonString = jsonEncode(data);
+    try {
+      configFile.writeAsString(jsonString);
+      debugPrint("Updated config file.");
+      print(data);
+    } catch (e) {
+      debugPrint(e.toString());
+      debugPrint("Couldn't update config file.");
     }
   }
 

@@ -46,6 +46,7 @@ class GeminiService {
       }
     } catch (e) {
       print(e);
+      return null;
     }
   }
 
@@ -91,6 +92,7 @@ class GeminiService {
       }
     } catch (e) {
       print(e.toString());
+      return null;
     }
   }
 }
