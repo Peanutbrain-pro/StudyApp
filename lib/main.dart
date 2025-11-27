@@ -140,46 +140,48 @@ class _MyHomePageState extends State<MyHomePage> {
     // });
     debugPrint(_apiKey);
     return Scaffold(
-      body: Center(
-        child: FractionallySizedBox(
-          widthFactor: 0.5,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text("Storage Location: "),
-                  SizedBox(
-                    width: 400,
-                    child: Text(
-                      _saveLocation,
+      body: SingleChildScrollView (
+        child: Center(
+          child: FractionallySizedBox(
+            widthFactor: 0.5,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text("Storage Location: "),
+                    SizedBox(
+                      width: 400,
+                      child: Text(
+                        _saveLocation,
+                      ),
                     ),
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.folder),
-                    onPressed: _pickSaveLocation,
-                  )
-                ],
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              DragAndDropWidget(outputPath: _saveLocation),
-              SizedBox(
-                height: 20,
-              ),
-              TextButton(
-                onPressed: _summarizePdfs,
-                child: Text("Summarize and create note",
-                    style: TextStyle(fontSize: 16)),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Text(geminiResponse)
-            ],
+                    IconButton(
+                      icon: Icon(Icons.folder),
+                      onPressed: _pickSaveLocation,
+                    )
+                  ],
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                DragAndDropWidget(outputPath: _saveLocation),
+                SizedBox(
+                  height: 20,
+                ),
+                TextButton(
+                  onPressed: _summarizePdfs,
+                  child: Text("Summarize and create note",
+                      style: TextStyle(fontSize: 16)),
+                ),
+                SizedBox(
+                  height: 20,
+                ),
+                Text(geminiResponse)
+              ],
+            ),
           ),
         ),
       ),
