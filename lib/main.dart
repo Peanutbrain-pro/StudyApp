@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-
+import 'package:path/path.dart' as path;
 import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
@@ -36,6 +36,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late Future<void> _configInitializationFuture;
+
   // Gemini API key
   final _apiKey = Platform.environment['GEMINI_API_KEY'] ?? "no api key";
   final GeminiService newGeminiService = GeminiService();
@@ -47,7 +49,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    _initializeConfigurations();
+    _configInitializationFuture = _initializeConfigurations();
     newGeminiService.setApiKey(_apiKey);
   }
 
@@ -55,20 +57,30 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       final directory = await getApplicationDocumentsDirectory();
       setState(() {
-        _configLocation = '${directory.path}\\StudyApp';
-        _saveLocation = '$_configLocation\\promptDocuments';
+        _configLocation = path.join(directory.path, 'StudyApp');
+        // _configLocation = '${directory.path}\\StudyApp';
+        _saveLocation = path.join(_configLocation, 'promptDocuments');
+        // _saveLocation = '$_configLocation\\promptDocuments';
       });
     } catch (e) {
       debugPrint(e.toString());
     }
 
     try {
-      Directory configDirectory = Directory('$_configLocation\\config');
+      Directory configDirectory =
+          Directory(path.join(_configLocation, 'config'));
       if (!await configDirectory.exists()) {
         configDirectory.create(recursive: true);
       }
 
-      File configFile = File('$_configLocation\\config\\config.json');
+      Directory defaultSaveLocation = Directory(_saveLocation);
+      if (!await defaultSaveLocation.exists()) {
+        defaultSaveLocation.create(recursive: true);
+        debugPrint("default save location created");
+      }
+
+      File configFile =
+          File(path.join(_configLocation, 'config', 'config.json'));
       if (!await configFile.exists()) {
         configFile.create();
         createDefaultConfig(configFile);
@@ -91,9 +103,12 @@ class _MyHomePageState extends State<MyHomePage> {
           await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
       setState(() {
         if (directory != null) {
-          _saveLocation = '$directory\\StudyApp\\promptDocuments';
-          updateConfig(
-              {"saveLocation": '$directory\\StudyApp\\promptDocuments'});
+          _saveLocation = path.join(directory, 'StudyApp', 'promptDocuments');
+          // _saveLocation = '$directory\\StudyApp\\promptDocuments';
+          updateConfig({
+            "saveLocation": path.join(directory, 'StudyApp', 'promptDocuments')
+          });
+          // {"saveLocation": '$directory\\StudyApp\\promptDocuments'});
         } else {
           debugPrint("Couldn't pick folder.");
         }
@@ -116,7 +131,8 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> updateConfig(Map<String, dynamic> data) async {
-    File configFile = File('$_configLocation\\config\\config.json');
+    File configFile = File(path.join(_configLocation, 'config', 'config.json'));
+    // File configFile = File('$_configLocation\\config\\config.json');
     String sourceJsonString = await configFile.readAsString();
     Map<String, dynamic> sourceData = await jsonDecode(sourceJsonString);
 
@@ -139,52 +155,62 @@ class _MyHomePageState extends State<MyHomePage> {
     //   print('$key: $value');
     // });
     debugPrint(_apiKey);
-    return Scaffold(
-      body: SingleChildScrollView (
-        child: Center(
-          child: FractionallySizedBox(
-            widthFactor: 0.5,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text("Storage Location: "),
-                    SizedBox(
-                      width: 400,
-                      child: Text(
-                        _saveLocation,
+    return FutureBuilder<void>(
+      future: _configInitializationFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return Scaffold(
+            body: SingleChildScrollView(
+              child: Center(
+                child: FractionallySizedBox(
+                  widthFactor: 0.5,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Text("Storage Location: "),
+                          SizedBox(
+                            width: 400,
+                            child: Text(
+                              _saveLocation,
+                            ),
+                          ),
+                          IconButton(
+                            icon: Icon(Icons.folder),
+                            onPressed: _pickSaveLocation,
+                          )
+                        ],
                       ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.folder),
-                      onPressed: _pickSaveLocation,
-                    )
-                  ],
+                      SizedBox(
+                        height: 20,
+                      ),
+                      DragAndDropWidget(outputPath: _saveLocation),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      TextButton(
+                        onPressed: _summarizePdfs,
+                        child: Text("Summarize and create note",
+                            style: TextStyle(fontSize: 16)),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Text(geminiResponse)
+                    ],
+                  ),
                 ),
-                SizedBox(
-                  height: 20,
-                ),
-                DragAndDropWidget(outputPath: _saveLocation),
-                SizedBox(
-                  height: 20,
-                ),
-                TextButton(
-                  onPressed: _summarizePdfs,
-                  child: Text("Summarize and create note",
-                      style: TextStyle(fontSize: 16)),
-                ),
-                SizedBox(
-                  height: 20,
-                ),
-                Text(geminiResponse)
-              ],
+              ),
             ),
-          ),
-        ),
-      ),
+          );
+        } else {
+          return const Scaffold(
+              body: Center(child: CircularProgressIndicator()));
+        }
+      },
     );
   }
 
