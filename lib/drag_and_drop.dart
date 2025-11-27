@@ -1,6 +1,5 @@
 import 'dart:async';
-// import 'dart:io';
-// import 'dart:typed_data';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:studyapp/document_preprocessing.dart';
@@ -15,12 +14,27 @@ class DragAndDropWidget extends StatefulWidget {
 }
 
 class _DragAndDropWidgetState extends State<DragAndDropWidget> {
-  late String outputPath;
+  List<String> pdfFilePaths = [];
 
   @override
   void initState() {
     super.initState();
-    outputPath = widget.outputPath;
+    if (widget.outputPath.isNotEmpty) {
+      initPdfFilePaths();
+    } else {
+      debugPrint("output path is empty in drag and drop widget");
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (widget.outputPath != oldWidget.outputPath &&
+        widget.outputPath.isNotEmpty) {
+      pdfFilePaths.clear();
+      initPdfFilePaths();
+    }
   }
 
   static const List<DataFormat<Object>> _allowedFormats = [
@@ -69,12 +83,15 @@ class _DragAndDropWidgetState extends State<DragAndDropWidget> {
         reader.getValue(Formats.fileUri, (uri) {
           // renderPdfImage(uri!.toFilePath());
           print(
-              "this is the output path sent to the splitPdf function: $widget.outputPath");
+              "this is the output path sent to the splitPdf function: ${widget.outputPath}");
           splitPdf(
-            [uri!.toFilePath()],
+            [uri!.toFilePath(windows: true)],
             outputLocation: widget.outputPath,
           );
-          // filePaths.add(uri.toFilePath());
+
+          setState(() {
+            pdfFilePaths.add(uri.pathSegments.last);
+          });
           // print(filePaths);
         });
       } else if (reader.canProvide(Formats.plainTextFile)) {
@@ -111,34 +128,80 @@ class _DragAndDropWidgetState extends State<DragAndDropWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return DropRegion(
-      formats: _allowedFormats,
-      onDropOver: onDropOver,
-      onDropLeave: onDropLeave,
-      onPerformDrop: onPerformDrop,
-      // child: Container(
-      //   height: 100,
-      //   color: _hoverColor,
-      //   child: Center(child: Text("Drag & drop files here.")),
-      // ),
-      child: DottedBorder(
-        options: RoundedRectDottedBorderOptions(
-            radius: Radius.circular(25),
-            strokeWidth: 2,
-            color: Colors.grey,
-            dashPattern: [5, 3]),
-        child: Center(
-          child: Container(
-            decoration: BoxDecoration(
-              color: _hoverColor,
-              borderRadius: BorderRadius.all(Radius.circular(25)),
+    return Column(
+      children: [
+        if (pdfFilePaths.isNotEmpty) PdfContainerBox(filePaths: pdfFilePaths),
+        SizedBox(
+          height: 20,
+        ),
+        DropRegion(
+          formats: _allowedFormats,
+          onDropOver: onDropOver,
+          onDropLeave: onDropLeave,
+          onPerformDrop: onPerformDrop,
+          // child: Container(
+          //   height: 100,
+          //   color: _hoverColor,
+          //   child: Center(child: Text("Drag & drop files here.")),
+          // ),
+          child: DottedBorder(
+            options: RoundedRectDottedBorderOptions(
+                radius: Radius.circular(25),
+                strokeWidth: 2,
+                color: Colors.grey,
+                dashPattern: [5, 3]),
+            child: Center(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: _hoverColor,
+                  borderRadius: BorderRadius.all(Radius.circular(25)),
+                ),
+                height: 100,
+                // color: _hoverColor,
+                child: Center(child: Text("Drag & drop files here.")),
+              ),
             ),
-            height: 100,
-            // color: _hoverColor,
-            child: Center(child: Text("Drag & drop files here.")),
           ),
         ),
-      ),
+      ],
+    );
+  }
+
+  void initPdfFilePaths() async {
+    Directory outputFolder = Directory(widget.outputPath);
+    await for (FileSystemEntity entity
+        in outputFolder.list(recursive: false, followLinks: false)) {
+      if (entity is File) {
+        pdfFilePaths.add(entity.uri.pathSegments.last);
+      }
+    }
+    setState(() {});
+  }
+}
+
+class PdfContainerBox extends StatefulWidget {
+  final List<String> filePaths;
+
+  const PdfContainerBox({super.key, required this.filePaths});
+  @override
+  State<PdfContainerBox> createState() => _PdfContainerBoxState();
+}
+
+class _PdfContainerBoxState extends State<PdfContainerBox> {
+  void updateFilePaths(List<String> pdfFilePaths) {
+    widget.filePaths.clear();
+    widget.filePaths.addAll(pdfFilePaths);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(5)),
+          border: BoxBorder.all(
+              color: Colors.black, style: BorderStyle.solid, width: 2)),
+      child: Text(widget.filePaths.toString()),
     );
   }
 }
