@@ -1,12 +1,9 @@
-import 'dart:convert';
 import 'dart:io';
 import 'package:path/path.dart' as path;
-import 'package:mime/mime.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:studyapp/gemini_service.dart';
-import 'drag_and_drop.dart';
 
 void main() {
   runApp(const MyApp());
@@ -36,214 +33,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late Future<void> _configInitializationFuture;
-
   // Gemini API key
   final _apiKey = Platform.environment['GEMINI_API_KEY'] ?? "no api key";
   final GeminiService newGeminiService = GeminiService();
 
-  String _configLocation = "";
-  String _saveLocation = "";
-  String geminiResponse = "This is where you will get response from gemini";
-
   @override
   void initState() {
     super.initState();
-    _configInitializationFuture = _initializeConfigurations();
     newGeminiService.setApiKey(_apiKey);
-  }
-
-  Future<void> _initializeConfigurations() async {
-    try {
-      final directory = await getApplicationDocumentsDirectory();
-      setState(() {
-        _configLocation = path.join(directory.path, 'StudyApp');
-        // _configLocation = '${directory.path}\\StudyApp';
-        _saveLocation = path.join(_configLocation, 'promptDocuments');
-        // _saveLocation = '$_configLocation\\promptDocuments';
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-
-    try {
-      Directory configDirectory =
-          Directory(path.join(_configLocation, 'config'));
-      if (!await configDirectory.exists()) {
-        configDirectory.create(recursive: true);
-      }
-
-      Directory defaultSaveLocation = Directory(_saveLocation);
-      if (!await defaultSaveLocation.exists()) {
-        defaultSaveLocation.create(recursive: true);
-        debugPrint("default save location created");
-      }
-
-      File configFile =
-          File(path.join(_configLocation, 'config', 'config.json'));
-      if (!await configFile.exists()) {
-        configFile.create();
-        createDefaultConfig(configFile);
-      }
-
-      final jsonString = await configFile.readAsString();
-      final Map<String, dynamic> decodedData = await jsonDecode(jsonString);
-
-      if (decodedData.containsKey('saveLocation')) {
-        _saveLocation = decodedData['saveLocation'];
-      }
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
-  Future<void> _pickSaveLocation() async {
-    try {
-      String? directory =
-          await FilePicker.platform.getDirectoryPath(lockParentWindow: true);
-      setState(() {
-        if (directory != null) {
-          _saveLocation = path.join(directory, 'StudyApp', 'promptDocuments');
-          // _saveLocation = '$directory\\StudyApp\\promptDocuments';
-          updateConfig({
-            "saveLocation": path.join(directory, 'StudyApp', 'promptDocuments')
-          });
-          // {"saveLocation": '$directory\\StudyApp\\promptDocuments'});
-        } else {
-          debugPrint("Couldn't pick folder.");
-        }
-      });
-    } catch (e) {
-      debugPrint(e.toString());
-    }
-  }
-
-  Future<void> createDefaultConfig(File configFile) async {
-    Map<String, dynamic> data = {'saveLocation': _saveLocation};
-    String jsonString = jsonEncode(data);
-    try {
-      await configFile.writeAsString(jsonString);
-      debugPrint("Default configurations added.");
-    } catch (e) {
-      debugPrint("Couldn't write default configurations.");
-      debugPrint(e.toString());
-    }
-  }
-
-  Future<void> updateConfig(Map<String, dynamic> data) async {
-    File configFile = File(path.join(_configLocation, 'config', 'config.json'));
-    // File configFile = File('$_configLocation\\config\\config.json');
-    String sourceJsonString = await configFile.readAsString();
-    Map<String, dynamic> sourceData = await jsonDecode(sourceJsonString);
-
-    data = {...sourceData, ...data};
-
-    String jsonString = jsonEncode(data);
-    try {
-      configFile.writeAsString(jsonString);
-      debugPrint("Updated config file.");
-      print(data);
-    } catch (e) {
-      debugPrint(e.toString());
-      debugPrint("Couldn't update config file.");
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Platform.environment.forEach((key, value) {
-    //   print('$key: $value');
-    // });
-    debugPrint(_apiKey);
-    return FutureBuilder<void>(
-      future: _configInitializationFuture,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.done) {
-          return Scaffold(
-            body: SingleChildScrollView(
-              child: Center(
-                child: FractionallySizedBox(
-                  widthFactor: 0.5,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Text("Storage Location: "),
-                          SizedBox(
-                            width: 400,
-                            child: Text(
-                              _saveLocation,
-                            ),
-                          ),
-                          IconButton(
-                            icon: Icon(Icons.folder),
-                            onPressed: _pickSaveLocation,
-                          )
-                        ],
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      DragAndDropWidget(outputPath: _saveLocation),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      TextButton(
-                        onPressed: _summarizePdfs,
-                        child: Text("Summarize and create note",
-                            style: TextStyle(fontSize: 16)),
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      Text(geminiResponse)
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        } else {
-          return const Scaffold(
-              body: Center(child: CircularProgressIndicator()));
-        }
-      },
-    );
-  }
-
-  void _summarizePdfs() async {
-    List<String> filePaths = [];
-    Directory saveLocation = Directory(_saveLocation);
-    await for (FileSystemEntity entity
-        in saveLocation.list(recursive: false, followLinks: false)) {
-      if (entity is File) {
-        filePaths.add(entity.path);
-      }
-    }
-
-    debugPrint("List of PDFs: ");
-    for (String filePath in filePaths) {
-      debugPrint(filePath);
-    }
-
-    // Uploading all files to gemini
-    List<String> newfilePaths = [];
-    for (String filePath in filePaths) {
-      String? temp = await newGeminiService.uploadFile(
-          filePath, lookupMimeType(filePath)!);
-      newfilePaths.add(temp!);
-    }
-
-    String? response = await newGeminiService.getResponse(
-        "Summarize the given pdfs, two sentences for each pdf max.",
-        fileUris: newfilePaths);
-
-    debugPrint(response);
-    setState(() {
-      geminiResponse = response!;
-    });
+    return Placeholder();
   }
 }
