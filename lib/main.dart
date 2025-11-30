@@ -19,6 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
+        fontFamily: "Poppins",
       ),
       home: const MyHomePage(),
     );
@@ -45,6 +46,39 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Placeholder();
+    return Scaffold(
+      body: Row(
+        children: [
+          Expanded(
+            flex: 1,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                SizedBox(height: 20),
+                Text(
+                  "Sources",
+                  textScaler: TextScaler.linear(2),
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+          VerticalDivider(width: 2),
+          Expanded(
+            flex: 2,
+            child: Column(
+              children: [
+                SizedBox(height: 20),
+                Text(
+                  "Summary",
+                  textScaler: TextScaler.linear(2),
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
