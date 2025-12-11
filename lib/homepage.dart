@@ -22,7 +22,26 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _isHoveringOnDropRegion = false;
 
   String tempDirectory = '';
-  List<String> filePaths = [];
+  List<String> filePaths = [
+    'desktop\\hello.png',
+    'desktop\\world',
+    'jhingallahuhuh\\hellloworld\\!',
+    'desktop\\hello.png',
+    'desktop\\world',
+    'jhingallahuhuh\\hellloworld\\!',
+    'desktop\\hello.png',
+    'desktop\\world',
+    'jhingallahuhuh\\hellloworld\\!',
+    'desktop\\hello.png',
+    'desktop\\world',
+    'jhingallahuhuh\\hellloworld\\!',
+    'desktop\\hello.png',
+    'desktop\\world',
+    'jhingallahuhuh\\hellloworld\\!',
+    'desktop\\hello.png',
+    'desktop\\world',
+    'jhingallahuhuh\\hellloworld\\!',
+  ];
 
   @override
   void initState() {
@@ -65,7 +84,10 @@ class _MyHomePageState extends State<MyHomePage> {
                               fontWeight: FontWeight.w600, fontSize: 22),
                         ),
                       ),
-                      Expanded(child: SourceWindow()),
+                      Expanded(
+                          child: SourceWindow(
+                        filePaths: filePaths,
+                      )),
                       SizedBox(height: 100)
                     ],
                   ),
@@ -166,7 +188,9 @@ class _MyHomePageState extends State<MyHomePage> {
 }
 
 class SourceWindow extends StatefulWidget {
-  const SourceWindow({super.key});
+  final List<String> filePaths;
+
+  const SourceWindow({super.key, required this.filePaths});
   @override
   State<SourceWindow> createState() => _SourceWindowState();
 }
@@ -175,24 +199,36 @@ class _SourceWindowState extends State<SourceWindow> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 12, left: 32, right: 32, bottom: 12),
-      child: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.max,
-          spacing: 10,
-          children: [
-            Container(color: Colors.blue, height: 80),
-            Container(color: Colors.blue, height: 80),
-            Container(color: Colors.blue, height: 80),
-            Container(color: Colors.blue, height: 80),
-            Container(color: Colors.blue, height: 80),
-            Container(color: Colors.blue, height: 80),
-            Container(color: Colors.blue, height: 80),
-            Container(color: Colors.blue, height: 80),
-          ],
-        ),
-      ),
-    );
+        padding:
+            const EdgeInsets.only(top: 12, left: 16, right: 16, bottom: 12),
+        child: ListView.builder(
+          itemCount: widget.filePaths.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding:
+                  const EdgeInsets.only(top: 4, bottom: 4, left: 20, right: 20),
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                    color: Colors.amberAccent,
+                    borderRadius: BorderRadius.circular(15)),
+                child: Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    spacing: 10,
+                    children: [
+                      Image.asset(
+                        "assets/pdf_icon.png",
+                        width: 42,
+                      ),
+                      Text(path
+                          .basenameWithoutExtension(widget.filePaths[index]))
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        ));
   }
 }
