@@ -1,5 +1,6 @@
-class Notebook {
-  // int id;
+/* class Notebook {
+  int id;
   String name;
-  Notebook({required this.name});
-}
+  DateTime createdAt;
+  Notebook({required this.id, required this.name, required this.createdAt});
+} */

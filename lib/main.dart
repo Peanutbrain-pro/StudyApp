@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/ui/app/views/first_launch_view.dart';
@@ -22,15 +23,31 @@ void main() async {
   runApp(
     MultiRepositoryProvider(
       providers: [
-        RepositoryProvider(
-            create: (BuildContext context) => AppRepository(prefs)),
-        RepositoryProvider(
-            create: (BuildContext context) => NotebookRepository()),
+        RepositoryProvider<AppRepository>(
+          create: (BuildContext context) => AppRepository(prefs),
+        ),
+        RepositoryProvider<AppDatabase>(
+          lazy: true,
+          create: (BuildContext context) {
+            final saveLocation =
+                context.read<AppRepository>().getSaveLocation();
+            return AppDatabase(saveLocation!);
+          },
+        ),
+        RepositoryProvider<NotebookRepository>(
+          lazy: true,
+          create: (BuildContext context) => NotebookRepository(
+            db: context.read<AppDatabase>(),
+            appSaveLocation: context.read<AppRepository>().getSaveLocation()!,
+          ),
+        ),
+        // RepositoryProvider<NotebookRepository>(create: (BuildContext) => NotebookRepository()),
       ],
       child: BlocProvider(
         create: (BuildContext context) => AppCubit(
-            appRepository: context.read<AppRepository>(),
-            notebookRepository: context.read<NotebookRepository>()),
+          // notebookRepository: context.read<NotebookRepository>(),
+          appRepository: context.read<AppRepository>(),
+        ),
         child: MyApp(prefs),
       ),
     ),
