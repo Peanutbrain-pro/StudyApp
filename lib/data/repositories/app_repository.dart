@@ -1,5 +1,7 @@
+import 'package:drift_flutter/drift_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/constants.dart';
+import 'package:studyapp/data/database/app_database.dart';
 
 enum AppInitStatus {
   firstLaunch, ready
@@ -8,13 +10,13 @@ enum AppInitStatus {
 class AppRepository {
   final SharedPreferences _prefs;
   AppRepository(this._prefs);
-  
-  Future<void> removeFirstLaunch() async {
-    await _prefs.setBool(keyFirstLaunch, false);
+
+  void removeFirstLaunch() async {
+    _prefs.setBool(keyFirstLaunch, false);
   }
 
-  Future<String?> getSaveLocation() async {
-    return await _prefs.getString(keySaveLocation);
+  String? getSaveLocation() {
+    return _prefs.getString(keySaveLocation);
   }
 
   Future<AppInitStatus> getAppStatus() async {
@@ -32,11 +34,16 @@ class AppRepository {
     }
   }
 
-  Future<void> setSaveLocation(String saveLocation) async {
-    await _prefs.setString(keySaveLocation, saveLocation);
+  void setSaveLocation(String saveLocation) {
+    _prefs.setString(keySaveLocation, saveLocation);
   }
 
-  Future<void> clearAppSettings() async {
-    await _prefs.clear();
+  void clearAppSettings() {
+    _prefs.clear();
+  }
+
+  Future<AppDatabase> getAppDatabase() async {
+    final saveLocation = await getSaveLocation();
+    return AppDatabase(saveLocation!);
   }
 }

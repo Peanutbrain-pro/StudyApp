@@ -26,13 +26,13 @@ class AppReady extends AppState {
 
 class AppCubit extends Cubit<AppState> {
   final AppRepository _appRepository;
-  final NotebookRepository _notebookRepository;
+  // final NotebookRepository _notebookRepository;
 
-  AppCubit(
-      {required AppRepository appRepository,
-      required NotebookRepository notebookRepository})
-      : _appRepository = appRepository,
-        _notebookRepository = notebookRepository,
+  AppCubit({
+    // required NotebookRepository notebookRepository,
+    required AppRepository appRepository,
+  })  : _appRepository = appRepository,
+        // _notebookRepository = notebookRepository,
         super(AppLoading(savePath: '')) {
     _initialize();
   }
@@ -46,20 +46,20 @@ class AppCubit extends Cubit<AppState> {
 
       case AppInitStatus.ready:
         final saveLocation = await _appRepository.getSaveLocation();
-        await _notebookRepository.initialize(saveLocation!);
+        // await _notebookRepository.initialize(saveLocation!);
 
         print("Save location is set to : $saveLocation");
         print("The app is ready (supposedly)");
-        emit(AppReady(savePath: saveLocation));
+        emit(AppReady(savePath: saveLocation!));
     }
   }
 
-  Future<void> clearSettings() async {
-    await _appRepository.clearAppSettings();
+  void clearSettings() {
+    _appRepository.clearAppSettings();
     emit(AppFirstLaunch(savePath: ''));
   }
 
-  Future<void> setDefaultFirstLaunch() async {
+  void setDefaultFirstLaunch() async {
     final Directory documentsDirectory =
         await getApplicationDocumentsDirectory();
     final String saveLocation = p.join(documentsDirectory.path, appName);
@@ -69,8 +69,8 @@ class AppCubit extends Cubit<AppState> {
     _onFirstConfigFinished(saveLocation);
   }
 
-  Future<void> _onFirstConfigFinished(String appSaveLocation) async {
-    await _notebookRepository.initialize(appSaveLocation);
+  void _onFirstConfigFinished(String appSaveLocation) async {
+    // await _notebookRepository.initialize(appSaveLocation);
     emit(AppReady(savePath: appSaveLocation));
   }
 }
