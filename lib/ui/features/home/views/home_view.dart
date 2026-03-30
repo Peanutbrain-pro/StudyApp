@@ -149,7 +149,7 @@ class NotebookItem extends StatelessWidget {
             index,
             (context, animation) {
               return ScaleTransition(
-                scale: animation,
+                scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
                 child: TextButton(
                   onPressed: null,
                   child: Text(notebook.name),
