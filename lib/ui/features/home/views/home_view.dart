@@ -6,6 +6,7 @@ import 'package:studyapp/ui/shared/widgets/appbar.dart';
 import '../../../../data/database/app_database.dart';
 import '../../../app/cubits/app_cubit.dart';
 import '../cubits/home_cubit.dart';
+import '../../../shared/utilities/dialog_helper.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
@@ -52,7 +53,10 @@ class _HomeViewState extends State<HomeView> {
                   }
                   if (nochange) break;
                 }
-                context.read<HomeCubit>().addNotebook("New Notebook $i");
+
+                // String result = "New Notebook $i";
+                String result = await DialogHelper.getStringInput(context, "Notebook Name", "New Notebook $i");
+                context.read<HomeCubit>().addNotebook(result);
               },
               icon: Icon(Icons.add),
               iconSize: 25,
@@ -98,7 +102,7 @@ class _HomeViewState extends State<HomeView> {
                           initialItemCount: state.notebooks.length,
                           gridDelegate:
                               SliverGridDelegateWithMaxCrossAxisExtent(
-                            maxCrossAxisExtent: 150,
+                            maxCrossAxisExtent: 200,
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
                           ),
@@ -130,6 +134,7 @@ class NotebookItem extends StatelessWidget {
   final int index;
   final Animation<double> animation;
   final GlobalKey<AnimatedGridState> gridKey;
+  // final TextEditingController _textEditingController = TextEditingController();
 
   const NotebookItem(
       {super.key,
@@ -142,26 +147,62 @@ class NotebookItem extends StatelessWidget {
   Widget build(BuildContext context) {
     return ScaleTransition(
       scale: CurvedAnimation(parent: animation, curve: Curves.easeInOutQuint),
-      child: TextButton(
-        onPressed: () async {
-          await context.read<HomeCubit>().deleteNotebook(notebook.id);
-          gridKey.currentState?.removeItem(
-            index,
-            (context, animation) {
-              return ScaleTransition(
-                scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
-                child: TextButton(
-                  onPressed: null,
-                  child: Text(notebook.name),
-                  style: TextButton.styleFrom(backgroundColor: Colors.amber),
-                ),
-              );
-            },
-          );
-          
-        },
-        style: TextButton.styleFrom(backgroundColor: Colors.amber),
-        child: Text(notebook.name),
+      child: Card(
+        color: Colors.amber,
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(child: Text(notebook.name)),
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: PopupMenuButton(itemBuilder: (BuildContext context) {
+                  return <PopupMenuItem>[
+                    PopupMenuItem(
+                      child: Text(
+                        "Delete",
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onTap: () async {
+                        await context
+                            .read<HomeCubit>()
+                            .deleteNotebook(notebook.id);
+                        gridKey.currentState?.removeItem(
+                          index,
+                          (context, animation) {
+                            return ScaleTransition(
+                              scale: CurvedAnimation(
+                                  parent: animation, curve: Curves.easeInQuint),
+                              child: Card(
+                                color: Colors.amber,
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                    PopupMenuItem(
+                      child: Text("Rename"),
+                      onTap: () async {
+                        String result = await DialogHelper.getStringInput(context, "Rename", "${notebook.name}");
+                        if (result == "") {
+                          return;
+                        }
+                        context
+                            .read<HomeCubit>()
+                            .renameNotebook(notebook.id, result);
+                      },
+                    )
+                  ];
+                }),
+              ),
+            )
+          ],
+        ),
       ),
     );
   }

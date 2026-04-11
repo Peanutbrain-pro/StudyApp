@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:studyapp/data/database/app_database.dart';
 
@@ -59,6 +60,16 @@ class NotebookRepository {
     // Folder creation
     if (await directoryToDelete.exists()) await directoryToDelete.delete(recursive: true);
     // return deletedNotebook.first;
+  }
+
+  Future<void> renameNotebook(int id, String name) async {
+    
+    final updatedNotebook = NotebooksCompanion(
+      id: Value(id), name: Value(name) 
+    ); 
+
+    // Database
+    _db.update(_db.notebooks).replace(updatedNotebook);
   }
   
 }

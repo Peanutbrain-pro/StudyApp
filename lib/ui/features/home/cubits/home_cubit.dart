@@ -51,4 +51,16 @@ class HomeCubit extends Cubit<HomeState> {
     updatedNotebooks.removeWhere((notebook) => notebook.id == id);
     emit(HomeReady(notebooks: updatedNotebooks)); 
   }
+
+  Future<void> renameNotebook(int id, String name) async {
+    print("Renaming a notebook with id:$id");
+    await notebookRepository.renameNotebook(id, name);
+    print("Successfully renamed to $name");
+    final updatedNotebooks = [...state.notebooks];
+    int index = updatedNotebooks.indexWhere((t) => t.id == id);
+    Notebook new_notebook = updatedNotebooks[index].copyWith(name: name);
+    updatedNotebooks.removeAt(index);
+    updatedNotebooks.insert(index, new_notebook);
+    emit(HomeReady(notebooks: updatedNotebooks));
+  }
 }
