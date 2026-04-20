@@ -1,6 +1,9 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path/path.dart';
 import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
+import 'package:studyapp/ui/shared/utilities/dialog_helper.dart';
 // import '../../../../domain/models/notebook.dart';
 
 class HomeState {
@@ -44,9 +47,13 @@ class HomeCubit extends Cubit<HomeState> {
     print("Cubit updated: ${state.notebooks.map((n) => n.name).toList()}");
   }
 
-  Future<void> deleteNotebook(int id) async {
+  Future<void> deleteNotebook(BuildContext context, int id) async {
     print("Deleting notebook with id : $id");
-    await notebookRepository.removeNotebook(id);
+    final deleted = await notebookRepository.removeNotebook(id);
+    if (!deleted) {
+      await DialogHelper.showError(context, "Unable to delete notebook", "Couldn't delete the notebook. Please make sure that no other application is using the folder used by this notebook you are about to delete");
+      return;
+    }
     final updatedNotebooks = [...state.notebooks];
     updatedNotebooks.removeWhere((notebook) => notebook.id == id);
     emit(HomeReady(notebooks: updatedNotebooks)); 

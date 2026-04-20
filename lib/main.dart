@@ -6,11 +6,14 @@ import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/ui/app/views/first_launch_view.dart';
 import 'package:studyapp/ui/features/home/views/home_view.dart';
+import 'package:window_manager/window_manager.dart';
 
 import 'ui/app/cubits/app_cubit.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await windowManager.ensureInitialized();
+
   final SharedPreferences prefs = await SharedPreferences.getInstance();
   // await prefs.clear();
 
@@ -48,15 +51,14 @@ void main() async {
           // notebookRepository: context.read<NotebookRepository>(),
           appRepository: context.read<AppRepository>(),
         ),
-        child: MyApp(prefs),
+        child: MyApp(),
       ),
     ),
   );
 }
 
 class MyApp extends StatelessWidget {
-  final SharedPreferences prefs;
-  const MyApp(this.prefs, {super.key});
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +76,7 @@ class MyApp extends StatelessWidget {
             case AppLoading():
               return CircularProgressIndicator();
             case AppFirstLaunch():
-              return FirstLaunchView(prefs: prefs);
+              return FirstLaunchView();
             case AppReady():
               return HomePage();
           }
