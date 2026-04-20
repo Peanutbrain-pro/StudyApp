@@ -5,7 +5,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:studyapp/constants.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:path/path.dart' as p;
-import 'package:studyapp/data/repositories/notebook_repository.dart';
 
 sealed class AppState {
   final String savePath;
@@ -54,9 +53,10 @@ class AppCubit extends Cubit<AppState> {
     }
   }
 
-  void clearSettings() {
+  void resetSettings() {
     _appRepository.clearAppSettings();
-    emit(AppFirstLaunch(savePath: ''));
+    // TODO:
+    // Also reset other things but they haven't been implemented yet
   }
 
   void setDefaultFirstLaunch() async {

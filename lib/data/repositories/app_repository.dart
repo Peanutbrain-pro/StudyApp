@@ -1,7 +1,7 @@
-import 'package:drift_flutter/drift_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/constants.dart';
 import 'package:studyapp/data/database/app_database.dart';
+import 'package:window_manager/window_manager.dart';
 
 enum AppInitStatus {
   firstLaunch, ready
@@ -39,7 +39,20 @@ class AppRepository {
   }
 
   void clearAppSettings() {
+    // Can't remove all the app settings like save location when resetting settings
+    final String saveLocation = _prefs.getString(keySaveLocation)!;
     _prefs.clear();
+    _prefs.setString(keySaveLocation, saveLocation);
+    _prefs.setBool(keyFirstLaunch, false);
+  }
+
+  void completeHardReset() {
+    print("Completely deleting everything in the app. No setting no databases");
+    _prefs.clear();
+  }
+
+  void closeApp() {
+    windowManager.destroy();
   }
 
   Future<AppDatabase> getAppDatabase() async {

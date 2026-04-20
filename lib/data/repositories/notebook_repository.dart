@@ -8,7 +8,7 @@ import 'package:studyapp/data/database/app_database.dart';
 
 class NotebookRepository {
   final String appSaveLocation;
-  late Directory _notebooksDirectory; 
+  late Directory _notebooksDirectory;
   late final AppDatabase _db;
 
   NotebookRepository({required AppDatabase db, required this.appSaveLocation}) : _db = db;
@@ -16,7 +16,7 @@ class NotebookRepository {
   Future<void> initialize() async {
     final directory = Directory(p.join(appSaveLocation, "Notebooks"));
     if (!await directory.exists()) {
-      await directory.create(recursive: true);      
+      await directory.create(recursive: true);
     }
 
     _notebooksDirectory = directory;
@@ -24,12 +24,12 @@ class NotebookRepository {
 
   Future<List<Notebook>> getNotebooks() async {
     final rows = await _db.select(_db.notebooks).get();
-    
+
     // in case any folder was deleted it will create it back (right now its empty folder)
     for (Notebook row in rows) {
       final Directory notebookDirectory = Directory(p.join(_notebooksDirectory.path, row.id.toString()));
       if (!await notebookDirectory.exists()) {
-        notebookDirectory.create(recursive: true);
+        await notebookDirectory.create(recursive: true);
       }
     }
     return rows;
@@ -43,33 +43,71 @@ class NotebookRepository {
     final inserted_notebook = await _db.into(_db.notebooks).insertReturning(new_notebook);
 
     // Folder creation
-    final Directory newNotebook = Directory(p.join(_notebooksDirectory.path, inserted_notebook.id.toString())); 
+    final Directory newNotebook =
+        Directory(p.join(_notebooksDirectory.path, inserted_notebook.id.toString()));
     if (!await newNotebook.exists()) {
-      newNotebook.create(recursive: true);
+      await newNotebook.create(recursive: true);
     }
     print("Notebook repository updated: Added: ${newNotebook.path}");
-    
+
     return inserted_notebook;
   }
-  
-  Future<void> removeNotebook(int id) async {
+
+  Future<bool> removeNotebook(int id) async {
     // Database
     final deletedNotebook = await (_db.delete(_db.notebooks)..where((t) => t.id.equals(id))).goAndReturn();
-    final Directory directoryToDelete = Directory(p.join(_notebooksDirectory.path, deletedNotebook.first.id.toString()));
-    
-    // Folder creation
-    if (await directoryToDelete.exists()) await directoryToDelete.delete(recursive: true);
+    final Directory directoryToDelete =
+        Directory(p.join(_notebooksDirectory.path, deletedNotebook.first.id.toString()));
+
+    // Folder deletion
+    if (await directoryToDelete.exists()) {
+      try {
+        await directoryToDelete.delete(recursive: true);
+      } catch (e) {
+        print("an error occured. Couldn't delete notebook");
+        return false;
+      }
+    } else {
+      print("The folder doesn't exist which the user has now requested to delete.");
+    }
+
+    return true;
     // return deletedNotebook.first;
   }
 
   Future<void> renameNotebook(int id, String name) async {
-    
-    final updatedNotebook = NotebooksCompanion(
-      id: Value(id), name: Value(name) 
-    ); 
+    final updatedNotebook = NotebooksCompanion(id: Value(id), name: Value(name));
 
     // Database
-    _db.update(_db.notebooks).replace(updatedNotebook);
+    await _db.update(_db.notebooks).replace(updatedNotebook);
   }
   
+  Future<bool> deleteNotebooksDirectory() async {
+    if (await _notebooksDirectory.exists()) {
+      print("Deleting the notebooks Directory now");
+      try {
+        await _notebooksDirectory.delete(recursive: true);
+        print("No errors now! Notebooks directory got deleted");
+        return true;
+      } catch (e) {
+        print("An error occured. Trying again after some time");
+        return false;
+      }
+      // await _notebooksDirectory.delete(recursive: true);
+    }
+    print("The directory doesn't even exist");
+    return true;
+  }
+
+  Future<void> resetDatabase() async {
+    print("Trying to reset the database");
+    print("This is the current notebooksdirectory btw : ${_notebooksDirectory.path}");
+    await _db.close();
+
+    final db_path = p.join(appSaveLocation, "data", "appdb.sqlite");
+    final db_file = File(db_path);
+    if (await db_file.exists()) {
+      await db_file.delete();
+    }
+  }
 }

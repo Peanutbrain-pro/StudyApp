@@ -4,7 +4,6 @@ import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/ui/shared/widgets/appbar.dart';
 
 import '../../../../data/database/app_database.dart';
-import '../../../app/cubits/app_cubit.dart';
 import '../cubits/home_cubit.dart';
 import '../../../shared/utilities/dialog_helper.dart';
 
@@ -40,8 +39,7 @@ class _HomeViewState extends State<HomeView> {
           actions: [
             IconButton(
               onPressed: () async {
-                final notebooks =
-                    await context.read<HomeCubit>().getNotebooks();
+                final notebooks = await context.read<HomeCubit>().getNotebooks();
                 int i = 1;
                 while (true) {
                   bool nochange = true;
@@ -55,18 +53,19 @@ class _HomeViewState extends State<HomeView> {
                 }
 
                 // String result = "New Notebook $i";
-                String result = await DialogHelper.getStringInput(context, "Notebook Name", "New Notebook $i");
+                String result =
+                    await DialogHelper.getStringInput(context, "Notebook Name", "New Notebook $i");
                 context.read<HomeCubit>().addNotebook(result);
               },
               icon: Icon(Icons.add),
               iconSize: 25,
             ),
-            TextButton(
-              onPressed: () {
-                context.read<AppCubit>().clearSettings();
-              },
-              child: Text("Reset Shared Preferences"),
-            ),
+            // TextButton(
+            //   onPressed: () {
+            //     context.read<AppCubit>().resetSettings();
+            //   },
+            //   child: Text("Reset Shared Preferences"),
+            // ),
           ],
         ),
         body: BlocConsumer<HomeCubit, HomeState>(
@@ -100,20 +99,15 @@ class _HomeViewState extends State<HomeView> {
                           // itemCount: state.notebooks.length,
                           key: _gridKey,
                           initialItemCount: state.notebooks.length,
-                          gridDelegate:
-                              SliverGridDelegateWithMaxCrossAxisExtent(
+                          gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
                             maxCrossAxisExtent: 200,
                             mainAxisSpacing: 12,
                             crossAxisSpacing: 12,
                           ),
-                          itemBuilder: (BuildContext context, int index,
-                              Animation<double> animation) {
+                          itemBuilder: (BuildContext context, int index, Animation<double> animation) {
                             final Notebook notebook = state.notebooks[index];
                             return NotebookItem(
-                                index: index,
-                                notebook: notebook,
-                                animation: animation,
-                                gridKey: _gridKey);
+                                index: index, notebook: notebook, animation: animation, gridKey: _gridKey);
                           },
                         )),
                   ),
@@ -121,9 +115,7 @@ class _HomeViewState extends State<HomeView> {
               );
             }
 
-            return Center(
-                child: Text(
-                    "The state is neither loading nor ready. What did you do?"));
+            return Center(child: Text("The state is neither loading nor ready. What did you do?"));
           },
         ));
   }
@@ -168,15 +160,16 @@ class NotebookItem extends StatelessWidget {
                         style: TextStyle(color: Colors.red),
                       ),
                       onTap: () async {
-                        await context
-                            .read<HomeCubit>()
-                            .deleteNotebook(notebook.id);
+                        bool confirmed = await DialogHelper.getConfirmation(context, "Delete Notebook",
+                            "Are you sure you want to delete the Notebook: ${notebook.name}", "Delete");
+                        if (!confirmed) return;
+
+                        await context.read<HomeCubit>().deleteNotebook(notebook.id);
                         gridKey.currentState?.removeItem(
                           index,
                           (context, animation) {
                             return ScaleTransition(
-                              scale: CurvedAnimation(
-                                  parent: animation, curve: Curves.easeInQuint),
+                              scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
                               child: Card(
                                 color: Colors.amber,
                               ),
@@ -188,13 +181,12 @@ class NotebookItem extends StatelessWidget {
                     PopupMenuItem(
                       child: Text("Rename"),
                       onTap: () async {
-                        String result = await DialogHelper.getStringInput(context, "Rename", "${notebook.name}");
+                        String result =
+                            await DialogHelper.getStringInput(context, "Rename", "${notebook.name}");
                         if (result == "") {
                           return;
                         }
-                        context
-                            .read<HomeCubit>()
-                            .renameNotebook(notebook.id, result);
+                        context.read<HomeCubit>().renameNotebook(notebook.id, result);
                       },
                     )
                   ];
