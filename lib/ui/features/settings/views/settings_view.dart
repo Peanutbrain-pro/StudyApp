@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/ui/features/settings/cubits/settings_cubit.dart';
 
@@ -12,69 +13,84 @@ class SettingsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => SettingsCubit(
-          appRepository: context.read<AppRepository>(),
-          notebookRepository: context.read<NotebookRepository>()),
+        appRepository: context.read<AppRepository>(),
+        notebookRepository: context.read<NotebookRepository>(),
+      ),
       child: SettingsView(),
     );
   }
 }
 
 class SettingsView extends StatelessWidget {
-  const SettingsView({super.key});
+ const SettingsView({super.key});
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (BuildContext context, SettingsState state) => Dialog(
-          insetPadding: EdgeInsets.only(top: 56, bottom: 56, left: 256, right: 256),
-          child: Padding(
-            padding: const EdgeInsets.all(56.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              spacing: 8,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(flex: 3, child: Text("App save location: ")),
-                    Expanded(
-                      flex: 4,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        spacing: 12,
-                        children: [
-                          Expanded(child: SelectableText(state.saveLocation)),
-                          IconButton(
-                              icon: Icon(Icons.folder),
-                              onPressed: context.read<SettingsCubit>().changeSaveLocation),
-                        ],
-                      ),
-                    ),
-                  ],
+        insetPadding: EdgeInsets.only(top: 56, bottom: 56, left: 256, right: 256),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            spacing: 8,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Row(
+              //   mainAxisSize: MainAxisSize.min,
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     Expanded(flex: 3, child: Text("App save location: ")),
+              //     Expanded(
+              //       flex: 4,
+              //       child: Row(
+              //         mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //         spacing: 12,
+              //         children: [
+              //           Expanded(child: SelectableText(state.saveLocation)),
+              //           FButton.icon(
+              //             variant: .outline,
+              //             child: Icon(Icons.folder),
+              //             onPress: () => context.read<SettingsCubit>().changeSaveLocation(context),
+              //           ),
+              //         ],
+              //       ),
+              //     ),
+              //   ],
+              // ),
+              FTile(
+                title: Text("Notebooks Save Location"),
+                details: ConstrainedBox(constraints: BoxConstraints(maxWidth: 400),
+                child: SelectableText(state.saveLocation)),
+                suffix: FButton.icon(
+                  variant: .outline,
+                  child: Icon(FIcons.folder),
+                  onPress: () => context.read<SettingsCubit>().changeSaveLocation(context),
                 ),
-                OutlinedButton(
-                  child: Text(
-                    "Reset Settings",
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onPressed: () => context.read<SettingsCubit>().resetSettings(context),
-                ),
-                OutlinedButton(
-                  child: Text(
-                    "Delete All Data",
-                    style: TextStyle(color: Colors.red),
-                  ),
-                  onPressed: () => context.read<SettingsCubit>().deleteAppData(context),
-                ),
-                OutlinedButton(
-                  child: Text("Reset and Delete Everything", style: TextStyle(color: Colors.red)),
-                  onPressed: () => context.read<SettingsCubit>().completeReset(context),
-                ),
-              ],
-            ),
-          )),
+              ),
+              SizedBox(height: 40),
+              FButton(
+                variant: .destructive,
+                mainAxisSize: .min,
+                child: Text("Reset Settings"),
+                onPress: () => context.read<SettingsCubit>().resetSettings(context),
+              ),
+              FButton(
+                variant: .destructive,
+                mainAxisSize: .min,
+                child: Text("Delete All Data"),
+                onPress: () => context.read<SettingsCubit>().deleteAppData(context),
+              ),
+              FButton(
+                variant: .destructive,
+                mainAxisSize: .min,
+                child: Text("Reset and Delete Everything"),
+                onPress: () => context.read<SettingsCubit>().completeReset(context),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
