@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:path/path.dart';
 import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/ui/shared/utilities/dialog_helper.dart';

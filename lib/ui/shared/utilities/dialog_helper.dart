@@ -1,55 +1,72 @@
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart';
+// import 'package:forui/forui.dart';
 import 'package:studyapp/ui/shared/widgets/text_input_dialog.dart';
 
 class DialogHelper {
-  static Future<String> getStringInput(BuildContext context, String title, String default_value) async {
-    String? result = await showDialog<String>(
+  static Future<String?> getStringInput(BuildContext context, String title, String default_value) async {
+    String? result = await showFDialog<String>(
       barrierDismissible: true,
       context: context,
-      builder: (BuildContext dialogContext) {
-        return TextInputWidget(default_value: default_value, title: title, dialogContext: context,);
+      builder: (dialogContext, fdialogStyle, animation) {
+        return TextInputWidget(default_value: default_value, title: title, dialogContext: context);
       },
     );
 
     // textEditingController.dispose();
-    return result ?? default_value;
+    return result;
   }
 
   static Future<bool> getConfirmation(
-      BuildContext context, String title, String content, String confirmation_text) async {
-    bool? out = await showDialog(
-        barrierDismissible: true,
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            constraints: BoxConstraints(maxWidth: 500),
-            title: Text(title),
-            content: Text(content),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: Text("Cancel"),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text(confirmation_text),
-              ),
-            ],
-          );
-        });
+    BuildContext context,
+    bool isDestructive,
+    String title,
+    String content,
+    String confirmation_text,
+  ) async {
+    bool? out = await showFDialog(
+      barrierDismissible: true,
+      context: context,
+      builder: (context, fDialogStyle, animation) {
+        return FDialog(
+          direction: .horizontal,
+          constraints: BoxConstraints(maxWidth: 500),
+          title: Text(title),
+          body: Text(content),
+          actions: [
+            FButton(
+              variant: isDestructive ? .destructive : .primary,
+              onPress: () => Navigator.pop(context, true),
+              child: Text(confirmation_text),
+            ),
+            FButton(variant: .outline, onPress: () => Navigator.pop(context, false), child: Text("Cancel")),
+          ],
+        );
+      },
+    );
 
-    return out?? false;
+    return out ?? false;
   }
 
   static Future<void> showError(BuildContext context, String title, String content) async {
-    showDialog(context: context, builder: (BuildContext context) { 
-      return AlertDialog(
-        title: Text(title),
-        content: Text(content),
-        actions: [
-          TextButton(child: Text("OK"), onPressed: () => Navigator.of(context).pop(),)
-        ],
-      );
-     });
+    showFDialog(
+      context: context,
+      builder: (context, fDialogStyle, animation) {
+        return FDialog(
+          title: Text(title),
+          body: Text(content),
+          actions: [FButton(variant: .outline, child: Text("OK"), onPress: () => Navigator.of(context).pop())],
+        );
+      },
+    );
+  }
+
+  static Future<void> showAlert(BuildContext context, String title, String content) async {
+    showFDialog(
+      context: context,
+      builder: (context, fDialogStyle, animation) {
+        return FDialog(title: Text(title), body: Text(content), actions: [],);
+      },
+    );
   }
 }

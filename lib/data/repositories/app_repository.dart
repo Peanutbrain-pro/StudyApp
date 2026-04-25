@@ -1,11 +1,8 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/constants.dart';
 import 'package:studyapp/data/database/app_database.dart';
-import 'package:window_manager/window_manager.dart';
 
-enum AppInitStatus {
-  firstLaunch, ready
-}
+enum AppInitStatus { firstLaunch, ready }
 
 class AppRepository {
   final SharedPreferences _prefs;
@@ -21,7 +18,7 @@ class AppRepository {
 
   Future<AppInitStatus> getAppStatus() async {
     final bool? firstLaunch = _prefs.getBool(keyFirstLaunch);
-    if (firstLaunch == null || firstLaunch == 'true') {
+    if (firstLaunch == null || firstLaunch == true) {
       _prefs.setBool(keyFirstLaunch, true);
       return AppInitStatus.firstLaunch;
     }
@@ -51,9 +48,9 @@ class AppRepository {
     _prefs.clear();
   }
 
-  void closeApp() {
-    windowManager.destroy();
-  }
+  // void closeApp() {
+  //   windowManager.destroy();
+  // }
 
   Future<AppDatabase> getAppDatabase() async {
     final saveLocation = await getSaveLocation();
