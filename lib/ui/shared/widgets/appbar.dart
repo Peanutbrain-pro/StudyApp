@@ -5,15 +5,24 @@ import 'package:studyapp/ui/app/cubits/app_cubit.dart';
 import 'package:studyapp/ui/features/settings/views/settings_view.dart';
 
 class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String title;
+  final Widget title;
   final List<Widget> actions;
+  final List<Widget> prefixes;
   final OverlayPortalController overlayPortalController = OverlayPortalController();
-  MainAppBar({super.key, required this.title, required this.actions});
+  MainAppBar({super.key, required this.title, required this.actions, this.prefixes = const []});
 
   @override
   Widget build(BuildContext context) {
     return FHeader(
-      title: Text(title),
+      title: Row(
+        // mainAxisAlignment: .spaceBetween,
+        spacing: 10,
+        mainAxisSize: .min,
+        children: [
+          if (prefixes.isNotEmpty) Row(children: prefixes),
+          title,
+        ],
+      ),
       suffixes: [
         Row(
           spacing: 5,
@@ -21,8 +30,8 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
             if (context.watch<AppCubit>().state case AppReady s when s.requiresRestart)
               FButton(
                 variant: .primary,
-                child: Text("Please Restart"),
                 onPress: context.read<AppCubit>().restartApp,
+                child: Text("Please Restart"),
               ),
             SizedBox(width: 20),
             ...actions,

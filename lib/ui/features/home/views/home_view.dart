@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/ui/shared/widgets/appbar.dart';
 import 'package:forui/forui.dart';
@@ -34,7 +35,8 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return FScaffold(
       header: MainAppBar(
-        title: "Notebooks",
+        title: Text("Notebooks"),
+        // prefixes: [],
         actions: [
           FTooltip(
             tipAnchor: .topRight,
@@ -63,8 +65,8 @@ class _HomeViewState extends State<HomeView> {
                 }
                 context.read<HomeCubit>().addNotebook(result);
               },
-              child: Icon(FIcons.plus),
               size: .md,
+              child: Icon(FIcons.plus),
             ),
           ),
         ],
@@ -143,111 +145,118 @@ class NotebookItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
     return ScaleTransition(
       scale: CurvedAnimation(parent: animation, curve: Curves.easeInOutQuint),
-      child: Card(
-        color: Theme.of(context).primaryColorLight,
-        child: Stack(
-          // fit: .expand,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Center(child: Text(notebook.name)),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Align(
-                alignment: Alignment.bottomRight,
-                child: FPopoverMenu(
-                  menu: [
-                    .group(
-                      children: [
-                        .item(
-                          prefix: Icon(FIcons.trash),
-                          title: Text("Delete"),
-                          onPress: () async {
-                            bool confirmed = await DialogHelper.getConfirmation(
-                              context,
-                              true,
-                              "Delete Notebook",
-                              "Are you sure you want to delete the Notebook: ${notebook.name}",
-                              "Delete",
-                            );
-                            if (!confirmed) return;
-                            
-                            await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
-                            gridKey.currentState?.removeItem(index, (context, animation) {
-                              return ScaleTransition(
-                                scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
-                                child: FCard(),
-                              );
-                            });
-                          },
-                        ),
-                        .item(
-                          prefix: Icon(FIcons.pencilLine),
-                          title: Text("Rename"),
-                          onPress: () async {
-                            String? result = await DialogHelper.getStringInput(
-                              context,
-                              "Rename",
-                              "${notebook.name}",
-                            );
-                            if (result == null || result == "") {
-                              return;
-                            }
-                            context.read<HomeCubit>().renameNotebook(notebook.id, result);
-                          },
-                        ),
-                      ],
-                    ),
-                  ],
-                  builder: (context, controller, child) {
-                    return FButton.icon(variant: .ghost, onPress: controller.toggle, child: Icon(FIcons.ellipsisVertical));
-                  },
-                ),
+      child: FTappable(
+        onPress: () {
+          context.go('/notebook/${notebook.id}');
+        },
+        child: Card(
+          color: colors.card,
+          // color: Theme.of(context).primaryColorLight,
+          child: Stack(
+            // fit: .expand,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Center(child: Text(notebook.name)),
               ),
-              // child: PopupMenuButton(itemBuilder: (BuildContext context) {
-              //   return <PopupMenuItem>[
-              //     PopupMenuItem(
-              //       child: Text(
-              //         "Delete",
-              //         style: TextStyle(color: Colors.red),
-              //       ),
-              //       onTap: () async {
-              //         bool confirmed = await DialogHelper.getConfirmation(context, "Delete Notebook",
-              //             "Are you sure you want to delete the Notebook: ${notebook.name}", "Delete");
-              //         if (!confirmed) return;
-            
-              //         await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
-              //         gridKey.currentState?.removeItem(
-              //           index,
-              //           (context, animation) {
-              //             return ScaleTransition(
-              //               scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
-              //               child: Card(
-              //                 color: Colors.amber,
-              //               ),
-              //             );
-              //           },
-              //         );
-              //       },
-              //     ),
-              //     PopupMenuItem(
-              //       child: Text("Rename"),
-              //       onTap: () async {
-              //         String result =
-              //             await DialogHelper.getStringInput(context, "Rename", "${notebook.name}");
-              //         if (result == "") {
-              //           return;
-              //         }
-              //         context.read<HomeCubit>().renameNotebook(notebook.id, result);
-              //       },
-              //     )
-              //   ];
-              // }),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: FPopoverMenu(
+                    menu: [
+                      .group(
+                        children: [
+                          .item(
+                            prefix: Icon(FIcons.trash),
+                            title: Text("Delete"),
+                            onPress: () async {
+                              bool confirmed = await DialogHelper.getConfirmation(
+                                context,
+                                true,
+                                "Delete Notebook",
+                                "Are you sure you want to delete the Notebook: ${notebook.name}",
+                                "Delete",
+                              );
+                              if (!confirmed) return;
+                              
+                              await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
+                              gridKey.currentState?.removeItem(index, (context, animation) {
+                                return ScaleTransition(
+                                  scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
+                                  child: FCard(),
+                                );
+                              });
+                            },
+                          ),
+                          .item(
+                            prefix: Icon(FIcons.pencilLine),
+                            title: Text("Rename"),
+                            onPress: () async {
+                              String? result = await DialogHelper.getStringInput(
+                                context,
+                                "Rename",
+                                notebook.name,
+                              );
+                              if (result == null || result == "") {
+                                return;
+                              }
+                              context.read<HomeCubit>().renameNotebook(notebook.id, result);
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                    builder: (context, controller, child) {
+                      return FButton.icon(variant: .ghost, onPress: controller.toggle, child: Icon(FIcons.ellipsisVertical));
+                    },
+                  ),
+                ),
+                // child: PopupMenuButton(itemBuilder: (BuildContext context) {
+                //   return <PopupMenuItem>[
+                //     PopupMenuItem(
+                //       child: Text(
+                //         "Delete",
+                //         style: TextStyle(color: Colors.red),
+                //       ),
+                //       onTap: () async {
+                //         bool confirmed = await DialogHelper.getConfirmation(context, "Delete Notebook",
+                //             "Are you sure you want to delete the Notebook: ${notebook.name}", "Delete");
+                //         if (!confirmed) return;
+              
+                //         await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
+                //         gridKey.currentState?.removeItem(
+                //           index,
+                //           (context, animation) {
+                //             return ScaleTransition(
+                //               scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
+                //               child: Card(
+                //                 color: Colors.amber,
+                //               ),
+                //             );
+                //           },
+                //         );
+                //       },
+                //     ),
+                //     PopupMenuItem(
+                //       child: Text("Rename"),
+                //       onTap: () async {
+                //         String result =
+                //             await DialogHelper.getStringInput(context, "Rename", "${notebook.name}");
+                //         if (result == "") {
+                //           return;
+                //         }
+                //         context.read<HomeCubit>().renameNotebook(notebook.id, result);
+                //       },
+                //     )
+                //   ];
+                // }),
+              ),
+            ],
+          ),
         ),
       ),
     );

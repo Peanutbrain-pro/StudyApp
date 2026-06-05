@@ -3,13 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
-import 'package:forui/localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
-import 'package:studyapp/ui/app/views/first_launch_view.dart';
-import 'package:studyapp/ui/features/home/views/home_view.dart';
+import 'package:studyapp/ui/router.dart';
 // import 'package:studyapp/ui/shared/widgets/app_closing_overlay.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -66,42 +64,50 @@ class MyApp extends StatelessWidget with WindowListener {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       supportedLocales: FLocalizations.supportedLocales,
       localizationsDelegates: const [...FLocalizations.localizationsDelegates],
       debugShowCheckedModeBanner: false,
       title: 'Document summarizer',
-      // theme: ThemeData(
-      //   colorScheme: ColorScheme.fromSeed(seedColor: Color(0xff519872)),
-      //   useMaterial3: true,
-      //   fontFamily: "Poppins",
-      // ),
       theme: FThemes.blue.light.desktop.toApproximateMaterialTheme(),
+      darkTheme: FThemes.blue.dark.desktop.toApproximateMaterialTheme(),
       // darkTheme: FThemes.green.dark.desktop.toApproximateMaterialTheme(),
-      builder: (_, child) => FTheme(
-        data: FThemes.blue.light.desktop,
-        child: FTooltipGroup(child: child!),
-      ),
-      home: BlocBuilder<AppCubit, AppState>(
-        // listener: (BuildContext context, AppState state) {
-        //   if (state is AppClosing) {
-        //     overlayPortalController.show();
-        //   } else {
-        //     overlayPortalController.hide();
-        //   }
-        // },
-        builder: (BuildContext context, AppState state) {
-          switch (state) {
-            case AppLoading():
-              return CircularProgressIndicator();
-            case AppFirstLaunch():
-              return FirstLaunchView();
-            // case AppClosing():
-            case AppReady():
-              return const HomePage();
-          }
-        },
-      ),
+      builder: (_, child) {
+        // 1. Detect if the system is in dark mode
+        final isDark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+        
+        windowManager.setBackgroundColor(isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5));
+        windowManager.setBrightness(isDark ? Brightness.dark : Brightness.light);
+
+        // 2. Dynamically assign the correct Forui theme variant
+        final currentTheme = isDark ? FThemes.blue.dark.desktop : FThemes.blue.light.desktop;
+
+        return FTheme(
+          data: currentTheme,
+          child: FTooltipGroup(child: child!),
+        );
+      },
+      // home: BlocBuilder<AppCubit, AppState>(
+      //   // listener: (BuildContext context, AppState state) {
+      //   //   if (state is AppClosing) {
+      //   //     overlayPortalController.show();
+      //   //   } else {
+      //   //     overlayPortalController.hide();
+      //   //   }
+      //   // },
+      //   builder: (BuildContext context, AppState state) {
+      //     switch (state) {
+      //       case AppLoading():
+      //         return CircularProgressIndicator();
+      //       case AppFirstLaunch():
+      //         return FirstLaunchView();
+      //       // case AppClosing():
+      //       case AppReady():
+      //         return const HomePage();
+      //     }
+      //   },
+      // ),
+      routerConfig: router,
     );
   }
 }

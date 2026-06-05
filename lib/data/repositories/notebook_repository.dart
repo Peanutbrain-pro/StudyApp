@@ -35,22 +35,27 @@ class NotebookRepository {
     return rows;
   }
 
+  Future<Notebook?> getNotebook(int id) async {
+    final notebook = await (_db.select(_db.notebooks)..where((notebook) => notebook.id.equals(id))).getSingleOrNull();
+    return notebook;
+  }
+
   Future<Notebook> addNotebook(String name) async {
     // Database
-    final new_notebook = NotebooksCompanion.insert(
+    final newNotebook = NotebooksCompanion.insert(
       name: name,
     );
-    final inserted_notebook = await _db.into(_db.notebooks).insertReturning(new_notebook);
+    final insertedNotebook = await _db.into(_db.notebooks).insertReturning(newNotebook);
 
     // Folder creation
-    final Directory newNotebook =
-        Directory(p.join(_notebooksDirectory.path, inserted_notebook.id.toString()));
-    if (!await newNotebook.exists()) {
-      await newNotebook.create(recursive: true);
+    final Directory notebook =
+        Directory(p.join(_notebooksDirectory.path, insertedNotebook.id.toString()));
+    if (!await notebook.exists()) {
+      await notebook.create(recursive: true);
     }
-    print("Notebook repository updated: Added: ${newNotebook.path}");
+    print("Notebook repository updated: Added: ${notebook.path}");
 
-    return inserted_notebook;
+    return insertedNotebook;
   }
 
   Future<bool> removeNotebook(int id) async {
@@ -104,10 +109,10 @@ class NotebookRepository {
     print("This is the current notebooksdirectory btw : ${_notebooksDirectory.path}");
     await _db.close();
 
-    final db_path = p.join(appSaveLocation, "data", "appdb.sqlite");
-    final db_file = File(db_path);
-    if (await db_file.exists()) {
-      await db_file.delete();
+    final dbPath = p.join(appSaveLocation, "data", "appdb.sqlite");
+    final dbFile = File(dbPath);
+    if (await dbFile.exists()) {
+      await dbFile.delete();
     }
   }
 }

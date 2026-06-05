@@ -53,7 +53,7 @@ class AppRepository {
   // }
 
   Future<AppDatabase> getAppDatabase() async {
-    final saveLocation = await getSaveLocation();
+    final saveLocation = getSaveLocation();
     return AppDatabase(saveLocation!);
   }
 }
