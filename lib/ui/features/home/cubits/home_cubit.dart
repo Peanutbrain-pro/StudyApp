@@ -64,9 +64,9 @@ class HomeCubit extends Cubit<HomeState> {
     print("Successfully renamed to $name");
     final updatedNotebooks = [...state.notebooks];
     int index = updatedNotebooks.indexWhere((t) => t.id == id);
-    Notebook new_notebook = updatedNotebooks[index].copyWith(name: name);
+    Notebook newNotebook = updatedNotebooks[index].copyWith(name: name);
     updatedNotebooks.removeAt(index);
-    updatedNotebooks.insert(index, new_notebook);
+    updatedNotebooks.insert(index, newNotebook);
     emit(HomeReady(notebooks: updatedNotebooks));
   }
 }

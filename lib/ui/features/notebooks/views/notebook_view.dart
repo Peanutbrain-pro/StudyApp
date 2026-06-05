@@ -1,0 +1,123 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
+import 'package:studyapp/data/repositories/notebook_repository.dart';
+import 'package:studyapp/ui/features/notebooks/cubits/notebook_cubit.dart';
+import 'package:studyapp/ui/features/notebooks/views/index_view.dart';
+import 'package:studyapp/ui/features/notebooks/views/notes_view.dart';
+import 'package:studyapp/ui/features/notebooks/views/pyqs_view.dart';
+import 'package:studyapp/ui/shared/widgets/appbar.dart';
+
+class NotebookPage extends StatelessWidget {
+  final int notebookId;
+  const NotebookPage({super.key, required this.notebookId});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          NotebookCubit(notebookId: notebookId, notebookRepository: context.read<NotebookRepository>())
+            ..initialize(),
+      child: NotebookView(),
+    );
+  }
+}
+
+class NotebookView extends StatefulWidget {
+  const NotebookView({super.key});
+
+  @override
+  State<NotebookView> createState() => _NotebookViewState();
+}
+
+class _NotebookViewState extends State<NotebookView> with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  @override
+  void initState() {
+    _tabController = TabController(length: 3, vsync: this);
+    _tabController.index = 1;
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NotebookCubit, NotebookState>(
+      builder: (context, state) {
+        final bool nameTooLong = state.notebookName.length > 35;
+
+        return FScaffold(
+          header: MainAppBar(
+            title: Row(
+              children: [
+                SizedBox(width: 5),
+                Text(state.notebookName),
+                SizedBox(width: 40),
+                if (!nameTooLong) TabHeader(tabController: _tabController),
+              ],
+            ),
+            prefixes: [
+              FButton.icon(size: .lg, variant: .ghost, onPress: () => context.pop(), child: Icon(FIcons.chevronLeft)),
+            ],
+            actions: [],
+          ),
+          child: Column(
+            spacing: 10,
+            children: [
+              if (nameTooLong)
+                Align(
+                  alignment: .centerLeft,
+                  child: Padding(
+                    padding: const .only(left: 48),
+                    child: TabHeader(tabController: _tabController),
+                  ),
+                ),
+              Expanded(
+                child: TabBarView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  controller: _tabController,
+                  children: [IndexPage(), NotesView(), PyqsView()],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class TabHeader extends StatelessWidget {
+  const TabHeader({super.key, required TabController tabController}) : _tabController = tabController;
+
+  final TabController _tabController;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    return Container(
+      height: 40,
+      width: 600,
+      decoration: BoxDecoration(color: colors.secondary, borderRadius: .circular(15)),
+      child: TabBar(
+        labelColor: colors.primaryForeground,
+        splashBorderRadius: .circular(15),
+        tabAlignment: .start,
+        isScrollable: true,
+        controller: _tabController,
+        dividerColor: Colors.transparent,
+        // indicatorPadding: .all(3),
+        // indicatorPadding: .only(left: 4, right: 4),
+        indicatorSize: .tab,
+        labelPadding: .zero,
+        indicator: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(15)),
+        tabs: [
+          SizedBox(width: 200, child: Tab(text: "Index")),
+          SizedBox(width: 200, child: Tab(text: 'Notes')),
+          SizedBox(width: 200, child: Tab(text: 'PYQs')),
+        ],
+      ),
+    );
+  }
+}

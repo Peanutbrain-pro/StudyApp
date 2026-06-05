@@ -56,7 +56,7 @@ class AppCubit extends Cubit<AppState> {
         emit(AppFirstLaunch());
 
       case AppInitStatus.ready:
-        final saveLocation = await _appRepository.getSaveLocation();
+        final saveLocation = _appRepository.getSaveLocation();
         // await _notebookRepository.initialize(saveLocation!);
 
         print("Save location is set to : $saveLocation");
@@ -104,7 +104,7 @@ class AppCubit extends Cubit<AppState> {
     }
 
     _appRepository.setSaveLocation(selectedDirectoryPath);
-    print("Save location set to: ${selectedDirectoryPath}");
+    print("Save location set to: $selectedDirectoryPath");
     emit(AppFirstLaunch());
   }
 
