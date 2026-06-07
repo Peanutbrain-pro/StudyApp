@@ -25,6 +25,13 @@ class IndexCubit extends Cubit<IndexState> {
               "[{\"insert\":\"Quick Start\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Hello World\\n\"}]",
             ],
           ),
+          (
+            id: 102,
+            data: [
+              "Unit 2",
+              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
+            ],
+          ),
         ],
       ),
     );

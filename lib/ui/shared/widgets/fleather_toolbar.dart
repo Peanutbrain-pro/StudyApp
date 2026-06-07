@@ -17,14 +17,7 @@ class CustomFleatherToolbar extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.card,
         borderRadius: .circular(10),
-        border: .all(color: colors.primary.withAlpha(50), width: 4),
-        boxShadow: [
-          BoxShadow(
-            spreadRadius: 3,
-            blurRadius: 15,
-            color: colors.mutedForeground.withAlpha(50)
-          )
-        ]
+        border: .all(color: colors.primary.withAlpha(170), width: 4),
       ),
       child: FleatherToolbar(
         children: [

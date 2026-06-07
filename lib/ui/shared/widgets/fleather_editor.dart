@@ -30,10 +30,6 @@ class _CustomFleatherEditorState extends State<CustomFleatherEditor> {
           return KeyEventResult.handled;
         }
 
-        // if ((event is KeyDownEvent) &&
-        //     event.logicalKey == LogicalKeyboardKey.enter) {
-        //   return _handleEnterKey();
-        // }
         return KeyEventResult.ignored;
       },
     );
@@ -73,14 +69,9 @@ class _CustomFleatherEditorState extends State<CustomFleatherEditor> {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: FleatherEditor(
+            autofocus: true,
             contextMenuBuilder: (context, editorState) {
-              return Column(
-                mainAxisSize: .min,
-                children: [
-                  widget.contextMenuBuilder(context, editorState),
-                  // defaultContextMenuBuilder(context, editorState),
-                ],
-              );
+              return widget.contextMenuBuilder(context, editorState);
             },
             controller: widget.controller,
             focusNode: _editorFocusNode,

@@ -26,9 +26,32 @@ class IndexView extends StatefulWidget {
   State<IndexView> createState() => _IndexViewState();
 }
 
-class _IndexViewState extends State<IndexView> with SingleTickerProviderStateMixin {
+class _IndexViewState extends State<IndexView>
+    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+  int? activeEditor;
+  VoidCallback? activeSaveCallback;
+
+  bool checkAndSetActive(int id, VoidCallback saveFunction) {
+    if (activeEditor != null) {
+      // Perhaps a popup message that another editor is already active
+      return false;
+    }
+    activeEditor = id;
+    activeSaveCallback = saveFunction;
+    return true;
+  }
+
+  void removeActive() {
+    activeSaveCallback = null;
+    activeEditor = null;
+  }
+
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final colors = context.theme.colors;
     return BlocBuilder<IndexCubit, IndexState>(
       builder: (context, state) {
@@ -70,7 +93,11 @@ class _IndexViewState extends State<IndexView> with SingleTickerProviderStateMix
                             ),
                           ),
                         ),
-                        IndexContent(content: state.content),
+                        IndexContent(
+                          content: state.content,
+                          checkAndSetActive: checkAndSetActive,
+                          removeActive: removeActive,
+                        ),
                         Align(
                           alignment: .centerRight,
                           child: FButton(
@@ -108,6 +135,7 @@ class _IndexViewState extends State<IndexView> with SingleTickerProviderStateMix
                         size: .lg,
                         onPress: () {
                           context.read<IndexCubit>().toggleEditMode();
+                          if (activeSaveCallback != null) activeSaveCallback!();
                         },
                         prefix: Icon(FIcons.check, size: 20),
                         child: Text("Done", style: .new(fontSize: 18)),
@@ -133,7 +161,14 @@ class IndexContent extends StatelessWidget {
   final List<({int id, List<String> data})> content;
   // final List<List<String?>> content;
 
-  const IndexContent({super.key, required this.content});
+  final bool Function(int id, VoidCallback saveFunction) checkAndSetActive;
+  final void Function() removeActive;
+  const IndexContent({
+    super.key,
+    required this.content,
+    required this.checkAndSetActive,
+    required this.removeActive,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -148,8 +183,8 @@ class IndexContent extends StatelessWidget {
           right: BorderSide(color: colors.border, width: 2),
           bottom: BorderSide(color: colors.border, width: 2),
           left: BorderSide(color: colors.border, width: 2),
-          horizontalInside: BorderSide(color: colors.border.withAlpha(120), width: 2),
-          verticalInside: BorderSide(color: colors.border.withAlpha(120), width: 2),
+          horizontalInside: BorderSide(color: colors.border, width: 2),
+          verticalInside: BorderSide(color: colors.border, width: 2),
           borderRadius: .circular(10),
         ),
         children: content.map((row) {
@@ -173,12 +208,15 @@ class IndexContent extends StatelessWidget {
               TableCell(
                 child: Padding(
                   // padding: const .only(top: 12, bottom: 12, right: 12, left: 24),
-                  padding: const .all(5),
+                  padding: const .all(12),
                   child: EditableFleatherCell(
                     initialDelta: descDelta,
                     saveData: (delta) {
                       context.read<IndexCubit>().editUnitDesc(row.id, jsonEncode(delta));
                     },
+                    checkAndSetActive: checkAndSetActive,
+                    removeActive: removeActive,
+                    id: row.id,
                   ),
                   // child: SelectableText(
                   //   row.data.length > 1 ? (row.data[1].isEmpty ? "" : row.data[1]) : "",
@@ -196,45 +234,62 @@ class IndexContent extends StatelessWidget {
 }
 
 class EditableFleatherCell extends StatefulWidget {
+  final int id;
   final Function(Delta delta) saveData;
   final Delta initialDelta;
-  const EditableFleatherCell({super.key, required this.initialDelta, required this.saveData});
+  final bool Function(int id, VoidCallback saveFunction) checkAndSetActive;
+  final void Function() removeActive;
+  const EditableFleatherCell({
+    super.key,
+    required this.initialDelta,
+    required this.saveData,
+    required this.checkAndSetActive,
+    required this.removeActive,
+    required this.id,
+  });
   @override
   State<EditableFleatherCell> createState() => EditableFleatherCellState();
 }
 
 class EditableFleatherCellState extends State<EditableFleatherCell> {
+  FleatherController? controller;
   bool isEditing = false;
+
+  void save() {
+    widget.removeActive();
+    final Delta delta = controller!.document.toDelta();
+    debugPrint(delta.toString());
+    widget.saveData(delta);
+    controller!.dispose();
+    setState(() {
+      isEditing = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     if (isEditing) {
-      final controller = FleatherController(document: .fromDelta(widget.initialDelta));
+      controller = FleatherController(document: .fromDelta(widget.initialDelta));
       return CustomFleatherEditor(
-        controller: controller,
+        controller: controller!,
         contextMenuBuilder: (context, editorState) {
           final anchors = editorState.contextMenuAnchors;
           print(anchors.primaryAnchor);
           return Transform.translate(
-            offset: Offset(anchors.primaryAnchor.dx - 500, anchors.primaryAnchor.dy - 100),
-            child: CustomFleatherToolbar(controller: controller),
+            offset: Offset(anchors.primaryAnchor.dx - 500, anchors.primaryAnchor.dy - 410),
+            child: UnconstrainedBox(child: CustomFleatherToolbar(controller: controller!)),
           );
         },
-        save: () {
-          final Delta delta = controller.document.toDelta();
-          debugPrint(delta.toString());
-          widget.saveData(delta);
-          controller.dispose();
-          setState(() {
-            isEditing = false;
-          });
-        },
+        save: save,
       );
     } else {
       return SelectionArea(
         child: GestureDetector(
           onTap: () {
             if (!context.read<IndexCubit>().state.inEditMode) {
+              return;
+            }
+            if (!widget.checkAndSetActive(widget.id, save)) {
               return;
             }
             setState(() {
