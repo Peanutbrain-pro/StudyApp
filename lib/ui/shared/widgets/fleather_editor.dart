@@ -5,7 +5,13 @@ import 'package:flutter/services.dart';
 class CustomFleatherEditor extends StatefulWidget {
   final FleatherController controller;
   final Function save;
-  const CustomFleatherEditor({super.key, required this.controller, required this.save});
+  final Widget Function(BuildContext, EditorState) contextMenuBuilder;
+  const CustomFleatherEditor({
+    super.key,
+    required this.controller,
+    required this.save,
+    required this.contextMenuBuilder,
+  });
 
   @override
   State<CustomFleatherEditor> createState() => _CustomFleatherEditorState();
@@ -64,7 +70,22 @@ class _CustomFleatherEditorState extends State<CustomFleatherEditor> {
           border: .all(color: Colors.blue, width: 2),
           borderRadius: .circular(8),
         ),
-        child: FleatherEditor(controller: widget.controller, focusNode: _editorFocusNode),
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: FleatherEditor(
+            contextMenuBuilder: (context, editorState) {
+              return Column(
+                mainAxisSize: .min,
+                children: [
+                  widget.contextMenuBuilder(context, editorState),
+                  // defaultContextMenuBuilder(context, editorState),
+                ],
+              );
+            },
+            controller: widget.controller,
+            focusNode: _editorFocusNode,
+          ),
+        ),
       ),
     );
   }
