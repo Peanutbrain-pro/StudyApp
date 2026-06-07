@@ -7,6 +7,7 @@ import 'package:forui/forui.dart' hide Delta;
 import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/index_cubit.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_editor.dart';
+import 'package:studyapp/ui/shared/widgets/fleather_toolbar.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_viewer.dart';
 
 class IndexPage extends StatelessWidget {
@@ -42,7 +43,7 @@ class _IndexViewState extends State<IndexView> with SingleTickerProviderStateMix
               maxScale: 3.5,
               scaleFactor: 900,
               panEnabled: true,
-            
+
               child: Container(
                 width: 1200,
                 constraints: BoxConstraints(minHeight: 1000),
@@ -86,7 +87,7 @@ class _IndexViewState extends State<IndexView> with SingleTickerProviderStateMix
                 ),
               ),
             ),
-        
+
             Positioned(
               bottom: 16.0,
               right: 16.0,
@@ -147,8 +148,8 @@ class IndexContent extends StatelessWidget {
           right: BorderSide(color: colors.border, width: 2),
           bottom: BorderSide(color: colors.border, width: 2),
           left: BorderSide(color: colors.border, width: 2),
-          horizontalInside: BorderSide(color: colors.border.withAlpha(20), width: 2),
-          verticalInside: BorderSide(color: colors.border.withAlpha(20), width: 2),
+          horizontalInside: BorderSide(color: colors.border.withAlpha(120), width: 2),
+          verticalInside: BorderSide(color: colors.border.withAlpha(120), width: 2),
           borderRadius: .circular(10),
         ),
         children: content.map((row) {
@@ -157,27 +158,34 @@ class IndexContent extends StatelessWidget {
 
           return TableRow(
             children: [
-              Padding(
-                padding: const .only(top: 12, bottom: 12, right: 12, left: 24),
-                child: SelectableText(
-                  row.data[0],
-                  style: context.theme.typography.xl.copyWith(fontFamily: 'Source Sans 3', fontWeight: .w500),
+              TableCell(
+                verticalAlignment: .fill,
+                child: Center(
+                  child: SelectableText(
+                    row.data[0],
+                    style: context.theme.typography.xl.copyWith(
+                      fontFamily: 'Source Sans 3',
+                      fontWeight: .w500,
+                    ),
+                  ),
                 ),
               ),
-              Padding(
-                // padding: const .only(top: 12, bottom: 12, right: 12, left: 24),
-                padding: const .all(5),
-                child: EditableFleatherCell(
-                  initialDelta: descDelta,
-                  saveData: (delta) {
-                    context.read<IndexCubit>().editUnitDesc(row.id, jsonEncode(delta));
-                  },
+              TableCell(
+                child: Padding(
+                  // padding: const .only(top: 12, bottom: 12, right: 12, left: 24),
+                  padding: const .all(5),
+                  child: EditableFleatherCell(
+                    initialDelta: descDelta,
+                    saveData: (delta) {
+                      context.read<IndexCubit>().editUnitDesc(row.id, jsonEncode(delta));
+                    },
+                  ),
+                  // child: SelectableText(
+                  //   row.data.length > 1 ? (row.data[1].isEmpty ? "" : row.data[1]) : "",
+                  //   // row.data[1],
+                  //   style: context.theme.typography.md.copyWith(fontFamily: 'Source Sans 3'),
+                  // ),
                 ),
-                // child: SelectableText(
-                //   row.data.length > 1 ? (row.data[1].isEmpty ? "" : row.data[1]) : "",
-                //   // row.data[1],
-                //   style: context.theme.typography.md.copyWith(fontFamily: 'Source Sans 3'),
-                // ),
               ),
             ],
           );
@@ -204,6 +212,14 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
       final controller = FleatherController(document: .fromDelta(widget.initialDelta));
       return CustomFleatherEditor(
         controller: controller,
+        contextMenuBuilder: (context, editorState) {
+          final anchors = editorState.contextMenuAnchors;
+          print(anchors.primaryAnchor);
+          return Transform.translate(
+            offset: Offset(anchors.primaryAnchor.dx - 500, anchors.primaryAnchor.dy - 100),
+            child: CustomFleatherToolbar(controller: controller),
+          );
+        },
         save: () {
           final Delta delta = controller.document.toDelta();
           debugPrint(delta.toString());

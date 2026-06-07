@@ -23,6 +23,7 @@ class _FleatherViewerState extends State<FleatherViewer> {
       crossAxisAlignment: .stretch,
       // mainAxisSize: .min,
       children: paragraphs.map((paragraph) {
+        final colors = context.theme.colors;
         final typography = context.theme.typography;
 
         if (paragraph.isEmpty) {
@@ -47,6 +48,8 @@ class _FleatherViewerState extends State<FleatherViewer> {
 
         // Set the Font Size of the block
         double? blockFontSize = typography.md.fontSize;
+        Color? textColor;
+        TextDecoration? decor;
         final headerKey = ParchmentAttribute.h1.key;
         if (paragraph.last.hasAttribute(headerKey)) {
           final headerValue = paragraph.last.attributes?[headerKey];
@@ -58,10 +61,13 @@ class _FleatherViewerState extends State<FleatherViewer> {
             blockFontSize = typography.xl.fontSize;
           } else if (headerValue == ParchmentAttribute.h4.value) {
             blockFontSize = typography.lg.fontSize;
+            textColor = colors.foreground.withAlpha(120);
           } else if (headerValue == ParchmentAttribute.h5.value) {
-            blockFontSize = typography.lg.fontSize;
+            blockFontSize = typography.md.fontSize;
+            decor = .underline;
           } else if (headerValue == ParchmentAttribute.h6.value) {
-            blockFontSize = typography.lg.fontSize;
+            blockFontSize = typography.md.fontSize;
+            textColor = colors.foreground.withAlpha(120);
           }
         }
 
@@ -70,7 +76,7 @@ class _FleatherViewerState extends State<FleatherViewer> {
           child: Text.rich(
             TextSpan(children: opsToTextSpan(paragraph)),
             textAlign: paraAlignment,
-            style: .new(fontSize: blockFontSize),
+            style: .new(fontSize: blockFontSize, decoration: decor, color: textColor),
           ),
         );
       }).toList(),
