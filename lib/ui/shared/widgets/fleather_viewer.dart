@@ -16,6 +16,8 @@ class _FleatherViewerState extends State<FleatherViewer> {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    final typography = context.theme.typography;
     List<List<Operation>> paragraphs = _splitIntoParagraphs(widget.delta);
 
     return Column(
@@ -23,11 +25,8 @@ class _FleatherViewerState extends State<FleatherViewer> {
       crossAxisAlignment: .stretch,
       // mainAxisSize: .min,
       children: paragraphs.map((paragraph) {
-        final colors = context.theme.colors;
-        final typography = context.theme.typography;
-
         if (paragraph.isEmpty) {
-          return Text.rich(TextSpan(text: ' '));
+          return const Text.rich(TextSpan(text: ' '));
         }
 
         // Set the Alignment of the block
@@ -71,13 +70,15 @@ class _FleatherViewerState extends State<FleatherViewer> {
           }
         }
 
-        return Padding(
-          padding: const EdgeInsets.only(top: 12),
-          child: Text.rich(
-            TextSpan(children: opsToTextSpan(paragraph)),
-            textAlign: paraAlignment,
-            style: .new(fontSize: blockFontSize, decoration: decor, color: textColor),
-          ),
+        return Row(
+          children: [
+            Text.rich(
+              TextSpan(children: opsToTextSpan(paragraph)),
+              textAlign: paraAlignment,
+              style: .new(fontSize: blockFontSize, decoration: decor, color: textColor),
+            ),
+            const Text("\n")
+          ],
         );
       }).toList(),
     );
@@ -130,8 +131,8 @@ class _FleatherViewerState extends State<FleatherViewer> {
     }
     if (lastStyle.contains(ParchmentAttribute.ul)) {
       spans.add(
-        WidgetSpan(
-          child: Padding(padding: const EdgeInsets.only(left: 5, right: 10), child: Text("•")),
+        const WidgetSpan(
+          child: Padding(padding: EdgeInsets.only(left: 5, right: 10), child: Text("•")),
         ),
       );
     }
@@ -144,7 +145,7 @@ class _FleatherViewerState extends State<FleatherViewer> {
           TextSpan(
             text: op.data as String,
             style: TextStyle(
-              height: 1.2,
+              height: 1,
               fontWeight: op.hasAttribute(ParchmentAttribute.bold.key) ? .bold : null,
               fontStyle: op.hasAttribute(ParchmentAttribute.italic.key) ? .italic : null,
               decoration: op.hasAttribute(ParchmentAttribute.underline.key) ? .underline : null,

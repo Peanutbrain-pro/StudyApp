@@ -16,7 +16,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   final NotebookRepository notebookRepository;
 
   SettingsCubit({required this.appRepository, required this.notebookRepository})
-      : super(SettingsState(saveLocation: "")) {
+      : super(const SettingsState(saveLocation: "")) {
     _loadSettings();
   }
 

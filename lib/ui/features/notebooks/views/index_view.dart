@@ -15,7 +15,7 @@ class IndexPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => IndexCubit(), child: IndexView());
+    return BlocProvider(create: (context) => IndexCubit(), child: const IndexView());
   }
 }
 
@@ -66,10 +66,9 @@ class _IndexViewState extends State<IndexView>
               maxScale: 3.5,
               scaleFactor: 900,
               panEnabled: true,
-
               child: Container(
                 width: 1200,
-                constraints: BoxConstraints(minHeight: 1000),
+                constraints: const BoxConstraints(minHeight: 1000),
                 decoration: BoxDecoration(
                   color: colors.card,
                   // color: Colors.white,
@@ -105,7 +104,7 @@ class _IndexViewState extends State<IndexView>
                             onPress: () {
                               debugPrint(state.content.toString());
                             },
-                            child: Text("Print state"),
+                            child: const Text("Print state"),
                           ),
                         ),
                       ],
@@ -125,7 +124,7 @@ class _IndexViewState extends State<IndexView>
                     ? FButton(
                         style: .delta(
                           decoration: .delta([
-                            .base(.boxDelta(color: Colors.green)),
+                            .base(const .boxDelta(color: Colors.green)),
                             .exact({.hovered}, .boxDelta(color: Colors.green[700])),
                             .match({
                               .disabled,
@@ -137,16 +136,16 @@ class _IndexViewState extends State<IndexView>
                           context.read<IndexCubit>().toggleEditMode();
                           if (activeSaveCallback != null) activeSaveCallback!();
                         },
-                        prefix: Icon(FIcons.check, size: 20),
-                        child: Text("Done", style: .new(fontSize: 18)),
+                        prefix: const Icon(FIcons.check, size: 20),
+                        child: const Text("Done", style: .new(fontSize: 18)),
                       )
                     : FButton(
                         size: .lg,
                         onPress: () {
                           context.read<IndexCubit>().toggleEditMode();
                         },
-                        prefix: Icon(FIcons.pencilLine, size: 20),
-                        child: Text("Edit", style: .new(fontSize: 18)),
+                        prefix: const Icon(FIcons.pencilLine, size: 20),
+                        child: const Text("Edit", style: .new(fontSize: 18)),
                       ),
               ),
             ),
@@ -174,7 +173,7 @@ class IndexContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 1050),
+      constraints: const BoxConstraints(maxWidth: 1050),
       child: Table(
         columnWidths: const {0: FixedColumnWidth(250)},
         // This creates the clean lines between cells

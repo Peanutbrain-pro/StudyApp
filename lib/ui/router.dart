@@ -16,11 +16,11 @@ final router = GoRouter(
         builder: (context, state) {
           switch (state) {
             case AppFirstLaunch():
-              return FirstLaunchView();
+              return const FirstLaunchView();
             case AppReady():
-              return HomePage();
+              return const HomePage();
             case AppLoading():
-              return FCircularProgress.loader();
+              return const FCircularProgress.loader();
           }
         },
       ),

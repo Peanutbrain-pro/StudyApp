@@ -30,7 +30,7 @@ class DialogHelper {
       builder: (context, fDialogStyle, animation) {
         return FDialog(
           direction: .horizontal,
-          constraints: BoxConstraints(maxWidth: 500),
+          constraints: const BoxConstraints(maxWidth: 500),
           title: Text(title),
           body: Text(content),
           actions: [
@@ -39,7 +39,7 @@ class DialogHelper {
               onPress: () => Navigator.pop(context, true),
               child: Text(confirmationText),
             ),
-            FButton(variant: .outline, onPress: () => Navigator.pop(context, false), child: Text("Cancel")),
+            FButton(variant: .outline, onPress: () => Navigator.pop(context, false), child: const Text("Cancel")),
           ],
         );
       },
@@ -55,7 +55,7 @@ class DialogHelper {
         return FDialog(
           title: Text(title),
           body: Text(content),
-          actions: [FButton(variant: .outline, child: Text("OK"), onPress: () => Navigator.of(context).pop())],
+          actions: [FButton(variant: .outline, child: const Text("OK"), onPress: () => Navigator.of(context).pop())],
         );
       },
     );

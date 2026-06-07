@@ -21,7 +21,7 @@ class NotebookGrid extends StatelessWidget {
     return AnimatedGrid(
       key: _gridKey,
       initialItemCount: homeState.notebooks.length,
-      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
         maxCrossAxisExtent: 200,
         mainAxisSpacing: 12,
         crossAxisSpacing: 12,
@@ -81,8 +81,8 @@ class NotebookItem extends StatelessWidget {
                   .group(
                     children: [
                       .item(
-                        prefix: Icon(FIcons.pencilLine),
-                        title: Text("Rename"),
+                        prefix: const Icon(FIcons.pencilLine),
+                        title: const Text("Rename"),
                         onPress: () async {
                           String? result = await DialogHelper.getStringInput(
                             context,
@@ -100,8 +100,8 @@ class NotebookItem extends StatelessWidget {
                         },
                       ),
                       .item(
-                        prefix: Icon(FIcons.trash),
-                        title: Text("Delete"),
+                        prefix: const Icon(FIcons.trash),
+                        title: const Text("Delete"),
                         onPress: () async {
                           bool confirmed = await DialogHelper.getConfirmation(
                             context,
@@ -137,7 +137,7 @@ class NotebookItem extends StatelessWidget {
                   return FButton.icon(
                     variant: .ghost,
                     onPress: controller.toggle,
-                    child: Icon(FIcons.ellipsisVertical),
+                    child: const Icon(FIcons.ellipsisVertical),
                   );
                 },
               ),

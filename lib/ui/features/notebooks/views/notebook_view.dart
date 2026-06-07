@@ -19,7 +19,7 @@ class NotebookPage extends StatelessWidget {
       create: (context) =>
           NotebookCubit(notebookId: notebookId, notebookRepository: context.read<NotebookRepository>())
             ..initialize(),
-      child: NotebookView(),
+      child: const NotebookView(),
     );
   }
 }
@@ -51,14 +51,14 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
           header: MainAppBar(
             title: Row(
               children: [
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 Text(state.notebookName),
-                SizedBox(width: 40),
+                const SizedBox(width: 40),
                 if (!nameTooLong) TabHeader(tabController: _tabController),
               ],
             ),
             prefixes: [
-              FButton.icon(size: .lg, variant: .ghost, onPress: () => context.pop(), child: Icon(FIcons.chevronLeft)),
+              FButton.icon(size: .lg, variant: .ghost, onPress: () => context.pop(), child: const Icon(FIcons.chevronLeft)),
             ],
             actions: [],
           ),
@@ -77,7 +77,7 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
                 child: TabBarView(
                   physics: const NeverScrollableScrollPhysics(),
                   controller: _tabController,
-                  children: [IndexPage(), NotesView(), PyqsView()],
+                  children: [const IndexPage(), const NotesView(), const PyqsView()],
                 ),
               ),
             ],
@@ -113,9 +113,9 @@ class TabHeader extends StatelessWidget {
         labelPadding: .zero,
         indicator: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(15)),
         tabs: [
-          SizedBox(width: 200, child: Tab(text: "Index")),
-          SizedBox(width: 200, child: Tab(text: 'Notes')),
-          SizedBox(width: 200, child: Tab(text: 'PYQs')),
+          const SizedBox(width: 200, child: Tab(text: "Index")),
+          const SizedBox(width: 200, child: Tab(text: 'Notes')),
+          const SizedBox(width: 200, child: Tab(text: 'PYQs')),
         ],
       ),
     );
