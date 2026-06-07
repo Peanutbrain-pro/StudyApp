@@ -4,12 +4,12 @@ import 'package:forui/forui.dart';
 import 'package:studyapp/ui/shared/widgets/text_input_dialog.dart';
 
 class DialogHelper {
-  static Future<String?> getStringInput(BuildContext context, String title, String default_value) async {
+  static Future<String?> getStringInput(BuildContext context, String title, String defaultValue) async {
     String? result = await showFDialog<String>(
       barrierDismissible: true,
       context: context,
       builder: (dialogContext, fdialogStyle, animation) {
-        return TextInputWidget(default_value: default_value, title: title, dialogContext: context);
+        return TextInputWidget(defaultValue: defaultValue, title: title, dialogContext: context);
       },
     );
 
@@ -22,7 +22,7 @@ class DialogHelper {
     bool isDestructive,
     String title,
     String content,
-    String confirmation_text,
+    String confirmationText,
   ) async {
     bool? out = await showFDialog(
       barrierDismissible: true,
@@ -37,7 +37,7 @@ class DialogHelper {
             FButton(
               variant: isDestructive ? .destructive : .primary,
               onPress: () => Navigator.pop(context, true),
-              child: Text(confirmation_text),
+              child: Text(confirmationText),
             ),
             FButton(variant: .outline, onPress: () => Navigator.pop(context, false), child: Text("Cancel")),
           ],
