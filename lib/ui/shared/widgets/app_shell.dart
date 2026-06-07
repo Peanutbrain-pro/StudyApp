@@ -8,6 +8,6 @@ class AppShell extends StatelessWidget {
   Widget build(BuildContext context) {
     // return FScaffold(
     //   header: MainAppBar(title: "Notebooks", actions: actions),
-      return Placeholder();
+      return const Placeholder();
   }
 }

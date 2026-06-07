@@ -16,7 +16,7 @@ class SettingsPage extends StatelessWidget {
         appRepository: context.read<AppRepository>(),
         notebookRepository: context.read<NotebookRepository>(),
       ),
-      child: SettingsView(),
+      child: const SettingsView(),
     );
   }
 }
@@ -28,7 +28,7 @@ class SettingsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (BuildContext context, SettingsState state) => Dialog(
-        insetPadding: EdgeInsets.only(top: 56, bottom: 56, left: 256, right: 256),
+        insetPadding: const EdgeInsets.only(top: 56, bottom: 56, left: 256, right: 256),
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
@@ -59,32 +59,32 @@ class SettingsView extends StatelessWidget {
               //   ],
               // ),
               FTile(
-                title: Text("Notebooks Save Location"),
-                details: ConstrainedBox(constraints: BoxConstraints(maxWidth: 400),
+                title: const Text("Notebooks Save Location"),
+                details: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 400),
                 child: SelectableText(state.saveLocation)),
                 suffix: FButton.icon(
                   variant: .outline,
-                  child: Icon(FIcons.folder),
+                  child: const Icon(FIcons.folder),
                   onPress: () => context.read<SettingsCubit>().changeSaveLocation(context),
                 ),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               FButton(
                 variant: .destructive,
                 mainAxisSize: .min,
-                child: Text("Reset Settings"),
+                child: const Text("Reset Settings"),
                 onPress: () => context.read<SettingsCubit>().resetSettings(context),
               ),
               FButton(
                 variant: .destructive,
                 mainAxisSize: .min,
-                child: Text("Delete All Data"),
+                child: const Text("Delete All Data"),
                 onPress: () => context.read<SettingsCubit>().deleteAppData(context),
               ),
               FButton(
                 variant: .destructive,
                 mainAxisSize: .min,
-                child: Text("Reset and Delete Everything"),
+                child: const Text("Reset and Delete Everything"),
                 onPress: () => context.read<SettingsCubit>().completeReset(context),
               ),
             ],

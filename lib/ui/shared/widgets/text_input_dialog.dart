@@ -45,8 +45,8 @@ class _TextInputWidgetState extends State<TextInputWidget> {
         },
       ),
       actions: [
-        FButton(variant: .primary, onPress: () => Navigator.pop(widget.dialogContext, textEditingController.text), child: Text("OK")),
-        FButton(variant: .outline, onPress: () => Navigator.pop(widget.dialogContext), child: Text("Cancel")),
+        FButton(variant: .primary, onPress: () => Navigator.pop(widget.dialogContext, textEditingController.text), child: const Text("OK")),
+        FButton(variant: .outline, onPress: () => Navigator.pop(widget.dialogContext), child: const Text("Cancel")),
       ],
     );
   }

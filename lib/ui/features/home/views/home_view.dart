@@ -16,7 +16,7 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => HomeCubit(notebookRepository: context.read<NotebookRepository>()),
-      child: HomeView(),
+      child: const HomeView(),
     );
   }
 }
@@ -35,13 +35,13 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return FScaffold(
       header: MainAppBar(
-        title: Text("Notebooks"),
+        title: const Text("Notebooks"),
         // prefixes: [],
         actions: [
           FTooltip(
             tipAnchor: .topRight,
             childAnchor: .topLeft,
-            tipBuilder: (context, _) => Text("Add a new Notebook"),
+            tipBuilder: (context, _) => const Text("Add a new Notebook"),
             child: FButton.icon(
               variant: .ghost,
               onPress: () async {
@@ -66,7 +66,7 @@ class _HomeViewState extends State<HomeView> {
                 context.read<HomeCubit>().addNotebook(result);
               },
               size: .md,
-              child: Icon(FIcons.plus),
+              child: const Icon(FIcons.plus),
             ),
           ),
         ],
@@ -88,7 +88,7 @@ class _HomeViewState extends State<HomeView> {
         },
         builder: (BuildContext context, state) {
           if (state is HomeLoading) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (state is HomeReady) {
@@ -100,7 +100,7 @@ class _HomeViewState extends State<HomeView> {
                     child: AnimatedGrid(
                       key: _gridKey,
                       initialItemCount: state.notebooks.length,
-                      gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                         maxCrossAxisExtent: 200,
                         mainAxisSpacing: 12,
                         crossAxisSpacing: 12,
@@ -121,7 +121,7 @@ class _HomeViewState extends State<HomeView> {
             );
           }
 
-          return Center(child: Text("The state is neither loading nor ready. What did you do?"));
+          return const Center(child: Text("The state is neither loading nor ready. What did you do?"));
         },
       ),
     );
@@ -171,8 +171,8 @@ class NotebookItem extends StatelessWidget {
                       .group(
                         children: [
                           .item(
-                            prefix: Icon(FIcons.trash),
-                            title: Text("Delete"),
+                            prefix: const Icon(FIcons.trash),
+                            title: const Text("Delete"),
                             onPress: () async {
                               bool confirmed = await DialogHelper.getConfirmation(
                                 context,
@@ -193,8 +193,8 @@ class NotebookItem extends StatelessWidget {
                             },
                           ),
                           .item(
-                            prefix: Icon(FIcons.pencilLine),
-                            title: Text("Rename"),
+                            prefix: const Icon(FIcons.pencilLine),
+                            title: const Text("Rename"),
                             onPress: () async {
                               String? result = await DialogHelper.getStringInput(
                                 context,
@@ -211,7 +211,7 @@ class NotebookItem extends StatelessWidget {
                       ),
                     ],
                     builder: (context, controller, child) {
-                      return FButton.icon(variant: .ghost, onPress: controller.toggle, child: Icon(FIcons.ellipsisVertical));
+                      return FButton.icon(variant: .ghost, onPress: controller.toggle, child: const Icon(FIcons.ellipsisVertical));
                     },
                   ),
                 ),

@@ -12,7 +12,7 @@ class CustomFleatherToolbar extends StatelessWidget {
     return Container(
       // height: 50,
       // width: 400,
-      margin: .all(5),
+      margin: const .all(5),
       padding: .zero,
       decoration: BoxDecoration(
         color: colors.card,
@@ -22,7 +22,7 @@ class CustomFleatherToolbar extends StatelessWidget {
       child: FleatherToolbar(
         children: [
           SelectHeadingButton(controller: _controller),
-          VerticalDivider(),
+          const VerticalDivider(),
 
           ToggleStyleButton(
             attribute: ParchmentAttribute.bold,
@@ -39,7 +39,7 @@ class CustomFleatherToolbar extends StatelessWidget {
             icon: Icons.format_underline,
             controller: _controller,
           ),
-          VerticalDivider(),
+          const VerticalDivider(),
 
           // Alignment
           AlignmentButton(

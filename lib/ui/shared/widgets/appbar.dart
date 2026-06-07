@@ -31,14 +31,14 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
               FButton(
                 variant: .primary,
                 onPress: context.read<AppCubit>().restartApp,
-                child: Text("Please Restart"),
+                child: const Text("Please Restart"),
               ),
-            SizedBox(width: 20),
+            const SizedBox(width: 20),
             ...actions,
             FTooltip(
               tipAnchor: .topRight,
               childAnchor: .topLeft,
-              tipBuilder: (context, _) => Text("Settings"),
+              tipBuilder: (context, _) => const Text("Settings"),
               child: FButton.icon(
                 variant: .ghost,
                 onPress: () => showFDialog(
@@ -46,9 +46,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                   barrierDismissible: true,
                   context: context,
                   // transitionDuration: Duration(milliseconds: 20),
-                  builder: (context, fdialogstyle, animation) => SettingsPage(),
+                  builder: (context, fdialogstyle, animation) => const SettingsPage(),
                 ),
-                child: Icon(FIcons.menu),
+                child: const Icon(FIcons.menu),
               ),
             ),
           ],
@@ -58,5 +58,5 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   @override
-  Size get preferredSize => Size.fromHeight(56);
+  Size get preferredSize => const Size.fromHeight(56);
 }

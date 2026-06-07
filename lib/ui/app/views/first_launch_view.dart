@@ -17,7 +17,7 @@ class FirstLaunchView extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            Text(
+            const Text(
               "Welcome",
               style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold),
             ),
@@ -25,7 +25,7 @@ class FirstLaunchView extends StatelessWidget {
             Container(
               decoration:
                   BoxDecoration(border: Border.all(width: 2), borderRadius: BorderRadius.circular(15)),
-              constraints: BoxConstraints(maxWidth: 500),
+              constraints: const BoxConstraints(maxWidth: 500),
               child: Padding(
                 padding: const EdgeInsets.all(18.0),
                 child: Column(
@@ -36,7 +36,7 @@ class FirstLaunchView extends StatelessWidget {
                       // mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(flex: 3, child: Text("App save location: ")),
+                        const Expanded(flex: 3, child: Text("App save location: ")),
                         Expanded(
                           flex: 4,
                           child: Row(
@@ -51,7 +51,7 @@ class FirstLaunchView extends StatelessWidget {
                                     }
                                   )),
                               IconButton(
-                                  icon: Icon(Icons.folder),
+                                  icon: const Icon(Icons.folder),
                                   onPressed: context.read<AppCubit>().changeSaveLocation),
                             ],
                           ),
@@ -62,7 +62,7 @@ class FirstLaunchView extends StatelessWidget {
                       style: ButtonStyle(
                         shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(12)))
                       ),
-                      child: Text("Done"),
+                      child: const Text("Done"),
                       onPressed: () => context.read<AppCubit>().onFirstConfigFinished(),
                     ),
                   ],
@@ -73,7 +73,7 @@ class FirstLaunchView extends StatelessWidget {
                 onPressed: () {
                   context.read<AppCubit>().setDefaultFirstLaunch();
                 },
-                child: Text("Set default First launch settings."))
+                child: const Text("Set default First launch settings."))
           ],
         ),
       ),
