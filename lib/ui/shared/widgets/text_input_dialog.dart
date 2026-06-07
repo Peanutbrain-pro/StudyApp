@@ -3,12 +3,12 @@ import 'package:forui/forui.dart';
 
 class TextInputWidget extends StatefulWidget {
   final String title;
-  final String default_value;
+  final String defaultValue;
   final BuildContext dialogContext;
-  TextInputWidget({super.key, required this.default_value, required this.title, required this.dialogContext});
+  const TextInputWidget({super.key, required this.defaultValue, required this.title, required this.dialogContext});
 
   // final TextEditingController textEditingController = TextEditingController();
-  // textEditingController.text = default_value;
+  // textEditingController.text = defaultValue;
 
   @override
   State<TextInputWidget> createState() => _TextInputWidgetState();
@@ -25,8 +25,8 @@ class _TextInputWidgetState extends State<TextInputWidget> {
 
   @override
   Widget build(BuildContext context) {
-    textEditingController.text = widget.default_value;
-    // FTextFieldControl fTextFieldControl = FTextFieldControl.managed(initial: TextEditingValue(text: widget.default_value));
+    textEditingController.text = widget.defaultValue;
+    // FTextFieldControl fTextFieldControl = FTextFieldControl.managed(initial: TextEditingValue(text: widget.defaultValue));
 
     return FDialog(
       direction: .horizontal,

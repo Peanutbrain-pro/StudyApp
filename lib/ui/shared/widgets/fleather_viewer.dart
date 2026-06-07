@@ -1,6 +1,6 @@
-
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
+import 'package:forui/forui.dart' hide Delta;
 
 class FleatherViewer extends StatefulWidget {
   final Delta delta;
@@ -23,11 +23,14 @@ class _FleatherViewerState extends State<FleatherViewer> {
       crossAxisAlignment: .stretch,
       // mainAxisSize: .min,
       children: paragraphs.map((paragraph) {
+        final typography = context.theme.typography;
+
         if (paragraph.isEmpty) {
-          // debugdebugPrint("Paragraph is empty.");
-          // debugdebugPrint(paragraph.toString());
           return Text.rich(TextSpan(text: ' '));
         }
+
+        // Set the Alignment of the block
+
         TextAlign paraAlignment = .left;
         // debugdebugPrint(paragraph.last.toString());
         final alignKey = ParchmentAttribute.alignment.center.key;
@@ -41,9 +44,34 @@ class _FleatherViewerState extends State<FleatherViewer> {
             paraAlignment = .justify;
           }
         }
+
+        // Set the Font Size of the block
+        double? blockFontSize = typography.md.fontSize;
+        final headerKey = ParchmentAttribute.h1.key;
+        if (paragraph.last.hasAttribute(headerKey)) {
+          final headerValue = paragraph.last.attributes?[headerKey];
+          if (headerValue == ParchmentAttribute.h1.value) {
+            blockFontSize = typography.xl4.fontSize;
+          } else if (headerValue == ParchmentAttribute.h2.value) {
+            blockFontSize = typography.xl2.fontSize;
+          } else if (headerValue == ParchmentAttribute.h3.value) {
+            blockFontSize = typography.xl.fontSize;
+          } else if (headerValue == ParchmentAttribute.h4.value) {
+            blockFontSize = typography.lg.fontSize;
+          } else if (headerValue == ParchmentAttribute.h5.value) {
+            blockFontSize = typography.lg.fontSize;
+          } else if (headerValue == ParchmentAttribute.h6.value) {
+            blockFontSize = typography.lg.fontSize;
+          }
+        }
+
         return Padding(
-          padding: const EdgeInsets.only(top: 5),
-          child: Text.rich(TextSpan(children: opsToTextSpan(paragraph)), textAlign: paraAlignment),
+          padding: const EdgeInsets.only(top: 12),
+          child: Text.rich(
+            TextSpan(children: opsToTextSpan(paragraph)),
+            textAlign: paraAlignment,
+            style: .new(fontSize: blockFontSize),
+          ),
         );
       }).toList(),
     );

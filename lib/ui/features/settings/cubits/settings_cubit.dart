@@ -21,7 +21,7 @@ class SettingsCubit extends Cubit<SettingsState> {
   }
 
   Future<void> _loadSettings() async {
-    final saveLocation = await appRepository.getSaveLocation();
+    final saveLocation = appRepository.getSaveLocation();
     emit(SettingsState(saveLocation: saveLocation!));
   }
 
