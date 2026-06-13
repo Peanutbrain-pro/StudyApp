@@ -72,10 +72,12 @@ class _FleatherViewerState extends State<FleatherViewer> {
 
         return Row(
           children: [
-            Text.rich(
-              TextSpan(children: opsToTextSpan(paragraph)),
-              textAlign: paraAlignment,
-              style: .new(fontSize: blockFontSize, decoration: decor, color: textColor),
+            Expanded(
+              child: Text.rich(
+                TextSpan(children: opsToTextSpan(paragraph)),
+                textAlign: paraAlignment,
+                style: .new(fontSize: blockFontSize, decoration: decor, color: textColor),
+              ),
             ),
             const Text("\n")
           ],
