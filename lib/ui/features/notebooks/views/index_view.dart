@@ -27,10 +27,33 @@ class IndexView extends StatefulWidget {
   State<IndexView> createState() => _IndexViewState();
 }
 
-class _IndexViewState extends State<IndexView>
-    with SingleTickerProviderStateMixin, AutomaticKeepAliveClientMixin {
+class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixin {
+  final customInteractiveViewerController = CustomInteractiveViewerController();
   bool activeEditor = false;
   VoidCallback? activeSaveCallback;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Give the package 50ms to finish its internal bounds calculations
+      Future.delayed(const Duration(milliseconds: 50), () {
+        if (mounted) {
+          customInteractiveViewerController.animateTo(
+            curve: Curves.easeOutExpo,
+            targetState: const TransformationState(
+              scale: 1.0,
+              offset: Offset(0, 0), // (0,0) snaps to Top-Left
+              rotation: 0,
+            ),
+            // Use a tiny 10ms duration rather than Duration.zero to ensure
+            // the package's physics engine actually registers the state change
+            duration: const Duration(milliseconds: 600),
+          );
+        }
+      });
+    });
+  }
 
   bool checkAndSetActive(VoidCallback saveFunction) {
     if (activeEditor == true) {
@@ -59,10 +82,9 @@ class _IndexViewState extends State<IndexView>
         return Stack(
           children: [
             CustomInteractiveViewer(
-              interactionConfig: const .new(
-                constrainBounds: true,
-
-              ),
+              controller: customInteractiveViewerController,
+              interactionConfig: const .new(constrainBounds: true),
+              zoomConfig: const .new(minScale: 0.2),
               // constrained: false,
               // noMouseDragScroll: false,
               // interactionEndFrictionCoefficient: 0.001,
@@ -104,6 +126,7 @@ class _IndexViewState extends State<IndexView>
                           noOfColumns: state.noOfColumns,
                           tableWidth: 1100,
                           headers: state.headers,
+                          columnWidths: state.columnWidths,
                         ),
                         Align(
                           alignment: .centerRight,
@@ -168,6 +191,7 @@ class IndexContent extends StatefulWidget {
   final List<({int id, List<String> data})> content;
   final List<String> headers;
   // final List<List<String?>> content;
+  final List<double> columnWidths;
   final double tableWidth;
   final int noOfColumns;
   final bool Function(VoidCallback saveFunction) checkAndSetActive;
@@ -180,6 +204,7 @@ class IndexContent extends StatefulWidget {
     required this.noOfColumns,
     required this.tableWidth,
     required this.headers,
+    required this.columnWidths,
   });
 
   @override
@@ -189,16 +214,16 @@ class IndexContent extends StatefulWidget {
 class _IndexContentState extends State<IndexContent> {
   // late Map<int, TableColumnWidth> columnWidths;
   final tableScrollController = ScrollController();
-  late List<double> columnWidths;
+  // late List<double> columnWidths;
   final double minColumnWidth = 50;
 
   @override
   void initState() {
     super.initState();
-    columnWidths = List.generate(widget.noOfColumns, (int index) {
-      if (index == 1) return 400;
-      return 200;
-    });
+    // columnWidths = List.generate(widget.noOfColumns, (int index) {
+    //   if (index == 1) return 400;
+    //   return 200;
+    // });
     // columnWidths = {
     //   for (int i = 0; i < widget.noOfColumns; i++)
     //     i: i == 1 ? const FixedColumnWidth(400) : const FixedColumnWidth(200),
@@ -250,9 +275,9 @@ class _IndexContentState extends State<IndexContent> {
                   onHorizontalDragUpdate: (details) {
                     setState(() {
                       // Calculate new width ensuring it doesn't drop below the minimum
-                      double newWidth = columnWidths[index] + details.delta.dx;
+                      double newWidth = widget.columnWidths[index] + details.delta.dx;
                       if (newWidth > minColumnWidth) {
-                        columnWidths[index] = newWidth;
+                        widget.columnWidths[index] = newWidth;
                       }
                     });
                   },
@@ -274,7 +299,9 @@ class _IndexContentState extends State<IndexContent> {
         controller: tableScrollController,
         scrollDirection: .horizontal,
         child: Table(
-          columnWidths: {for (int i = 0; i < widget.noOfColumns; i++) i: FixedColumnWidth(columnWidths[i])},
+          columnWidths: {
+            for (int i = 0; i < widget.noOfColumns; i++) i: FixedColumnWidth(widget.columnWidths[i]),
+          },
           // columnWidths: generateColumnWidth(widget.noOfColumns),
           // columnWidths: const {0: FixedColumnWidth(250)},
           // This creates the clean lines between cells
