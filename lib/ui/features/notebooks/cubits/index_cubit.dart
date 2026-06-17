@@ -148,6 +148,10 @@ class IndexCubit extends Cubit<IndexState> {
     );
   }
 
+  void saveColumnWidths(List<double> columnWidths) {
+    
+  }
+
   void addUnit(String unitTitle) {
     // final String jsonDesc = jsonEncode(unitDescription);
     final ({int id, List<String> data}) unit = (id: DateTime.now().millisecondsSinceEpoch, data: [unitTitle]);
