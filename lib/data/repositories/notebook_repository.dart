@@ -9,7 +9,7 @@ import 'package:studyapp/data/database/app_database.dart';
 class NotebookRepository {
   final String appSaveLocation;
   late Directory _notebooksDirectory;
-  late final AppDatabase _db;
+  final AppDatabase _db;
 
   NotebookRepository({required AppDatabase db, required this.appSaveLocation}) : _db = db;
 
