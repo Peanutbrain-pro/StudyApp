@@ -1,5 +1,7 @@
 // import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:studyapp/data/database/app_database.dart';
+import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 
 class IndexState {
   // final List<List<String?>> content;
@@ -21,9 +23,18 @@ class IndexState {
 }
 
 class IndexCubit extends Cubit<IndexState> {
-  IndexCubit()
-    : super(IndexState(content: [], inEditMode: false, noOfColumns: 0, headers: [], columnWidths: [])) {
-    // initialize();
+  final UiPreferencesRepository _uiPreferencesRepository;
+  final int notebookId;
+
+  IndexCubit({required UiPreferencesRepository uiPreferencesRepository, required this.notebookId})
+    : _uiPreferencesRepository = uiPreferencesRepository,
+      super(IndexState(content: [], inEditMode: false, noOfColumns: 0, headers: ["Unit", "Description"], columnWidths: [])) {
+    initialize();
+  }
+
+  Future<void> initialize() async {
+    if (isClosed) return;
+
     emit(
       IndexState(
         inEditMode: false,
@@ -137,19 +148,34 @@ class IndexCubit extends Cubit<IndexState> {
               "",
             ],
           ),
-
         ],
         headers: ['Title', 'Description', 'e1', 'e2', 'e3'],
-        columnWidths: List<double>.generate(5, (index) {
-          if (index == 1) return 500;
-          return 100;
-        }),
+        columnWidths: await getColumnWidths(notebookId, 5),
       ),
     );
   }
 
-  void saveColumnWidths(List<double> columnWidths) {
-    
+  void saveColumnWidths(int notebookId, List<double> columnWidths) {
+    print("saving to database the column widths $columnWidths");
+    _uiPreferencesRepository.saveColumnWidths(notebookId, columnWidths);
+  }
+
+  Future<List<double>> getColumnWidths(int notebookId, int noOfColumns) async {
+    print("Trying to get Column widths from database");
+    final columnWidths = await _uiPreferencesRepository.getColumnWidths(notebookId, "Index");
+    if (columnWidths == null) {
+      print("Creating new columnWidths");
+      final newWidths = List<double>.generate(noOfColumns, (index) {
+        if (index == 1) return 500;
+        return 100;
+      });
+      print("Saving to database");
+      saveColumnWidths(notebookId, newWidths);
+      return newWidths;
+    }
+  
+    print("Found column Widths, giving it now: $columnWidths");
+    return columnWidths;
   }
 
   void addUnit(String unitTitle) {

@@ -5,6 +5,7 @@ import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart' hide Delta;
+import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 // import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/index_cubit.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_editor.dart';
@@ -12,16 +13,24 @@ import 'package:studyapp/ui/shared/widgets/fleather_toolbar.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_viewer.dart';
 
 class IndexPage extends StatelessWidget {
-  const IndexPage({super.key});
+  final int notebookId;
+  const IndexPage({super.key, required this.notebookId});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(create: (context) => IndexCubit(), child: const IndexView());
+    return BlocProvider(
+      create: (context) => IndexCubit(
+        uiPreferencesRepository: context.read<UiPreferencesRepository>(),
+        notebookId: notebookId,
+      ),
+      child: IndexView(notebookId: notebookId),
+    );
   }
 }
 
 class IndexView extends StatefulWidget {
-  const IndexView({super.key});
+  final int notebookId;
+  const IndexView({super.key, required this.notebookId});
 
   @override
   State<IndexView> createState() => _IndexViewState();
@@ -36,6 +45,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Move the view to the top of the index page instead of centering it
       // Give the package 50ms to finish its internal bounds calculations
       Future.delayed(const Duration(milliseconds: 50), () {
         if (mounted) {
@@ -127,6 +137,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                           tableWidth: 1100,
                           headers: state.headers,
                           columnWidths: state.columnWidths,
+                          notebookId: widget.notebookId,
                         ),
                         Align(
                           alignment: .centerRight,
@@ -188,6 +199,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
 }
 
 class IndexContent extends StatefulWidget {
+  final int notebookId;
   final List<({int id, List<String> data})> content;
   final List<String> headers;
   // final List<List<String?>> content;
@@ -205,6 +217,7 @@ class IndexContent extends StatefulWidget {
     required this.tableWidth,
     required this.headers,
     required this.columnWidths,
+    required this.notebookId,
   });
 
   @override
@@ -220,26 +233,7 @@ class _IndexContentState extends State<IndexContent> {
   @override
   void initState() {
     super.initState();
-    // columnWidths = List.generate(widget.noOfColumns, (int index) {
-    //   if (index == 1) return 400;
-    //   return 200;
-    // });
-    // columnWidths = {
-    //   for (int i = 0; i < widget.noOfColumns; i++)
-    //     i: i == 1 ? const FixedColumnWidth(400) : const FixedColumnWidth(200),
-    // };
   }
-
-  // Map<int, TableColumnWidth>? generateColumnWidth(int noOfColumns) {
-  //   return .fromIterable(
-  //     Iterable.generate(noOfColumns),
-  //     key: (i) => i,
-  //     value: (i) {
-  //       if (i == 1) return const FixedColumnWidth(400);
-  //       return const FlexColumnWidth(200);
-  //     },
-  //   );
-  // }
 
   TableRow generateHeaders() {
     return TableRow(
@@ -251,17 +245,6 @@ class _IndexContentState extends State<IndexContent> {
               padding: const EdgeInsets.all(12.0),
               child: Text(header, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
-            // A transparent placeholder block to maintain the header cell's minimum height
-            // const Padding(
-            //   padding: EdgeInsets.all(12.0),
-            //   child: Visibility(
-            //     visible: false,
-            //     maintainSize: true,
-            //     maintainAnimation: true,
-            //     maintainState: true,
-            //     child: Text("Spacer"),
-            //   ),
-            // ),
             // The Hit-Test Target for Draggable Border (Positioned on the far right)
             Positioned(
               top: 0,
@@ -273,13 +256,18 @@ class _IndexContentState extends State<IndexContent> {
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onHorizontalDragUpdate: (details) {
+                    double newWidth;
                     setState(() {
                       // Calculate new width ensuring it doesn't drop below the minimum
-                      double newWidth = widget.columnWidths[index] + details.delta.dx;
+                      newWidth = widget.columnWidths[index] + details.delta.dx;
                       if (newWidth > minColumnWidth) {
                         widget.columnWidths[index] = newWidth;
                       }
                     });
+                    // context.read<IndexCubit>().saveColumnWidths(widget.notebookId, widget.columnWidths);
+                  },
+                  onHorizontalDragEnd: (details) {
+                    context.read<IndexCubit>().saveColumnWidths(widget.notebookId, widget.columnWidths);
                   },
                 ),
               ),
@@ -292,6 +280,10 @@ class _IndexContentState extends State<IndexContent> {
 
   @override
   Widget build(BuildContext context) {
+    // if (widget.noOfColumns == 0) {
+    //   return const SizedBox.shrink();
+    // }
+
     final colors = context.theme.colors;
     return Scrollbar(
       controller: tableScrollController,
@@ -319,19 +311,6 @@ class _IndexContentState extends State<IndexContent> {
             ...widget.content.map((row) {
               return TableRow(
                 children: [
-                  // TableCell(
-                  //   verticalAlignment: .fill,
-                  //   child: Center(
-                  //     child: SelectableText(
-                  //       row.data[0],
-                  //       style: context.theme.typography.xl.copyWith(
-                  //         fontFamily: 'Source Sans 3',
-                  //         fontWeight: .w500,
-                  //       ),
-                  //     ),
-                  //   ),
-                  // ),
-                  // ...generateHeaders(),
                   ...List<Widget>.generate(widget.noOfColumns, (int index) {
                     if (index >= row.data.length) {
                       return const TableCell(child: Text(""));
