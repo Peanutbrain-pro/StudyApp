@@ -19,13 +19,14 @@ class NotebookPage extends StatelessWidget {
       create: (context) =>
           NotebookCubit(notebookId: notebookId, notebookRepository: context.read<NotebookRepository>())
             ..initialize(),
-      child: const NotebookView(),
+      child: NotebookView(notebookId: notebookId),
     );
   }
 }
 
 class NotebookView extends StatefulWidget {
-  const NotebookView({super.key});
+  final int notebookId;
+  const NotebookView({super.key, required this.notebookId});
 
   @override
   State<NotebookView> createState() => _NotebookViewState();
@@ -58,7 +59,12 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
               ],
             ),
             prefixes: [
-              FButton.icon(size: .lg, variant: .ghost, onPress: () => context.pop(), child: const Icon(FIcons.chevronLeft)),
+              FButton.icon(
+                size: .lg,
+                variant: .ghost,
+                onPress: () => context.pop(),
+                child: const Icon(FIcons.chevronLeft),
+              ),
             ],
             actions: [],
           ),
@@ -77,7 +83,11 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
                 child: TabBarView(
                   physics: const NeverScrollableScrollPhysics(),
                   controller: _tabController,
-                  children: [const IndexPage(), const NotesView(), const PyqsView()],
+                  children: [
+                    IndexPage(notebookId: widget.notebookId),
+                    const NotesView(),
+                    const PyqsView(),
+                  ],
                 ),
               ),
             ],

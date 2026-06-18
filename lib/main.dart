@@ -7,6 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
+import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 import 'package:studyapp/ui/router.dart';
 // import 'package:studyapp/ui/shared/widgets/app_closing_overlay.dart';
 import 'package:window_manager/window_manager.dart';
@@ -37,6 +38,10 @@ void main() async {
             final saveLocation = context.read<AppRepository>().getSaveLocation();
             return AppDatabase(saveLocation!);
           },
+        ),
+        RepositoryProvider<UiPreferencesRepository>(
+          lazy: true,
+          create: (context) => UiPreferencesRepository(db: context.read<AppDatabase>()),
         ),
         RepositoryProvider<NotebookRepository>(
           lazy: true,
@@ -75,8 +80,9 @@ class MyApp extends StatelessWidget with WindowListener {
       builder: (_, child) {
         // 1. Detect if the system is in dark mode
         final isDark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
-        
+
         windowManager.setBackgroundColor(isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5));
+        print("Setting window brightness to dark in dark mode $isDark");
         windowManager.setBrightness(isDark ? Brightness.dark : Brightness.light);
 
         // 2. Dynamically assign the correct Forui theme variant
