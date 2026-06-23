@@ -76,6 +76,7 @@ class MyApp extends StatelessWidget with WindowListener {
       title: 'Document summarizer',
       theme: FThemes.blue.light.desktop.toApproximateMaterialTheme(),
       darkTheme: FThemes.blue.dark.desktop.toApproximateMaterialTheme(),
+      themeMode: .system,
       // darkTheme: FThemes.green.dark.desktop.toApproximateMaterialTheme(),
       builder: (_, child) {
         // 1. Detect if the system is in dark mode
@@ -87,6 +88,8 @@ class MyApp extends StatelessWidget with WindowListener {
 
         // 2. Dynamically assign the correct Forui theme variant
         final currentTheme = isDark ? FThemes.blue.dark.desktop : FThemes.blue.light.desktop;
+
+        // currentTheme = FThemes.blue.light.desktop;
 
         return FTheme(
           data: currentTheme,
