@@ -1,10 +1,10 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
-import 'package:custom_interactive_viewer/custom_interactive_viewer.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart' hide Delta;
+import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 // import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/index_cubit.dart';
@@ -37,33 +37,10 @@ class IndexView extends StatefulWidget {
 }
 
 class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixin {
-  final customInteractiveViewerController = CustomInteractiveViewerController();
+  // final customInteractiveViewerController = CustomInteractiveViewerController();
+  final horizontalScrollController = ScrollController();
   bool activeEditor = false;
   VoidCallback? activeSaveCallback;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Move the view to the top of the index page instead of centering it
-      // Give the package 50ms to finish its internal bounds calculations
-      Future.delayed(const Duration(milliseconds: 50), () {
-        if (mounted) {
-          customInteractiveViewerController.animateTo(
-            curve: Curves.easeOutExpo,
-            targetState: const TransformationState(
-              scale: 1.0,
-              offset: Offset(0, 0), // (0,0) snaps to Top-Left
-              rotation: 0,
-            ),
-            // Use a tiny 10ms duration rather than Duration.zero to ensure
-            // the package's physics engine actually registers the state change
-            duration: const Duration(milliseconds: 600),
-          );
-        }
-      });
-    });
-  }
 
   bool checkAndSetActive(VoidCallback saveFunction) {
     if (activeEditor == true) {
@@ -89,55 +66,59 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
     final colors = context.theme.colors;
     return BlocBuilder<IndexCubit, IndexState>(
       builder: (context, state) {
-        return Stack(
-          children: [
-            CustomInteractiveViewer(
-              controller: customInteractiveViewerController,
-              interactionConfig: const .new(constrainBounds: true),
-              zoomConfig: const .new(minScale: 0.2),
-              // constrained: false,
-              // noMouseDragScroll: false,
-              // interactionEndFrictionCoefficient: 0.001,
-              // allowNonCoveringScreenZoom: true,
-              // minScale: 0.3,
-              // maxScale: 3.5,
-              // scaleFactor: 900,
-              // panEnabled: _canPan,
-              child: Container(
-                width: 1200,
-                constraints: const BoxConstraints(minHeight: 1000),
-                decoration: BoxDecoration(
-                  color: colors.card,
-                  // color: Colors.white,
-                  border: .all(width: 2, color: colors.border),
-                ),
-                child: BlocBuilder<IndexCubit, IndexState>(
-                  builder: (context, state) {
-                    return Column(
+        switch (state) {
+          case IndexLoading():
+            return const CircularProgressIndicator();
+          case IndexReady():
+            return Stack(
+              children: [
+                InteractiveViewer2(
+                  // controller: customInteractiveViewerController,
+                  // interactionConfig: const .new(constrainBounds: true),
+                  // zoomConfig: const .new(minScale: 0.2),
+                  showScrollbars: true,
+                  constrained: false,
+                  noMouseDragScroll: false,
+                  interactionEndFrictionCoefficient: 0.001,
+                  allowNonCoveringScreenZoom: true,
+                  minScale: 0.3,
+                  maxScale: 3.5,
+                  scaleFactor: 900,
+                  // panEnabled: _canPan,
+                  child: Container(
+                    // width: 1200,
+                    constraints: const BoxConstraints(minHeight: 1000, minWidth: 1200),
+                    decoration: BoxDecoration(
+                      color: colors.card,
+                      // color: Colors.white,
+                      border: .all(width: 2, color: colors.border),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: .start,
                       children: [
-                        Align(
-                          alignment: .centerLeft,
-                          child: Padding(
-                            padding: const EdgeInsets.all(72.0),
-                            child: Text(
-                              "Index",
-                              style: context.theme.typography.xl7.copyWith(
-                                fontFamily: 'Source Sans 3',
-                                fontWeight: .bold,
-                              ),
-                              // style: Theme.of(context).textTheme.displayLarge!.copyWith(fontWeight: .w800),
+                        Padding(
+                          padding: const EdgeInsets.all(72.0),
+                          child: Text(
+                            "Index",
+                            style: context.theme.typography.xl7.copyWith(
+                              fontFamily: 'Source Sans 3',
+                              fontWeight: .bold,
                             ),
+                            // style: Theme.of(context).textTheme.displayLarge!.copyWith(fontWeight: .w800),
                           ),
                         ),
-                        IndexContent(
-                          content: state.content,
-                          checkAndSetActive: checkAndSetActive,
-                          removeActive: removeActive,
-                          noOfColumns: state.noOfColumns,
-                          tableWidth: 1100,
-                          headers: state.headers,
-                          columnWidths: state.columnWidths,
-                          notebookId: widget.notebookId,
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 48, left: 48, right: 48),
+                          child: IndexContent(
+                            content: state.content,
+                            checkAndSetActive: checkAndSetActive,
+                            removeActive: removeActive,
+                            noOfColumns: state.noOfColumns,
+                            tableWidth: 1100,
+                            headers: state.headers,
+                            columnWidths: state.columnWidths,
+                            notebookId: widget.notebookId,
+                          ),
                         ),
                         Align(
                           alignment: .centerRight,
@@ -150,49 +131,48 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                           ),
                         ),
                       ],
-                    );
-                  },
+                    ),
+                  ),
                 ),
-              ),
-            ),
 
-            Positioned(
-              bottom: 16.0,
-              right: 16.0,
-              child: SizedBox(
-                height: 60,
-                width: 120,
-                child: state.inEditMode
-                    ? FButton(
-                        style: .delta(
-                          decoration: .delta([
-                            .base(const .boxDelta(color: Colors.green)),
-                            .exact({.hovered}, .boxDelta(color: Colors.green[700])),
-                            .match({
-                              .disabled,
-                            }, .boxDelta(color: Colors.green.withAlpha((0.4 * 255).toInt()))),
-                          ]),
-                        ),
-                        size: .lg,
-                        onPress: () {
-                          context.read<IndexCubit>().toggleEditMode();
-                          if (activeSaveCallback != null) activeSaveCallback!();
-                        },
-                        prefix: const Icon(FIcons.check, size: 20),
-                        child: const Text("Done", style: .new(fontSize: 18)),
-                      )
-                    : FButton(
-                        size: .lg,
-                        onPress: () {
-                          context.read<IndexCubit>().toggleEditMode();
-                        },
-                        prefix: const Icon(FIcons.pencilLine, size: 20),
-                        child: const Text("Edit", style: .new(fontSize: 18)),
-                      ),
-              ),
-            ),
-          ],
-        );
+                Positioned(
+                  bottom: 16.0,
+                  right: 16.0,
+                  child: SizedBox(
+                    height: 60,
+                    width: 120,
+                    child: state.inEditMode
+                        ? FButton(
+                            style: .delta(
+                              decoration: .delta([
+                                .base(const .boxDelta(color: Colors.green)),
+                                .exact({.hovered}, .boxDelta(color: Colors.green[700])),
+                                .match({
+                                  .disabled,
+                                }, .boxDelta(color: Colors.green.withAlpha((0.4 * 255).toInt()))),
+                              ]),
+                            ),
+                            size: .lg,
+                            onPress: () {
+                              context.read<IndexCubit>().toggleEditMode();
+                              if (activeSaveCallback != null) activeSaveCallback!();
+                            },
+                            prefix: const Icon(FIcons.check, size: 20),
+                            child: const Text("Done", style: .new(fontSize: 18)),
+                          )
+                        : FButton(
+                            size: .lg,
+                            onPress: () {
+                              context.read<IndexCubit>().toggleEditMode();
+                            },
+                            prefix: const Icon(FIcons.pencilLine, size: 20),
+                            child: const Text("Edit", style: .new(fontSize: 18)),
+                          ),
+                  ),
+                ),
+              ],
+            );
+        }
       },
     );
   }
@@ -226,8 +206,10 @@ class IndexContent extends StatefulWidget {
 
 class _IndexContentState extends State<IndexContent> {
   // late Map<int, TableColumnWidth> columnWidths;
-  final tableScrollController = ScrollController();
+  // final tableScrollController = ScrollController();
   // late List<double> columnWidths;
+  int? activeId;
+  int? activeCol;
   final double minColumnWidth = 50;
 
   @override
@@ -280,67 +262,64 @@ class _IndexContentState extends State<IndexContent> {
 
   @override
   Widget build(BuildContext context) {
-    // if (widget.noOfColumns == 0) {
-    //   return const SizedBox.shrink();
-    // }
-
     final colors = context.theme.colors;
-    return Scrollbar(
-      controller: tableScrollController,
-      child: SingleChildScrollView(
-        controller: tableScrollController,
-        scrollDirection: .horizontal,
-        child: Table(
-          columnWidths: {
-            for (int i = 0; i < widget.noOfColumns; i++) i: FixedColumnWidth(widget.columnWidths[i]),
-          },
-          // columnWidths: generateColumnWidth(widget.noOfColumns),
-          // columnWidths: const {0: FixedColumnWidth(250)},
-          // This creates the clean lines between cells
-          border: TableBorder(
-            top: BorderSide(color: colors.border, width: 2),
-            right: BorderSide(color: colors.border, width: 2),
-            bottom: BorderSide(color: colors.border, width: 2),
-            left: BorderSide(color: colors.border, width: 2),
-            horizontalInside: BorderSide(color: colors.border, width: 2),
-            verticalInside: BorderSide(color: colors.border, width: 2),
-            borderRadius: .circular(10),
-          ),
-          children: [
-            generateHeaders(),
-            ...widget.content.map((row) {
-              return TableRow(
-                children: [
-                  ...List<Widget>.generate(widget.noOfColumns, (int index) {
-                    if (index >= row.data.length) {
-                      return const TableCell(child: Text(""));
-                    }
-                    final List<dynamic> rawDelta = jsonDecode(row.data[index]);
-                    final Delta dataDelta = Delta.fromJson(rawDelta);
-
-                    return TableCell(
-                      child: Padding(
-                        // padding: const .only(top: 12, bottom: 12, right: 12, left: 24),
-                        padding: const .all(12),
-                        child: EditableFleatherCell(
-                          initialDelta: dataDelta,
-                          saveData: (delta) {
-                            // context.read<IndexCubit>().editUnitDesc(row.id, jsonEncode(delta));
-                            context.read<IndexCubit>().editUnitData(row.id, index, jsonEncode(delta));
-                          },
-                          checkAndSetActive: widget.checkAndSetActive,
-                          removeActive: widget.removeActive,
-                          id: row.id,
-                        ),
-                      ),
-                    );
-                  }, growable: false),
-                ],
-              );
-            }),
-          ],
-        ),
+    return Table(
+      columnWidths: {
+        for (int i = 0; i < widget.noOfColumns; i++) i: FixedColumnWidth(widget.columnWidths[i]),
+      },
+      border: TableBorder(
+        top: BorderSide(color: colors.border, width: 2),
+        right: BorderSide(color: colors.border, width: 2),
+        bottom: BorderSide(color: colors.border, width: 2),
+        left: BorderSide(color: colors.border, width: 2),
+        horizontalInside: BorderSide(color: colors.border, width: 2),
+        verticalInside: BorderSide(color: colors.border, width: 2),
+        borderRadius: .circular(10),
       ),
+      children: [
+        generateHeaders(),
+        ...widget.content.map((row) {
+          return TableRow(
+            children: [
+              ...List<Widget>.generate(widget.noOfColumns, (int index) {
+                if (index >= row.data.length) {
+                  // return const TableCell(child: Text(""));
+                  row.data.add(jsonEncode(Delta()..insert('\n')));
+                }
+                final List<dynamic> rawDelta = jsonDecode(row.data[index]);
+                final Delta dataDelta = Delta.fromJson(rawDelta);
+
+                // bool isStretched = activeId == row.id && activeCol == index;
+
+                return TableCell(
+                  // verticalAlignment: isStretched ? .fill : null,
+                  child: EditableFleatherCell(
+                    initialDelta: dataDelta,
+                    saveData: (delta) {
+                      // context.read<IndexCubit>().editUnitDesc(row.id, jsonEncode(delta));
+                      context.read<IndexCubit>().editUnitData(row.id, index, jsonEncode(delta));
+                    },
+                    checkAndSetActive: widget.checkAndSetActive,
+                    removeActive: widget.removeActive,
+                    id: row.id,
+                    // currentlyActive: (bool value) {
+                    //   setState(() {
+                    //     if (value) {
+                    //       activeId = row.id;
+                    //       activeCol = index;
+                    //     } else {
+                    //       activeId = null;
+                    //       activeCol = null;
+                    //     }
+                    //   });
+                    // },
+                  ),
+                );
+              }, growable: false),
+            ],
+          );
+        }),
+      ],
     );
   }
 }
@@ -351,6 +330,7 @@ class EditableFleatherCell extends StatefulWidget {
   final Delta initialDelta;
   final bool Function(VoidCallback saveFunction) checkAndSetActive;
   final void Function() removeActive;
+  // final ValueChanged<bool> currentlyActive;
   const EditableFleatherCell({
     super.key,
     required this.initialDelta,
@@ -358,6 +338,7 @@ class EditableFleatherCell extends StatefulWidget {
     required this.checkAndSetActive,
     required this.removeActive,
     required this.id,
+    // required this.currentlyActive,
   });
   @override
   State<EditableFleatherCell> createState() => EditableFleatherCellState();
@@ -376,6 +357,7 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
     setState(() {
       isEditing = false;
     });
+    // widget.currentlyActive(false);
   }
 
   @override
@@ -388,30 +370,35 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
           final anchors = editorState.contextMenuAnchors;
           print(anchors.primaryAnchor);
           return Transform.translate(
-            offset: Offset(anchors.primaryAnchor.dx - 500, anchors.primaryAnchor.dy - 410),
+            offset: Offset(anchors.primaryAnchor.dx - 501, anchors.primaryAnchor.dy - 410),
             child: UnconstrainedBox(child: CustomFleatherToolbar(controller: controller!)),
           );
         },
         save: save,
       );
     } else {
-      return SelectionArea(
-        child: GestureDetector(
+      if (context.read<IndexCubit>().readyState.inEditMode) {
+        return GestureDetector(
+          behavior: .opaque,
           onTap: () {
-            if (!context.read<IndexCubit>().state.inEditMode) {
-              return;
-            }
+            // if (!context.read<IndexCubit>().state.inEditMode) {
+            //   return;
+            // }
             if (!widget.checkAndSetActive(save)) {
               return;
             }
             setState(() {
               isEditing = true;
             });
+
+            // widget.currentlyActive(true);
           },
 
-          child: FleatherViewer(delta: widget.initialDelta),
-        ),
-      );
+          child: IgnorePointer(child: FleatherViewer(delta: widget.initialDelta)),
+        );
+      } else {
+        return FleatherViewer(delta: widget.initialDelta);
+      }
     }
   }
 }

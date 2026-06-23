@@ -64,11 +64,12 @@ class _CustomFleatherEditorState extends State<CustomFleatherEditor> {
       child: Container(
         decoration: BoxDecoration(
           border: .all(color: Colors.blue, width: 2),
-          borderRadius: .circular(8),
+          // borderRadius: .circular(8),
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: FleatherEditor(
+            // expands: true,
             autofocus: true,
             contextMenuBuilder: (context, editorState) {
               return widget.contextMenuBuilder(context, editorState);

@@ -47,6 +47,7 @@ dependencies:
   path_provider: ^2.1.5
   restart_app: ^1.7.3
   shared_preferences: ^2.5.4
+  textf: ^1.2.4
   trina_grid: ^2.2.2
   window_manager: ^0.5.1
   #   - images/a_dot_burr.jpeg

@@ -1106,6 +1106,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.11"
+  textf:
+    dependency: "direct main"
+    description:
+      name: textf
+      sha256: e05807e5d5ec8ac0c72c99de3d132cae71e95540e2c3ad6287d0582b7b8b15d8
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.4"
   theme_extensions_builder_annotation:
     dependency: transitive
     description:

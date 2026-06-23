@@ -1,6 +1,6 @@
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
-import 'package:forui/forui.dart' hide Delta;
+// import 'package:forui/forui.dart' hide Delta;
 
 class FleatherViewer extends StatefulWidget {
   final Delta delta;
@@ -11,79 +11,132 @@ class FleatherViewer extends StatefulWidget {
 }
 
 class _FleatherViewerState extends State<FleatherViewer> {
+  late final FleatherController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = .new(document: .fromDelta(widget.delta));
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
   // late Delta _currentDelta;
   // bool _isEditing = false;
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.theme.colors;
-    final typography = context.theme.typography;
-    List<List<Operation>> paragraphs = _splitIntoParagraphs(widget.delta);
-
-    return Column(
-      mainAxisAlignment: .start,
-      crossAxisAlignment: .stretch,
-      // mainAxisSize: .min,
-      children: paragraphs.map((paragraph) {
-        if (paragraph.isEmpty) {
-          return const Text.rich(TextSpan(text: ' '));
-        }
-
-        // Set the Alignment of the block
-
-        TextAlign paraAlignment = .left;
-        // debugdebugPrint(paragraph.last.toString());
-        final alignKey = ParchmentAttribute.alignment.center.key;
-        if (paragraph.last.hasAttribute(alignKey)) {
-          final alignValue = paragraph.last.attributes?[alignKey];
-          if (alignValue == ParchmentAttribute.alignment.center.value) {
-            paraAlignment = .center;
-          } else if (alignValue == ParchmentAttribute.alignment.right.value) {
-            paraAlignment = .right;
-          } else if (alignValue == ParchmentAttribute.alignment.justify.value) {
-            paraAlignment = .justify;
-          }
-        }
-
-        // Set the Font Size of the block
-        double? blockFontSize = typography.md.fontSize;
-        Color? textColor;
-        TextDecoration? decor;
-        final headerKey = ParchmentAttribute.h1.key;
-        if (paragraph.last.hasAttribute(headerKey)) {
-          final headerValue = paragraph.last.attributes?[headerKey];
-          if (headerValue == ParchmentAttribute.h1.value) {
-            blockFontSize = typography.xl4.fontSize;
-          } else if (headerValue == ParchmentAttribute.h2.value) {
-            blockFontSize = typography.xl2.fontSize;
-          } else if (headerValue == ParchmentAttribute.h3.value) {
-            blockFontSize = typography.xl.fontSize;
-          } else if (headerValue == ParchmentAttribute.h4.value) {
-            blockFontSize = typography.lg.fontSize;
-            textColor = colors.foreground.withAlpha(120);
-          } else if (headerValue == ParchmentAttribute.h5.value) {
-            blockFontSize = typography.md.fontSize;
-            decor = .underline;
-          } else if (headerValue == ParchmentAttribute.h6.value) {
-            blockFontSize = typography.md.fontSize;
-            textColor = colors.foreground.withAlpha(120);
-          }
-        }
-
-        return Row(
-          children: [
-            Expanded(
-              child: Text.rich(
-                TextSpan(children: opsToTextSpan(paragraph)),
-                textAlign: paraAlignment,
-                style: .new(fontSize: blockFontSize, decoration: decor, color: textColor),
-              ),
-            ),
-            const Text("\n")
-          ],
-        );
-      }).toList(),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12, left: 12, right: 12, top: 12),
+      child: FleatherEditor(controller: controller, readOnly: true, showCursor: false),
     );
+
+    // final colors = context.theme.colors;
+    // final typography = context.theme.typography;
+    // final List<List<Operation>> paragraphs = _splitIntoParagraphs(widget.delta);
+
+    // return Padding(
+    //   padding: const EdgeInsets.all(12.0),
+    //   child: Column(
+    //     mainAxisAlignment: MainAxisAlignment.start,
+    //     crossAxisAlignment: CrossAxisAlignment.stretch,
+    //     // spacing: 17,
+    //     children: paragraphs
+    //         .asMap()
+    //         .entries
+    //         .map((entry) {
+    //           final index = entry.key;
+    //           final paragraph = entry.value;
+    //           bool isHeader = false;
+
+    //           // double? blockFontSize = typography.md.fontSize;
+    //           TextStyle textStyle = typography.md;
+    //           TextAlign paraAlignment = TextAlign.left;
+
+    //           if (paragraph.isEmpty) {
+    //             return const Text.rich(
+    //               TextSpan(text: '\u200b\n'),
+    //               // style: textStyle,
+    //               // strutStyle: .new(fontSize: blockFontSize, height: typography.md.height),
+    //             );
+    //           }
+
+    //           // Set the Alignment of the block
+    //           final alignKey = ParchmentAttribute.alignment.center.key;
+    //           if (paragraph.last.hasAttribute(alignKey)) {
+    //             final alignValue = paragraph.last.attributes?[alignKey];
+    //             if (alignValue == ParchmentAttribute.alignment.center.value) {
+    //               paraAlignment = TextAlign.center;
+    //             } else if (alignValue == ParchmentAttribute.alignment.right.value) {
+    //               paraAlignment = TextAlign.right;
+    //             } else if (alignValue == ParchmentAttribute.alignment.justify.value) {
+    //               paraAlignment = TextAlign.justify;
+    //             }
+    //           }
+
+    //           // Set the Font Size of the block
+    //           Color? textColor;
+    //           TextDecoration? decor;
+    //           final headerKey = ParchmentAttribute.h1.key;
+    //           if (paragraph.last.hasAttribute(headerKey)) {
+    //             isHeader = true;
+    //             final headerValue = paragraph.last.attributes?[headerKey];
+    //             if (headerValue == ParchmentAttribute.h1.value) {
+    //               // blockFontSize = typography.xl4.fontSize;
+    //               textStyle = typography.xl4;
+    //               textColor = colors.foreground.withAlpha(160);
+    //             } else if (headerValue == ParchmentAttribute.h2.value) {
+    //               // blockFontSize = typography.xl2.fontSize;
+    //               textStyle = typography.xl2;
+    //               textColor = colors.foreground.withAlpha(160);
+    //             } else if (headerValue == ParchmentAttribute.h3.value) {
+    //               // blockFontSize = typography.xl.fontSize;
+    //               textStyle = typography.xl;
+    //               textColor = colors.foreground.withAlpha(160);
+    //             } else if (headerValue == ParchmentAttribute.h4.value) {
+    //               // blockFontSize = typography.lg.fontSize;
+    //               textStyle = typography.lg;
+    //               textColor = colors.foreground.withAlpha(120);
+    //             } else if (headerValue == ParchmentAttribute.h5.value) {
+    //               decor = TextDecoration.underline;
+    //               textColor = colors.foreground.withAlpha(160);
+    //             } else if (headerValue == ParchmentAttribute.h6.value) {
+    //               // blockFontSize = typography.md.fontSize;
+    //               textColor = colors.foreground.withAlpha(120);
+    //             }
+    //           }
+
+    //           return Padding(
+    //             padding: .zero,
+    //             // padding: EdgeInsets.only(
+    //             //   bottom: (index != paragraphs.length - 1)
+    //             //       ? (isHeader)
+    //             //             ? 10
+    //             //             : 17
+    //             //       : 0,
+    //             // ),
+    //             child: Text.rich(
+    //               TextSpan(
+    //                 children: [
+    //                   ...opsToTextSpan(paragraph),
+    //                   const TextSpan(
+    //                     text: '\n',
+    //                     // style: .new(height: 0.1, fontSize: 0.1)
+    //                   ),
+    //                 ],
+    //               ),
+    //               textAlign: paraAlignment,
+    //               style: TextStyle(fontSize: textStyle.fontSize, decoration: decor, color: textColor),
+    //               // strutStyle: .new(height: textStyle.height, fontSize: textStyle.fontSize),
+    //             ),
+    //           );
+    //         })
+    //         .toList(growable: false),
+    //   ),
+    // );
   }
 
   List<List<Operation>> _splitIntoParagraphs(Delta delta) {
@@ -142,19 +195,19 @@ class _FleatherViewerState extends State<FleatherViewer> {
     for (Operation op in paragraph) {
       // debugdebugPrint(op.data.toString());
       // if ((op.data as String).isEmpty) debugdebugPrint("Empty part");
-      if ((op.data as String).isNotEmpty) {
-        spans.add(
-          TextSpan(
-            text: op.data as String,
-            style: TextStyle(
-              height: 1,
-              fontWeight: op.hasAttribute(ParchmentAttribute.bold.key) ? .bold : null,
-              fontStyle: op.hasAttribute(ParchmentAttribute.italic.key) ? .italic : null,
-              decoration: op.hasAttribute(ParchmentAttribute.underline.key) ? .underline : null,
-            ),
+      // if ((op.data as String).isNotEmpty) {
+      spans.add(
+        TextSpan(
+          text: op.data as String,
+          style: TextStyle(
+            // height: 1,
+            fontWeight: op.hasAttribute(ParchmentAttribute.bold.key) ? .bold : null,
+            fontStyle: op.hasAttribute(ParchmentAttribute.italic.key) ? .italic : null,
+            decoration: op.hasAttribute(ParchmentAttribute.underline.key) ? .underline : null,
           ),
-        );
-      }
+        ),
+      );
+      // }
     }
     return spans;
   }
