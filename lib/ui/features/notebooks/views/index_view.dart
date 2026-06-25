@@ -3,6 +3,7 @@ import 'package:collection/collection.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:forui/forui.dart' hide Delta;
 import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
@@ -70,107 +71,167 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
           case IndexLoading():
             return const CircularProgressIndicator();
           case IndexReady():
-            return Stack(
-              children: [
-                InteractiveViewer2(
-                  // controller: customInteractiveViewerController,
-                  // interactionConfig: const .new(constrainBounds: true),
-                  // zoomConfig: const .new(minScale: 0.2),
-                  showScrollbars: true,
-                  constrained: false,
-                  noMouseDragScroll: false,
-                  interactionEndFrictionCoefficient: 0.001,
-                  allowNonCoveringScreenZoom: true,
-                  minScale: 0.3,
-                  maxScale: 3.5,
-                  scaleFactor: 900,
-                  // panEnabled: _canPan,
-                  child: Container(
-                    // width: 1200,
-                    constraints: const BoxConstraints(minHeight: 1000, minWidth: 1200),
-                    decoration: BoxDecoration(
-                      color: colors.card,
-                      // color: Colors.white,
-                      border: .all(width: 2, color: colors.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: .start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(72.0),
-                          child: Text(
-                            "Index",
-                            style: context.theme.typography.xl7.copyWith(
-                              fontFamily: 'Source Sans 3',
-                              fontWeight: .bold,
+            return Scaffold(
+              backgroundColor: Colors.transparent,
+              // floatingActionButtonLocation: ExpandableFab.location,
+              floatingActionButton: Stack(
+                children: [
+                  Positioned(
+                    bottom: 0,
+                    right: 90,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: state.inEditMode
+                          ? FButton(
+                              style: .delta(
+                                decoration: .delta([
+                                  .base(const .boxDelta(color: Colors.green)),
+                                  .exact({.hovered}, .boxDelta(color: Colors.green[700])),
+                                  .match({
+                                    .disabled,
+                                  }, .boxDelta(color: Colors.green.withAlpha((0.4 * 255).toInt()))),
+                                ]),
+                              ),
+                              size: .lg,
+                              onPress: () {
+                                context.read<IndexCubit>().toggleEditMode();
+                                if (activeSaveCallback != null) activeSaveCallback!();
+                              },
+                              prefix: const Icon(FIcons.check, size: 20),
+                              child: const Text("Done", style: .new(fontSize: 18)),
+                            )
+                          : FButton(
+                              size: .lg,
+                              onPress: () {
+                                context.read<IndexCubit>().toggleEditMode();
+                              },
+                              prefix: const Icon(FIcons.pencilLine, size: 20),
+                              child: const Text("Edit", style: .new(fontSize: 18)),
                             ),
-                            // style: Theme.of(context).textTheme.displayLarge!.copyWith(fontWeight: .w800),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 48, left: 48, right: 48),
-                          child: IndexContent(
-                            content: state.content,
-                            checkAndSetActive: checkAndSetActive,
-                            removeActive: removeActive,
-                            noOfColumns: state.noOfColumns,
-                            tableWidth: 1100,
-                            headers: state.headers,
-                            columnWidths: state.columnWidths,
-                            notebookId: widget.notebookId,
-                          ),
-                        ),
-                        Align(
-                          alignment: .centerRight,
-                          child: FButton(
-                            mainAxisSize: .min,
-                            onPress: () {
-                              debugPrint(state.content.toString());
-                            },
-                            child: const Text("Print state"),
-                          ),
-                        ),
+                    ),
+                  ),
+                  Align(
+                    alignment: .bottomRight,
+                    child: ExpandableFab(
+                      childrenAnimation: .none,
+                      childrenOffset: const .new(0, 20),
+                      type: .up,
+                      distance: 50,
+                      openButtonBuilder: RotateFloatingActionButtonBuilder(
+                        child: const Icon(Icons.arrow_right_rounded),
+                        fabSize: ExpandableFabSize.regular,
+                        // foregroundColor: Colors.amber,
+                        // backgroundColor: Colors.green,
+                        shape: const CircleBorder(),
+                      ),
+                      closeButtonBuilder: DefaultFloatingActionButtonBuilder(
+                        child: const Icon(Icons.close),
+                        fabSize: ExpandableFabSize.regular,
+                        // foregroundColor: Colors.deepOrangeAccent,
+                        // backgroundColor: Colors.lightGreen,
+                        shape: const CircleBorder(),
+                      ),
+                      children: [
+                        FloatingActionButton.small(onPressed: () {}, child: const Icon(Icons.menu)),
+                        FloatingActionButton.small(onPressed: () {}, child: const Icon(Icons.menu)),
+                        FloatingActionButton.small(onPressed: () {}, child: const Icon(Icons.menu)),
                       ],
                     ),
                   ),
-                ),
-
-                Positioned(
-                  bottom: 16.0,
-                  right: 16.0,
-                  child: SizedBox(
-                    height: 60,
-                    width: 120,
-                    child: state.inEditMode
-                        ? FButton(
-                            style: .delta(
-                              decoration: .delta([
-                                .base(const .boxDelta(color: Colors.green)),
-                                .exact({.hovered}, .boxDelta(color: Colors.green[700])),
-                                .match({
-                                  .disabled,
-                                }, .boxDelta(color: Colors.green.withAlpha((0.4 * 255).toInt()))),
-                              ]),
+                ],
+              ),
+              body: Stack(
+                children: [
+                  InteractiveViewer2(
+                    // controller: customInteractiveViewerController,
+                    // interactionConfig: const .new(constrainBounds: true),
+                    // zoomConfig: const .new(minScale: 0.2),
+                    showScrollbars: true,
+                    constrained: false,
+                    noMouseDragScroll: false,
+                    interactionEndFrictionCoefficient: 0.001,
+                    allowNonCoveringScreenZoom: true,
+                    minScale: 0.3,
+                    maxScale: 3.5,
+                    scaleFactor: 900,
+                    // panEnabled: _canPan,
+                    child: Container(
+                      // width: 1200,
+                      constraints: const BoxConstraints(minHeight: 1000, minWidth: 1200),
+                      decoration: BoxDecoration(
+                        color: colors.card,
+                        // color: Colors.white,
+                        border: .all(width: 2, color: colors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: .start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(72.0),
+                            child: Text(
+                              "Index",
+                              style: context.theme.typography.xl7.copyWith(
+                                fontFamily: 'Source Sans 3',
+                                fontWeight: .bold,
+                              ),
+                              // style: Theme.of(context).textTheme.displayLarge!.copyWith(fontWeight: .w800),
                             ),
-                            size: .lg,
-                            onPress: () {
-                              context.read<IndexCubit>().toggleEditMode();
-                              if (activeSaveCallback != null) activeSaveCallback!();
-                            },
-                            prefix: const Icon(FIcons.check, size: 20),
-                            child: const Text("Done", style: .new(fontSize: 18)),
-                          )
-                        : FButton(
-                            size: .lg,
-                            onPress: () {
-                              context.read<IndexCubit>().toggleEditMode();
-                            },
-                            prefix: const Icon(FIcons.pencilLine, size: 20),
-                            child: const Text("Edit", style: .new(fontSize: 18)),
                           ),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 48, left: 48, right: 48),
+                            child: IndexContent(
+                              content: state.content,
+                              checkAndSetActive: checkAndSetActive,
+                              removeActive: removeActive,
+                              noOfColumns: state.noOfColumns,
+                              tableWidth: 1100,
+                              headers: state.headers,
+                              columnWidths: state.columnWidths,
+                              notebookId: widget.notebookId,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
-              ],
+
+                  // Positioned(
+                  //   bottom: 16.0,
+                  //   right: 16.0,
+                  //   child: SizedBox(
+                  //     height: 60,
+                  //     width: 120,
+                  //     child: state.inEditMode
+                  //         ? FButton(
+                  //             style: .delta(
+                  //               decoration: .delta([
+                  //                 .base(const .boxDelta(color: Colors.green)),
+                  //                 .exact({.hovered}, .boxDelta(color: Colors.green[700])),
+                  //                 .match({
+                  //                   .disabled,
+                  //                 }, .boxDelta(color: Colors.green.withAlpha((0.4 * 255).toInt()))),
+                  //               ]),
+                  //             ),
+                  //             size: .lg,
+                  //             onPress: () {
+                  //               context.read<IndexCubit>().toggleEditMode();
+                  //               if (activeSaveCallback != null) activeSaveCallback!();
+                  //             },
+                  //             prefix: const Icon(FIcons.check, size: 20),
+                  //             child: const Text("Done", style: .new(fontSize: 18)),
+                  //           )
+                  //         : FButton(
+                  //             size: .lg,
+                  //             onPress: () {
+                  //               context.read<IndexCubit>().toggleEditMode();
+                  //             },
+                  //             prefix: const Icon(FIcons.pencilLine, size: 20),
+                  //             child: const Text("Edit", style: .new(fontSize: 18)),
+                  //           ),
+                  //   ),
+                  // ),
+                ],
+              ),
             );
         }
       },
