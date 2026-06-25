@@ -14,8 +14,8 @@ class IndexItems extends Table {
   TextColumn get description => text().withLength(max: 5000).nullable()();
   IntColumn get position => integer()();
   TextColumn get extraInfo => text().nullable()();
-  DateTimeColumn get createdAt => dateTime().clientDefault(() => DateTime.now())();
-  DateTimeColumn get modifiedAt => dateTime().clientDefault(() => DateTime.now())();
+  DateTimeColumn get createdAt => dateTime().clientDefault(() => DateTime.now()).nullable()();
+  DateTimeColumn get modifiedAt => dateTime().clientDefault(() => DateTime.now()).nullable()();
 }
 
 class UiPreferences extends Table {

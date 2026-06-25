@@ -30,7 +30,7 @@ class $NotebooksTable extends Notebooks
     false,
     additionalChecks: GeneratedColumn.checkTextLength(
       minTextLength: 1,
-      maxTextLength: 64,
+      maxTextLength: 100,
     ),
     type: DriftSqlType.string,
     requiredDuringInsert: true,
@@ -337,7 +337,7 @@ class $IndexItemsTable extends IndexItems
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
     'created_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     clientDefault: () => DateTime.now(),
@@ -349,7 +349,7 @@ class $IndexItemsTable extends IndexItems
   late final GeneratedColumn<DateTime> modifiedAt = GeneratedColumn<DateTime>(
     'modified_at',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
     clientDefault: () => DateTime.now(),
@@ -465,11 +465,11 @@ class $IndexItemsTable extends IndexItems
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
-      )!,
+      ),
       modifiedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}modified_at'],
-      )!,
+      ),
     );
   }
 
@@ -486,8 +486,8 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
   final String? description;
   final int position;
   final String? extraInfo;
-  final DateTime createdAt;
-  final DateTime modifiedAt;
+  final DateTime? createdAt;
+  final DateTime? modifiedAt;
   const IndexItem({
     required this.id,
     required this.notebookId,
@@ -495,8 +495,8 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
     this.description,
     required this.position,
     this.extraInfo,
-    required this.createdAt,
-    required this.modifiedAt,
+    this.createdAt,
+    this.modifiedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -513,8 +513,12 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
     if (!nullToAbsent || extraInfo != null) {
       map['extra_info'] = Variable<String>(extraInfo);
     }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['modified_at'] = Variable<DateTime>(modifiedAt);
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(createdAt);
+    }
+    if (!nullToAbsent || modifiedAt != null) {
+      map['modified_at'] = Variable<DateTime>(modifiedAt);
+    }
     return map;
   }
 
@@ -532,8 +536,12 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
       extraInfo: extraInfo == null && nullToAbsent
           ? const Value.absent()
           : Value(extraInfo),
-      createdAt: Value(createdAt),
-      modifiedAt: Value(modifiedAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      modifiedAt: modifiedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(modifiedAt),
     );
   }
 
@@ -549,8 +557,8 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
       description: serializer.fromJson<String?>(json['description']),
       position: serializer.fromJson<int>(json['position']),
       extraInfo: serializer.fromJson<String?>(json['extraInfo']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      modifiedAt: serializer.fromJson<DateTime>(json['modifiedAt']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      modifiedAt: serializer.fromJson<DateTime?>(json['modifiedAt']),
     );
   }
   @override
@@ -563,8 +571,8 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
       'description': serializer.toJson<String?>(description),
       'position': serializer.toJson<int>(position),
       'extraInfo': serializer.toJson<String?>(extraInfo),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'modifiedAt': serializer.toJson<DateTime>(modifiedAt),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'modifiedAt': serializer.toJson<DateTime?>(modifiedAt),
     };
   }
 
@@ -575,8 +583,8 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
     Value<String?> description = const Value.absent(),
     int? position,
     Value<String?> extraInfo = const Value.absent(),
-    DateTime? createdAt,
-    DateTime? modifiedAt,
+    Value<DateTime?> createdAt = const Value.absent(),
+    Value<DateTime?> modifiedAt = const Value.absent(),
   }) => IndexItem(
     id: id ?? this.id,
     notebookId: notebookId ?? this.notebookId,
@@ -584,8 +592,8 @@ class IndexItem extends DataClass implements Insertable<IndexItem> {
     description: description.present ? description.value : this.description,
     position: position ?? this.position,
     extraInfo: extraInfo.present ? extraInfo.value : this.extraInfo,
-    createdAt: createdAt ?? this.createdAt,
-    modifiedAt: modifiedAt ?? this.modifiedAt,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    modifiedAt: modifiedAt.present ? modifiedAt.value : this.modifiedAt,
   );
   IndexItem copyWithCompanion(IndexItemsCompanion data) {
     return IndexItem(
@@ -653,8 +661,8 @@ class IndexItemsCompanion extends UpdateCompanion<IndexItem> {
   final Value<String?> description;
   final Value<int> position;
   final Value<String?> extraInfo;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> modifiedAt;
+  final Value<DateTime?> createdAt;
+  final Value<DateTime?> modifiedAt;
   const IndexItemsCompanion({
     this.id = const Value.absent(),
     this.notebookId = const Value.absent(),
@@ -705,8 +713,8 @@ class IndexItemsCompanion extends UpdateCompanion<IndexItem> {
     Value<String?>? description,
     Value<int>? position,
     Value<String?>? extraInfo,
-    Value<DateTime>? createdAt,
-    Value<DateTime>? modifiedAt,
+    Value<DateTime?>? createdAt,
+    Value<DateTime?>? modifiedAt,
   }) {
     return IndexItemsCompanion(
       id: id ?? this.id,
@@ -1374,8 +1382,8 @@ typedef $$IndexItemsTableCreateCompanionBuilder =
       Value<String?> description,
       required int position,
       Value<String?> extraInfo,
-      Value<DateTime> createdAt,
-      Value<DateTime> modifiedAt,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> modifiedAt,
     });
 typedef $$IndexItemsTableUpdateCompanionBuilder =
     IndexItemsCompanion Function({
@@ -1385,8 +1393,8 @@ typedef $$IndexItemsTableUpdateCompanionBuilder =
       Value<String?> description,
       Value<int> position,
       Value<String?> extraInfo,
-      Value<DateTime> createdAt,
-      Value<DateTime> modifiedAt,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> modifiedAt,
     });
 
 final class $$IndexItemsTableReferences
@@ -1641,8 +1649,8 @@ class $$IndexItemsTableTableManager
                 Value<String?> description = const Value.absent(),
                 Value<int> position = const Value.absent(),
                 Value<String?> extraInfo = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> modifiedAt = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> modifiedAt = const Value.absent(),
               }) => IndexItemsCompanion(
                 id: id,
                 notebookId: notebookId,
@@ -1661,8 +1669,8 @@ class $$IndexItemsTableTableManager
                 Value<String?> description = const Value.absent(),
                 required int position,
                 Value<String?> extraInfo = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> modifiedAt = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> modifiedAt = const Value.absent(),
               }) => IndexItemsCompanion.insert(
                 id: id,
                 notebookId: notebookId,
