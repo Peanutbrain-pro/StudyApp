@@ -3,11 +3,10 @@ import 'package:collection/collection.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
+// import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:forui/forui.dart' hide Delta;
 import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
-// import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/index_cubit.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_editor.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_toolbar.dart';
@@ -38,14 +37,12 @@ class IndexView extends StatefulWidget {
 }
 
 class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixin {
-  // final customInteractiveViewerController = CustomInteractiveViewerController();
   final horizontalScrollController = ScrollController();
   bool activeEditor = false;
   VoidCallback? activeSaveCallback;
 
   bool checkAndSetActive(VoidCallback saveFunction) {
     if (activeEditor == true) {
-      // Perhaps a popup message that another editor is already active
       return false;
     }
     activeEditor = true;
@@ -73,12 +70,11 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
           case IndexReady():
             return Scaffold(
               backgroundColor: Colors.transparent,
-              // floatingActionButtonLocation: ExpandableFab.location,
               floatingActionButton: Stack(
                 children: [
                   Positioned(
                     bottom: 0,
-                    right: 90,
+                    right: 0,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 20),
                       child: state.inEditMode
@@ -110,42 +106,11 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                             ),
                     ),
                   ),
-                  Align(
-                    alignment: .bottomRight,
-                    child: ExpandableFab(
-                      childrenAnimation: .none,
-                      childrenOffset: const .new(0, 20),
-                      type: .up,
-                      distance: 50,
-                      openButtonBuilder: RotateFloatingActionButtonBuilder(
-                        child: const Icon(Icons.arrow_right_rounded),
-                        fabSize: ExpandableFabSize.regular,
-                        // foregroundColor: Colors.amber,
-                        // backgroundColor: Colors.green,
-                        shape: const CircleBorder(),
-                      ),
-                      closeButtonBuilder: DefaultFloatingActionButtonBuilder(
-                        child: const Icon(Icons.close),
-                        fabSize: ExpandableFabSize.regular,
-                        // foregroundColor: Colors.deepOrangeAccent,
-                        // backgroundColor: Colors.lightGreen,
-                        shape: const CircleBorder(),
-                      ),
-                      children: [
-                        FloatingActionButton.small(onPressed: () {}, child: const Icon(Icons.menu)),
-                        FloatingActionButton.small(onPressed: () {}, child: const Icon(Icons.menu)),
-                        FloatingActionButton.small(onPressed: () {}, child: const Icon(Icons.menu)),
-                      ],
-                    ),
-                  ),
                 ],
               ),
               body: Stack(
                 children: [
                   InteractiveViewer2(
-                    // controller: customInteractiveViewerController,
-                    // interactionConfig: const .new(constrainBounds: true),
-                    // zoomConfig: const .new(minScale: 0.2),
                     showScrollbars: true,
                     constrained: false,
                     noMouseDragScroll: false,
@@ -154,82 +119,47 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                     minScale: 0.3,
                     maxScale: 3.5,
                     scaleFactor: 900,
-                    // panEnabled: _canPan,
-                    child: Container(
-                      // width: 1200,
-                      constraints: const BoxConstraints(minHeight: 1000, minWidth: 1200),
-                      decoration: BoxDecoration(
-                        color: colors.card,
-                        // color: Colors.white,
-                        border: .all(width: 2, color: colors.border),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: .start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(72.0),
-                            child: Text(
-                              "Index",
-                              style: context.theme.typography.xl7.copyWith(
-                                fontFamily: 'Source Sans 3',
-                                fontWeight: .bold,
+                    child: Column(
+                      children: [
+                        Container(
+                          constraints: const BoxConstraints(minHeight: 1000, minWidth: 1200),
+                          decoration: BoxDecoration(
+                            color: colors.card,
+                            border: .all(width: 2, color: colors.border),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(72.0),
+                                child: Text(
+                                  "Index",
+                                  style: context.theme.typography.xl7.copyWith(
+                                    fontFamily: 'Source Sans 3',
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
-                              // style: Theme.of(context).textTheme.displayLarge!.copyWith(fontWeight: .w800),
-                            ),
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 48, left: 48, right: 48),
+                                child: IndexContent(
+                                  content: state.content,
+                                  checkAndSetActive: checkAndSetActive,
+                                  removeActive: removeActive,
+                                  noOfColumns: state.noOfColumns,
+                                  tableWidth: 1100,
+                                  headers: state.headers,
+                                  columnWidths: state.columnWidths,
+                                  notebookId: widget.notebookId,
+                                ),
+                              ),
+                            ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.only(bottom: 48, left: 48, right: 48),
-                            child: IndexContent(
-                              content: state.content,
-                              checkAndSetActive: checkAndSetActive,
-                              removeActive: removeActive,
-                              noOfColumns: state.noOfColumns,
-                              tableWidth: 1100,
-                              headers: state.headers,
-                              columnWidths: state.columnWidths,
-                              notebookId: widget.notebookId,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 150),
+                      ],
                     ),
                   ),
-
-                  // Positioned(
-                  //   bottom: 16.0,
-                  //   right: 16.0,
-                  //   child: SizedBox(
-                  //     height: 60,
-                  //     width: 120,
-                  //     child: state.inEditMode
-                  //         ? FButton(
-                  //             style: .delta(
-                  //               decoration: .delta([
-                  //                 .base(const .boxDelta(color: Colors.green)),
-                  //                 .exact({.hovered}, .boxDelta(color: Colors.green[700])),
-                  //                 .match({
-                  //                   .disabled,
-                  //                 }, .boxDelta(color: Colors.green.withAlpha((0.4 * 255).toInt()))),
-                  //               ]),
-                  //             ),
-                  //             size: .lg,
-                  //             onPress: () {
-                  //               context.read<IndexCubit>().toggleEditMode();
-                  //               if (activeSaveCallback != null) activeSaveCallback!();
-                  //             },
-                  //             prefix: const Icon(FIcons.check, size: 20),
-                  //             child: const Text("Done", style: .new(fontSize: 18)),
-                  //           )
-                  //         : FButton(
-                  //             size: .lg,
-                  //             onPress: () {
-                  //               context.read<IndexCubit>().toggleEditMode();
-                  //             },
-                  //             prefix: const Icon(FIcons.pencilLine, size: 20),
-                  //             child: const Text("Edit", style: .new(fontSize: 18)),
-                  //           ),
-                  //   ),
-                  // ),
                 ],
               ),
             );
@@ -243,12 +173,12 @@ class IndexContent extends StatefulWidget {
   final int notebookId;
   final List<({int id, List<String> data})> content;
   final List<String> headers;
-  // final List<List<String?>> content;
   final List<double> columnWidths;
   final double tableWidth;
   final int noOfColumns;
   final bool Function(VoidCallback saveFunction) checkAndSetActive;
   final void Function() removeActive;
+
   const IndexContent({
     super.key,
     required this.content,
@@ -266,121 +196,261 @@ class IndexContent extends StatefulWidget {
 }
 
 class _IndexContentState extends State<IndexContent> {
-  // late Map<int, TableColumnWidth> columnWidths;
-  // final tableScrollController = ScrollController();
-  // late List<double> columnWidths;
-  int? activeId;
-  int? activeCol;
   final double minColumnWidth = 50;
+
+  // Manages the actual column widths (Updates ONLY on drop)
+  late ValueNotifier<List<double>> widthsNotifier;
+
+  // Manages the 60fps blue dragging line (Updates continuously)
+  final ValueNotifier<double?> dragPositionNotifier = ValueNotifier(null);
+  int _draggingColIndex = -1;
 
   @override
   void initState() {
     super.initState();
+    widthsNotifier = ValueNotifier(List.from(widget.columnWidths));
   }
 
-  TableRow generateHeaders() {
-    return TableRow(
-      children: widget.headers.mapIndexed((index, header) {
-        return Stack(
-          children: [
-            // The Actual Header Content
-            Padding(
-              padding: const EdgeInsets.all(12.0),
-              child: Text(header, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ),
-            // The Hit-Test Target for Draggable Border (Positioned on the far right)
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: 0,
-              width: 10, // Width of the invisible dragging hot-spot
-              child: MouseRegion(
-                cursor: SystemMouseCursors.resizeLeftRight,
-                child: GestureDetector(
-                  behavior: HitTestBehavior.translucent,
-                  onHorizontalDragUpdate: (details) {
-                    double newWidth;
-                    setState(() {
-                      // Calculate new width ensuring it doesn't drop below the minimum
-                      newWidth = widget.columnWidths[index] + details.delta.dx;
-                      if (newWidth > minColumnWidth) {
-                        widget.columnWidths[index] = newWidth;
-                      }
-                    });
-                    // context.read<IndexCubit>().saveColumnWidths(widget.notebookId, widget.columnWidths);
-                  },
-                  onHorizontalDragEnd: (details) {
-                    context.read<IndexCubit>().saveColumnWidths(widget.notebookId, widget.columnWidths);
-                  },
+  @override
+  void didUpdateWidget(covariant IndexContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.columnWidths != widget.columnWidths) {
+      widthsNotifier.value = List.from(widget.columnWidths);
+    }
+  }
+
+  @override
+  void dispose() {
+    widthsNotifier.dispose();
+    dragPositionNotifier.dispose();
+    super.dispose();
+  }
+
+  Widget _buildHeaderRow(Color borderColor) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: widget.headers.mapIndexed((index, header) {
+          return ValueListenableBuilder<List<double>>(
+            valueListenable: widthsNotifier,
+            builder: (context, currentWidths, child) {
+              return Container(
+                width: currentWidths[index],
+                decoration: BoxDecoration(
+                  border: Border(
+                    right: index < widget.headers.length - 1
+                        ? BorderSide(color: borderColor, width: 2)
+                        : BorderSide.none,
+                  ),
                 ),
-              ),
-            ),
-          ],
-        );
-      }).toList(),
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Text(header, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                    Positioned(
+                      top: 0,
+                      bottom: 0,
+                      right: 0,
+                      width: 10,
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.resizeLeftRight,
+                        child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+
+                          // --- THE NEW 144FPS DRAG LOGIC ---
+                          onHorizontalDragStart: (details) {
+                            _draggingColIndex = index;
+                            // Calculate exact starting X coordinate for the blue line
+                            double startX = 0;
+                            for (int i = 0; i <= index; i++) startX += widthsNotifier.value[i];
+                            dragPositionNotifier.value = startX;
+                          },
+                          onHorizontalDragUpdate: (details) {
+                            if (dragPositionNotifier.value == null) return;
+
+                            // Move the blue line at 60fps WITHOUT rebuilding the table
+                            double newX = dragPositionNotifier.value! + details.delta.dx;
+
+                            // Enforce minimum width visually
+                            double minAllowedX = 0;
+                            for (int i = 0; i < index; i++) minAllowedX += widthsNotifier.value[i];
+                            minAllowedX += minColumnWidth;
+
+                            if (newX >= minAllowedX) {
+                              dragPositionNotifier.value = newX;
+                            }
+                          },
+                          onHorizontalDragEnd: (details) {
+                            if (_draggingColIndex != -1 && dragPositionNotifier.value != null) {
+                              // Calculate start X of the SPECIFIC column being dragged
+                              double startColX = 0;
+                              for (int i = 0; i < _draggingColIndex; i++)
+                                startColX += widthsNotifier.value[i];
+
+                              // Apply the final calculated width ONE TIME
+                              double finalWidth = dragPositionNotifier.value! - startColX;
+
+                              final newWidths = List<double>.from(widthsNotifier.value);
+                              newWidths[_draggingColIndex] = finalWidth;
+                              widthsNotifier.value = newWidths; // Triggers single heavy rebuild
+
+                              context.read<IndexCubit>().saveColumnWidths(widget.notebookId, newWidths);
+                            }
+                            // Hide the proxy line
+                            dragPositionNotifier.value = null;
+                            _draggingColIndex = -1;
+                          },
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }).toList(),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
-    return Table(
-      columnWidths: {
-        for (int i = 0; i < widget.noOfColumns; i++) i: FixedColumnWidth(widget.columnWidths[i]),
-      },
-      border: TableBorder(
-        top: BorderSide(color: colors.border, width: 2),
-        right: BorderSide(color: colors.border, width: 2),
-        bottom: BorderSide(color: colors.border, width: 2),
-        left: BorderSide(color: colors.border, width: 2),
-        horizontalInside: BorderSide(color: colors.border, width: 2),
-        verticalInside: BorderSide(color: colors.border, width: 2),
-        borderRadius: .circular(10),
-      ),
-      children: [
-        generateHeaders(),
-        ...widget.content.map((row) {
-          return TableRow(
-            children: [
-              ...List<Widget>.generate(widget.noOfColumns, (int index) {
-                if (index >= row.data.length) {
-                  // return const TableCell(child: Text(""));
-                  row.data.add(jsonEncode(Delta()..insert('\n')));
-                }
-                final List<dynamic> rawDelta = jsonDecode(row.data[index]);
-                final Delta dataDelta = Delta.fromJson(rawDelta);
+    final inEditMode = context.read<IndexCubit>().readyState.inEditMode;
 
-                // bool isStretched = activeId == row.id && activeCol == index;
+    return ValueListenableBuilder<List<double>>(
+      valueListenable: widthsNotifier,
+      builder: (context, currentWidths, _) {
+        final innerColumnsWidth = currentWidths.fold(0.0, (prev, width) => prev + width);
+        final currentTableWidth = innerColumnsWidth + 4.0;
 
-                return TableCell(
-                  // verticalAlignment: isStretched ? .fill : null,
-                  child: EditableFleatherCell(
-                    initialDelta: dataDelta,
-                    saveData: (delta) {
-                      // context.read<IndexCubit>().editUnitDesc(row.id, jsonEncode(delta));
-                      context.read<IndexCubit>().editUnitData(row.id, index, jsonEncode(delta));
-                    },
-                    checkAndSetActive: widget.checkAndSetActive,
-                    removeActive: widget.removeActive,
-                    id: row.id,
-                    // currentlyActive: (bool value) {
-                    //   setState(() {
-                    //     if (value) {
-                    //       activeId = row.id;
-                    //       activeCol = index;
-                    //     } else {
-                    //       activeId = null;
-                    //       activeCol = null;
-                    //     }
-                    //   });
-                    // },
+        return Column(
+          spacing: 10,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: currentTableWidth,
+              decoration: BoxDecoration(
+                border: Border.all(color: colors.border, width: 2),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              clipBehavior: Clip.hardEdge,
+              // Wrap the entire inner table in a Stack to float the Proxy Line
+              child: Stack(
+                children: [
+                  // 1. The Main Table
+                  Column(
+                    children: [
+                      _buildHeaderRow(colors.border),
+
+                      ...widget.content.mapIndexed((rowIndex, row) {
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              decoration: BoxDecoration(
+                                border: Border(top: BorderSide(color: colors.border, width: 2)),
+                              ),
+                              child: IntrinsicHeight(
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: List.generate(widget.noOfColumns, (index) {
+                                    if (index >= row.data.length) {
+                                      row.data.add(jsonEncode(Delta()..insert('\n')));
+                                    }
+                                    final List<dynamic> rawDelta = jsonDecode(row.data[index]);
+                                    final Delta dataDelta = Delta.fromJson(rawDelta);
+
+                                    // Pre-build the heavy Fleather editor so ValueListenableBuilder can cache it
+                                    final cachedFleatherCell = EditableFleatherCell(
+                                      initialDelta: dataDelta,
+                                      saveData: (delta) {
+                                        context.read<IndexCubit>().editUnitData(
+                                          row.id,
+                                          index,
+                                          jsonEncode(delta),
+                                        );
+                                      },
+                                      checkAndSetActive: widget.checkAndSetActive,
+                                      removeActive: widget.removeActive,
+                                      id: row.id,
+                                    );
+
+                                    return ValueListenableBuilder<List<double>>(
+                                      valueListenable: widthsNotifier,
+                                      child: cachedFleatherCell, // Protects editor from rebuilds
+                                      builder: (context, currentWidths, child) {
+                                        return Container(
+                                          width: currentWidths[index],
+                                          decoration: BoxDecoration(
+                                            border: Border(
+                                              right: index < widget.noOfColumns - 1
+                                                  ? BorderSide(color: colors.border, width: 2)
+                                                  : BorderSide.none,
+                                            ),
+                                          ),
+                                          child: child,
+                                        );
+                                      },
+                                    );
+                                  }),
+                                ),
+                              ),
+                            ),
+
+                            if (inEditMode)
+                              Positioned(
+                                top: -4,
+                                left: 0,
+                                right: 0,
+                                child: HoverInsertBox(
+                                  onInsert: () {
+                                    print("Inserting before row: ${row.id}");
+                                  },
+                                ),
+                              ),
+                          ],
+                        );
+                      }),
+                    ],
                   ),
-                );
-              }, growable: false),
-            ],
-          );
-        }),
-      ],
+
+                  // Proxy Drag Line
+                  ValueListenableBuilder<double?>(
+                    valueListenable: dragPositionNotifier,
+                    builder: (context, dragX, child) {
+                      if (dragX == null) return const SizedBox.shrink();
+                      return Positioned(
+                        left: dragX,
+                        top: 0,
+                        bottom: 0,
+                        child: Container(
+                          width: 3,
+                          color: Colors.blue.withAlpha(200), // Highly visible guide line
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            if (inEditMode)
+              SizedBox(
+                width: currentTableWidth,
+                child: FButton(
+                  variant: .outline,
+                  onPress: () {
+                    print("Appending to bottom of table");
+                  },
+                  child: const Icon(FIcons.plus),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -391,7 +461,7 @@ class EditableFleatherCell extends StatefulWidget {
   final Delta initialDelta;
   final bool Function(VoidCallback saveFunction) checkAndSetActive;
   final void Function() removeActive;
-  // final ValueChanged<bool> currentlyActive;
+
   const EditableFleatherCell({
     super.key,
     required this.initialDelta,
@@ -399,8 +469,8 @@ class EditableFleatherCell extends StatefulWidget {
     required this.checkAndSetActive,
     required this.removeActive,
     required this.id,
-    // required this.currentlyActive,
   });
+
   @override
   State<EditableFleatherCell> createState() => EditableFleatherCellState();
 }
@@ -418,7 +488,6 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
     setState(() {
       isEditing = false;
     });
-    // widget.currentlyActive(false);
   }
 
   @override
@@ -440,26 +509,50 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
     } else {
       if (context.read<IndexCubit>().readyState.inEditMode) {
         return GestureDetector(
-          behavior: .opaque,
+          behavior: HitTestBehavior.opaque,
           onTap: () {
-            // if (!context.read<IndexCubit>().state.inEditMode) {
-            //   return;
-            // }
             if (!widget.checkAndSetActive(save)) {
               return;
             }
             setState(() {
               isEditing = true;
             });
-
-            // widget.currentlyActive(true);
           },
-
           child: IgnorePointer(child: FleatherViewer(delta: widget.initialDelta)),
         );
       } else {
         return FleatherViewer(delta: widget.initialDelta);
       }
     }
+  }
+}
+
+class HoverInsertBox extends StatefulWidget {
+  final VoidCallback onInsert;
+  const HoverInsertBox({super.key, required this.onInsert});
+
+  @override
+  State<HoverInsertBox> createState() => _HoverInsertBoxState();
+}
+
+class _HoverInsertBoxState extends State<HoverInsertBox> {
+  bool isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => isHovered = true),
+      onExit: (_) => setState(() => isHovered = false),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: widget.onInsert,
+        child: SizedBox(
+          height: 10,
+          // alignment: Alignment.center,
+          child: Container(height: 3, color: isHovered ? Colors.blue : Colors.transparent),
+        ),
+      ),
+    );
   }
 }
