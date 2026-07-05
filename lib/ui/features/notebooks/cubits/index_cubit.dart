@@ -181,7 +181,7 @@ class IndexCubit extends Cubit<IndexState> {
     return columnWidths;
   }
 
-  void addUnit(String unitTitle) {
+  void addUnit(int position, String unitTitle) {
     if (state is IndexReady) {
       final currentState = state as IndexReady;
       // final String jsonDesc = jsonEncode(unitDescription);

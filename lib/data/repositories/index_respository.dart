@@ -14,11 +14,19 @@ class IndexRepository {
     return unit;
   }
 
-  Future<({int id, List<String?> data})> addUnit(int notebookId) async {
-    final rows = await _db.indexItems
-        .count(where: (row) => row.notebookId.equals(notebookId))
-        .getSingleOrNull();
-    final nextPos = (rows ?? -1) + 1;
+  Future<({int id, List<String?> data})> addUnit(int notebookId, {int position = -1}) async {
+    // final nextPos = position != -1
+    //     ? position
+    //     : (await _db.indexItems.count(where: (row) => row.notebookId.equals(notebookId)).getSingleOrNull() ??
+    //               -1) +
+    //           1;
+    int nextPos = position;
+    if (position == -1) {
+      final rows = await _db.indexItems
+          .count(where: (row) => row.notebookId.equals(notebookId))
+          .getSingleOrNull();
+      nextPos = (rows ?? -1) + 1;
+    } else {}
 
     final addedResult = await _db
         .into(_db.indexItems)
