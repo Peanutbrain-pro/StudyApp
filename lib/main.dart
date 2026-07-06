@@ -1,5 +1,3 @@
-// import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
@@ -9,7 +7,7 @@ import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 import 'package:studyapp/ui/router.dart';
-// import 'package:studyapp/ui/shared/widgets/app_closing_overlay.dart';
+import 'package:studyapp/ui/shared/widgets/window_title_bar.dart';
 import 'package:window_manager/window_manager.dart';
 
 import 'ui/app/cubits/app_cubit.dart';
@@ -18,15 +16,18 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await windowManager.ensureInitialized();
 
-  final SharedPreferences prefs = await SharedPreferences.getInstance();
-  // await prefs.clear();
-  // exit(0);
+  const WindowOptions windowOptions = WindowOptions(
+    size: Size(1000, 700),
+    center: true,
+    titleBarStyle: TitleBarStyle.hidden,
+  );
 
-  print("=== SHARED PREFERENCES DUMP ===");
-  for (String key in prefs.getKeys()) {
-    print('$key : ${prefs.get(key)}');
-  }
-  print("===============================");
+  windowManager.waitUntilReadyToShow(windowOptions, () async {
+    await windowManager.show();
+    await windowManager.focus();
+  });
+
+  final SharedPreferences prefs = await SharedPreferences.getInstance();
 
   runApp(
     MultiRepositoryProvider(
@@ -50,22 +51,17 @@ void main() async {
             appSaveLocation: context.read<AppRepository>().getSaveLocation()!,
           ),
         ),
-        // RepositoryProvider<NotebookRepository>(create: (BuildContext) => NotebookRepository()),
       ],
       child: BlocProvider(
-        create: (BuildContext context) => AppCubit(
-          // notebookRepository: context.read<NotebookRepository>(),
-          appRepository: context.read<AppRepository>(),
-        ),
-        child: MyApp(),
+        create: (BuildContext context) => AppCubit(appRepository: context.read<AppRepository>()),
+        child: const MyApp(),
       ),
     ),
   );
 }
 
-class MyApp extends StatelessWidget with WindowListener {
-  final OverlayPortalController overlayPortalController = OverlayPortalController();
-  MyApp({super.key});
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -76,46 +72,23 @@ class MyApp extends StatelessWidget with WindowListener {
       title: 'Document summarizer',
       theme: FThemes.blue.light.desktop.toApproximateMaterialTheme(),
       darkTheme: FThemes.blue.dark.desktop.toApproximateMaterialTheme(),
-      themeMode: .system,
-      // darkTheme: FThemes.green.dark.desktop.toApproximateMaterialTheme(),
-      builder: (_, child) {
-        // 1. Detect if the system is in dark mode
+      themeMode: ThemeMode.system,
+      builder: (context, child) {
         final isDark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
-
-        windowManager.setBackgroundColor(isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5F5F5));
-        print("Setting window brightness to dark in dark mode $isDark");
-        windowManager.setBrightness(isDark ? Brightness.dark : Brightness.light);
-
-        // 2. Dynamically assign the correct Forui theme variant
         final currentTheme = isDark ? FThemes.blue.dark.desktop : FThemes.blue.light.desktop;
-
-        // currentTheme = FThemes.blue.light.desktop;
 
         return FTheme(
           data: currentTheme,
-          child: FTooltipGroup(child: child!),
+          child: Material(
+            child: Column(
+              children: [
+                const CustomWindowTitleBar(),
+                Expanded(child: FTooltipGroup(child: child!)),
+              ],
+            ),
+          ),
         );
       },
-      // home: BlocBuilder<AppCubit, AppState>(
-      //   // listener: (BuildContext context, AppState state) {
-      //   //   if (state is AppClosing) {
-      //   //     overlayPortalController.show();
-      //   //   } else {
-      //   //     overlayPortalController.hide();
-      //   //   }
-      //   // },
-      //   builder: (BuildContext context, AppState state) {
-      //     switch (state) {
-      //       case AppLoading():
-      //         return CircularProgressIndicator();
-      //       case AppFirstLaunch():
-      //         return FirstLaunchView();
-      //       // case AppClosing():
-      //       case AppReady():
-      //         return const HomePage();
-      //     }
-      //   },
-      // ),
       routerConfig: router,
     );
   }

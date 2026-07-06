@@ -201,7 +201,6 @@ class _IndexContentState extends State<IndexContent> {
   final ValueNotifier<double?> dragPositionNotifier = ValueNotifier(null);
   int _draggingColIndex = -1;
 
-  // NEW: A central notifier that tracks exactly which seam (border line) is being hovered
   final ValueNotifier<int?> hoveredSeamNotifier = ValueNotifier(null);
 
   @override
@@ -302,7 +301,6 @@ class _IndexContentState extends State<IndexContent> {
           ),
         ),
 
-        // The bottom hit box for the Header row (activates Seam 0)
         if (inEditMode)
           Positioned(
             bottom: 0,
@@ -355,7 +353,6 @@ class _IndexContentState extends State<IndexContent> {
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            // 1. The Data Row Container (Draws the top gray border)
                             Container(
                               decoration: BoxDecoration(
                                 border: Border(top: BorderSide(color: colors.border, width: 2)),
@@ -406,9 +403,6 @@ class _IndexContentState extends State<IndexContent> {
                               ),
                             ),
 
-                            // 2. THE BLUE LINE PAINTER
-                            // Because this sits inside the row stack after the background container,
-                            // it guarantees perfect top-layer Z-index painting.
                             if (inEditMode)
                               ValueListenableBuilder<int?>(
                                 valueListenable: hoveredSeamNotifier,
@@ -425,7 +419,6 @@ class _IndexContentState extends State<IndexContent> {
                                 },
                               ),
 
-                            // 3. TOP HITBOX (Activates this row's seam)
                             if (inEditMode)
                               Positioned(
                                 top: 0,
@@ -440,7 +433,6 @@ class _IndexContentState extends State<IndexContent> {
                                 ),
                               ),
 
-                            // 4. BOTTOM HITBOX (Activates the next row's seam)
                             if (inEditMode && !isLastRow)
                               Positioned(
                                 bottom: 0,
