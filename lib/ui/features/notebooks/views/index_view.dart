@@ -3,7 +3,6 @@ import 'package:collection/collection.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// import 'package:flutter_expandable_fab/flutter_expandable_fab.dart';
 import 'package:forui/forui.dart' hide Delta;
 import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
@@ -198,12 +197,12 @@ class IndexContent extends StatefulWidget {
 class _IndexContentState extends State<IndexContent> {
   final double minColumnWidth = 50;
 
-  // Manages the actual column widths (Updates ONLY on drop)
   late ValueNotifier<List<double>> widthsNotifier;
-
-  // Manages the 60fps blue dragging line (Updates continuously)
   final ValueNotifier<double?> dragPositionNotifier = ValueNotifier(null);
   int _draggingColIndex = -1;
+
+  // NEW: A central notifier that tracks exactly which seam (border line) is being hovered
+  final ValueNotifier<int?> hoveredSeamNotifier = ValueNotifier(null);
 
   @override
   void initState() {
@@ -223,95 +222,102 @@ class _IndexContentState extends State<IndexContent> {
   void dispose() {
     widthsNotifier.dispose();
     dragPositionNotifier.dispose();
+    hoveredSeamNotifier.dispose();
     super.dispose();
   }
 
-  Widget _buildHeaderRow(Color borderColor) {
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: widget.headers.mapIndexed((index, header) {
-          return ValueListenableBuilder<List<double>>(
-            valueListenable: widthsNotifier,
-            builder: (context, currentWidths, child) {
-              return Container(
-                width: currentWidths[index],
-                decoration: BoxDecoration(
-                  border: Border(
-                    right: index < widget.headers.length - 1
-                        ? BorderSide(color: borderColor, width: 2)
-                        : BorderSide.none,
-                  ),
-                ),
-                child: Stack(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Text(header, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                    Positioned(
-                      top: 0,
-                      bottom: 0,
-                      right: 0,
-                      width: 10,
-                      child: MouseRegion(
-                        cursor: SystemMouseCursors.resizeLeftRight,
-                        child: GestureDetector(
-                          behavior: HitTestBehavior.translucent,
-
-                          // --- THE NEW 144FPS DRAG LOGIC ---
-                          onHorizontalDragStart: (details) {
-                            _draggingColIndex = index;
-                            // Calculate exact starting X coordinate for the blue line
-                            double startX = 0;
-                            for (int i = 0; i <= index; i++) startX += widthsNotifier.value[i];
-                            dragPositionNotifier.value = startX;
-                          },
-                          onHorizontalDragUpdate: (details) {
-                            if (dragPositionNotifier.value == null) return;
-
-                            // Move the blue line at 60fps WITHOUT rebuilding the table
-                            double newX = dragPositionNotifier.value! + details.delta.dx;
-
-                            // Enforce minimum width visually
-                            double minAllowedX = 0;
-                            for (int i = 0; i < index; i++) minAllowedX += widthsNotifier.value[i];
-                            minAllowedX += minColumnWidth;
-
-                            if (newX >= minAllowedX) {
-                              dragPositionNotifier.value = newX;
-                            }
-                          },
-                          onHorizontalDragEnd: (details) {
-                            if (_draggingColIndex != -1 && dragPositionNotifier.value != null) {
-                              // Calculate start X of the SPECIFIC column being dragged
-                              double startColX = 0;
-                              for (int i = 0; i < _draggingColIndex; i++)
-                                startColX += widthsNotifier.value[i];
-
-                              // Apply the final calculated width ONE TIME
-                              double finalWidth = dragPositionNotifier.value! - startColX;
-
-                              final newWidths = List<double>.from(widthsNotifier.value);
-                              newWidths[_draggingColIndex] = finalWidth;
-                              widthsNotifier.value = newWidths; // Triggers single heavy rebuild
-
-                              context.read<IndexCubit>().saveColumnWidths(widget.notebookId, newWidths);
-                            }
-                            // Hide the proxy line
-                            dragPositionNotifier.value = null;
-                            _draggingColIndex = -1;
-                          },
-                        ),
+  Widget _buildHeaderRow(Color borderColor, bool inEditMode) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: widget.headers.mapIndexed((index, header) {
+              return ValueListenableBuilder<List<double>>(
+                valueListenable: widthsNotifier,
+                builder: (context, currentWidths, child) {
+                  return Container(
+                    width: currentWidths[index],
+                    decoration: BoxDecoration(
+                      border: Border(
+                        right: index < widget.headers.length - 1
+                            ? BorderSide(color: borderColor, width: 2)
+                            : BorderSide.none,
                       ),
                     ),
-                  ],
-                ),
+                    child: Stack(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Text(header, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        Positioned(
+                          top: 0,
+                          bottom: 0,
+                          right: 0,
+                          width: 10,
+                          child: MouseRegion(
+                            cursor: SystemMouseCursors.resizeLeftRight,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.translucent,
+                              onHorizontalDragStart: (details) {
+                                _draggingColIndex = index;
+                                double startX = 0;
+                                for (int i = 0; i <= index; i++) startX += widthsNotifier.value[i];
+                                dragPositionNotifier.value = startX;
+                              },
+                              onHorizontalDragUpdate: (details) {
+                                if (dragPositionNotifier.value == null) return;
+                                double newX = dragPositionNotifier.value! + details.delta.dx;
+                                double minAllowedX = 0;
+                                for (int i = 0; i < index; i++) minAllowedX += widthsNotifier.value[i];
+                                minAllowedX += minColumnWidth;
+                                if (newX >= minAllowedX) dragPositionNotifier.value = newX;
+                              },
+                              onHorizontalDragEnd: (details) {
+                                if (_draggingColIndex != -1 && dragPositionNotifier.value != null) {
+                                  double startColX = 0;
+                                  for (int i = 0; i < _draggingColIndex; i++) {
+                                    startColX += widthsNotifier.value[i];
+                                  }
+                                  double finalWidth = dragPositionNotifier.value! - startColX;
+                                  final newWidths = List<double>.from(widthsNotifier.value);
+                                  newWidths[_draggingColIndex] = finalWidth;
+                                  widthsNotifier.value = newWidths;
+                                  context.read<IndexCubit>().saveColumnWidths(widget.notebookId, newWidths);
+                                }
+                                dragPositionNotifier.value = null;
+                                _draggingColIndex = -1;
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               );
-            },
-          );
-        }).toList(),
-      ),
+            }).toList(),
+          ),
+        ),
+
+        // The bottom hit box for the Header row (activates Seam 0)
+        if (inEditMode)
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: HoverInsertBox(
+              seamIndex: 0,
+              hoveredSeamNotifier: hoveredSeamNotifier,
+              onInsert: () {
+                final targetId = widget.content.isNotEmpty ? widget.content.first.id : 0;
+                print("Inserting before row: $targetId");
+              },
+            ),
+          ),
+      ],
     );
   }
 
@@ -337,18 +343,19 @@ class _IndexContentState extends State<IndexContent> {
                 borderRadius: BorderRadius.circular(10),
               ),
               clipBehavior: Clip.hardEdge,
-              // Wrap the entire inner table in a Stack to float the Proxy Line
               child: Stack(
                 children: [
-                  // 1. The Main Table
                   Column(
                     children: [
-                      _buildHeaderRow(colors.border),
+                      _buildHeaderRow(colors.border, inEditMode),
 
                       ...widget.content.mapIndexed((rowIndex, row) {
+                        final isLastRow = rowIndex == widget.content.length - 1;
+
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
+                            // 1. The Data Row Container (Draws the top gray border)
                             Container(
                               decoration: BoxDecoration(
                                 border: Border(top: BorderSide(color: colors.border, width: 2)),
@@ -363,7 +370,6 @@ class _IndexContentState extends State<IndexContent> {
                                     final List<dynamic> rawDelta = jsonDecode(row.data[index]);
                                     final Delta dataDelta = Delta.fromJson(rawDelta);
 
-                                    // Pre-build the heavy Fleather editor so ValueListenableBuilder can cache it
                                     final cachedFleatherCell = EditableFleatherCell(
                                       initialDelta: dataDelta,
                                       saveData: (delta) {
@@ -380,7 +386,7 @@ class _IndexContentState extends State<IndexContent> {
 
                                     return ValueListenableBuilder<List<double>>(
                                       valueListenable: widthsNotifier,
-                                      child: cachedFleatherCell, // Protects editor from rebuilds
+                                      child: cachedFleatherCell,
                                       builder: (context, currentWidths, child) {
                                         return Container(
                                           width: currentWidths[index],
@@ -400,14 +406,52 @@ class _IndexContentState extends State<IndexContent> {
                               ),
                             ),
 
+                            // 2. THE BLUE LINE PAINTER
+                            // Because this sits inside the row stack after the background container,
+                            // it guarantees perfect top-layer Z-index painting.
+                            if (inEditMode)
+                              ValueListenableBuilder<int?>(
+                                valueListenable: hoveredSeamNotifier,
+                                builder: (context, hoveredSeam, child) {
+                                  if (hoveredSeam == rowIndex) {
+                                    return Positioned(
+                                      top: -1, // Centers the 4px blue line over the 2px gray border
+                                      left: 0,
+                                      right: 0,
+                                      child: Container(height: 4, color: Colors.blue),
+                                    );
+                                  }
+                                  return const SizedBox.shrink();
+                                },
+                              ),
+
+                            // 3. TOP HITBOX (Activates this row's seam)
                             if (inEditMode)
                               Positioned(
-                                top: -4,
+                                top: 0,
                                 left: 0,
                                 right: 0,
                                 child: HoverInsertBox(
+                                  seamIndex: rowIndex,
+                                  hoveredSeamNotifier: hoveredSeamNotifier,
                                   onInsert: () {
                                     print("Inserting before row: ${row.id}");
+                                  },
+                                ),
+                              ),
+
+                            // 4. BOTTOM HITBOX (Activates the next row's seam)
+                            if (inEditMode && !isLastRow)
+                              Positioned(
+                                bottom: 0,
+                                left: 0,
+                                right: 0,
+                                child: HoverInsertBox(
+                                  seamIndex: rowIndex + 1,
+                                  hoveredSeamNotifier: hoveredSeamNotifier,
+                                  onInsert: () {
+                                    final nextRowId = widget.content[rowIndex + 1].id;
+                                    print("Inserting before row: $nextRowId");
                                   },
                                 ),
                               ),
@@ -426,10 +470,7 @@ class _IndexContentState extends State<IndexContent> {
                         left: dragX,
                         top: 0,
                         bottom: 0,
-                        child: Container(
-                          width: 3,
-                          color: Colors.blue.withAlpha(200), // Highly visible guide line
-                        ),
+                        child: Container(width: 3, color: Colors.blue.withAlpha(200)),
                       );
                     },
                   ),
@@ -527,31 +568,34 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
   }
 }
 
-class HoverInsertBox extends StatefulWidget {
+// 5. Completely stripped down: It is now just an invisible sensor.
+class HoverInsertBox extends StatelessWidget {
   final VoidCallback onInsert;
-  const HoverInsertBox({super.key, required this.onInsert});
+  final int seamIndex;
+  final ValueNotifier<int?> hoveredSeamNotifier;
 
-  @override
-  State<HoverInsertBox> createState() => _HoverInsertBoxState();
-}
-
-class _HoverInsertBoxState extends State<HoverInsertBox> {
-  bool isHovered = false;
+  const HoverInsertBox({
+    super.key,
+    required this.onInsert,
+    required this.seamIndex,
+    required this.hoveredSeamNotifier,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MouseRegion(
       cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => isHovered = true),
-      onExit: (_) => setState(() => isHovered = false),
+      onEnter: (_) => hoveredSeamNotifier.value = seamIndex,
+      onExit: (_) {
+        // Only clear it if a new box hasn't already claimed the state
+        if (hoveredSeamNotifier.value == seamIndex) {
+          hoveredSeamNotifier.value = null;
+        }
+      },
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: widget.onInsert,
-        child: SizedBox(
-          height: 10,
-          // alignment: Alignment.center,
-          child: Container(height: 3, color: isHovered ? Colors.blue : Colors.transparent),
-        ),
+        onTap: onInsert,
+        child: const SizedBox(height: 8, width: double.infinity),
       ),
     );
   }
