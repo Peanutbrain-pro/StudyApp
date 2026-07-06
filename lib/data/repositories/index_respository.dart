@@ -14,25 +14,26 @@ class IndexRepository {
     return unit;
   }
 
-  Future<({int id, List<String?> data})> addUnit(int notebookId, {int position = -1}) async {
-    // final nextPos = position != -1
-    //     ? position
-    //     : (await _db.indexItems.count(where: (row) => row.notebookId.equals(notebookId)).getSingleOrNull() ??
-    //               -1) +
-    //           1;
+  Future<({({int id, List<String?> data}) unit, int position})> addUnit(int notebookId, {int position = -1}) async {
     int nextPos = position;
     if (position == -1) {
       final rows = await _db.indexItems
           .count(where: (row) => row.notebookId.equals(notebookId))
           .getSingleOrNull();
-      nextPos = (rows ?? -1) + 1;
-    } else {}
+      nextPos = rows ?? 0;
+    } else {
+      // Move all the next position rows by +1
+      (_db.update(_db.indexItems)..where(
+            (item) => item.notebookId.equals(notebookId) & item.position.isBiggerOrEqualValue(position),
+          ))
+          .write(IndexItemsCompanion.custom(position: _db.indexItems.position + const Variable(1)));
+    }
 
     final addedResult = await _db
         .into(_db.indexItems)
         .insertReturning(IndexItemsCompanion.insert(notebookId: notebookId, position: nextPos));
     final row = indexItemToContent(addedResult);
-    return row;
+    return (unit: row, position: nextPos);
   }
 
   Future<List<({int id, List<String?> data})>> getUnits(int notebookId) async {
@@ -51,5 +52,9 @@ class IndexRepository {
 
   Future<void> deleteUnit(int notebookId, int unitId) async {
     // TODO: do it
+  }
+
+  Future<int> deleteAllItems(int notebookId) async {
+    return (_db.delete(_db.indexItems)..where((row) => row.notebookId.equals(notebookId))).go();
   }
 }
