@@ -1,5 +1,7 @@
 // import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:path/path.dart';
+import 'package:studyapp/data/repositories/index_respository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 
 sealed class IndexState {}
@@ -11,7 +13,7 @@ class IndexReady extends IndexState {
   // something like this for a single unit
   // {id: 1, data: ["Unit Title", "JSON  unit description", "extra column", "extra column" ...]
   // ... }
-  final List<({int id, List<String> data})> content;
+  final List<({int id, List<String?> data})> content;
   final int noOfColumns;
   final List<String> headers;
   final List<double> columnWidths;
@@ -27,11 +29,16 @@ class IndexReady extends IndexState {
 
 class IndexCubit extends Cubit<IndexState> {
   final UiPreferencesRepository _uiPreferencesRepository;
+  final IndexRepository _indexRepository;
   final int notebookId;
 
-  IndexCubit({required UiPreferencesRepository uiPreferencesRepository, required this.notebookId})
-    : _uiPreferencesRepository = uiPreferencesRepository,
-      super(IndexLoading()) {
+  IndexCubit({
+    required UiPreferencesRepository uiPreferencesRepository,
+    required this.notebookId,
+    required IndexRepository indexRepository,
+  }) : _indexRepository = indexRepository,
+       _uiPreferencesRepository = uiPreferencesRepository,
+       super(IndexLoading()) {
     initialize();
   }
 
@@ -181,22 +188,42 @@ class IndexCubit extends Cubit<IndexState> {
     return columnWidths;
   }
 
-  void addUnit(int position, String unitTitle) {
+  Future<void> addUnit({int position = -1}) async {
     if (state is IndexReady) {
       final currentState = state as IndexReady;
+
+      final row = await _indexRepository.addUnit(notebookId, position: position);
+
       // final String jsonDesc = jsonEncode(unitDescription);
-      final ({int id, List<String> data}) unit = (
-        id: DateTime.now().millisecondsSinceEpoch,
-        data: [unitTitle],
-      );
-      final newStateContent = [...currentState.content, unit];
+      // final ({int id, List<String> data}) unit = (
+      //   id: DateTime.now().millisecondsSinceEpoch,
+      //   data: [unitTitle],
+      // );
+      final newStateContent = [...currentState.content]..insert(row.position, row.unit);
       emit(
         IndexReady(
           content: newStateContent,
-          inEditMode: false,
+          inEditMode: true,
           noOfColumns: currentState.noOfColumns,
           headers: currentState.headers,
           columnWidths: currentState.columnWidths,
+        ),
+      );
+    }
+  }
+
+  void deleteUnit({required int position}) {}
+  void deleteAllItems() {
+    _indexRepository.deleteAllItems(notebookId);
+    if (state is IndexReady) {
+      final currentState = state as IndexReady;
+      emit(
+        IndexReady(
+          columnWidths: currentState.columnWidths,
+          content: [],
+          inEditMode: currentState.inEditMode,
+          noOfColumns: currentState.noOfColumns,
+          headers: currentState.headers,
         ),
       );
     }
