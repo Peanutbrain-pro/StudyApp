@@ -393,7 +393,7 @@ class $IndexItemsTable extends IndexItems
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES notebooks (id)',
+      'REFERENCES notebooks (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _titleMeta = const VerificationMeta('title');
@@ -901,7 +901,7 @@ class $UiPreferencesTable extends UiPreferences
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES notebooks (id)',
+      'REFERENCES notebooks (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _preferencesMeta = const VerificationMeta(
@@ -1130,6 +1130,23 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     indexItems,
     uiPreferences,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'notebooks',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('index_items', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'notebooks',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ui_preferences', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$NotebooksTableCreateCompanionBuilder =

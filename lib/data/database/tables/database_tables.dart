@@ -13,7 +13,7 @@ class Notebooks extends Table {
 
 class IndexItems extends Table {
   late final IntColumn id = integer().autoIncrement()();
-  late final IntColumn notebookId = integer().references(Notebooks, #id)();
+  late final IntColumn notebookId = integer().references(Notebooks, #id, onDelete: .cascade)();
   late final TextColumn title = text().withLength(max: 500).nullable()();
   late final TextColumn description = text().withLength(max: 5000).nullable()();
   late final IntColumn position = integer()();
@@ -23,12 +23,12 @@ class IndexItems extends Table {
 }
 
 class UiPreferences extends Table {
-  late final IntColumn notebookId = integer().references(Notebooks, #id)();
+  late final IntColumn notebookId = integer().references(Notebooks, #id, onDelete: .cascade)();
   late final TextColumn preferences = text().nullable()();
 }
 
 class Sources extends Table {
-  late final IntColumn indexId = integer().references(IndexItems, #id)();
+  late final IntColumn indexId = integer().references(IndexItems, #id, onDelete: .cascade)();
   late final IntColumn id = integer().autoIncrement()();
   late final TextColumn path = text()();
   late final TextColumn type = text()();
