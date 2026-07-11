@@ -190,7 +190,7 @@ class IndexCubit extends Cubit<IndexState> {
       // update database
       final updated = await _indexRepository.updateUnit(id, data, columnIndex);
       print("updated $updated row[s]");
-
+      
       final currentState = state as IndexReady;
       final index = currentState.content.indexWhere((tuple) => tuple.id == id);
       final newState = [...currentState.content];

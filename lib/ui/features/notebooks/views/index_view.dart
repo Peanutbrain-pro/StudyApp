@@ -123,7 +123,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                     child: Column(
                       children: [
                         Container(
-                          constraints: const BoxConstraints(minHeight: 1000, minWidth: 1200),
+                          constraints: const BoxConstraints(minHeight: 1000),
                           decoration: BoxDecoration(
                             color: colors.card,
                             border: .all(width: 2, color: colors.border),
@@ -386,28 +386,17 @@ class _IndexContentState extends State<IndexContent> {
                                           if (columnIndex >= row.data.length) {
                                             row.data.add(jsonEncode(Delta()..insert('\n')));
                                           }
-                                          final List<dynamic> rawDelta = jsonDecode(row.data[columnIndex] ?? "[]");
+                                          final List<dynamic> rawDelta = jsonDecode(
+                                            row.data[columnIndex] ?? "[]",
+                                          );
                                           final Delta dataDelta = rawDelta.isNotEmpty
                                               ? Delta.fromJson(rawDelta)
                                               : ParchmentDocument().toDelta();
 
-                                          final cachedFleatherCell = EditableFleatherCell(
-                                            initialDelta: dataDelta,
-                                            saveData: (delta) {
-                                              context.read<IndexCubit>().editUnitData(
-                                                row.id,
-                                                columnIndex,
-                                                jsonEncode(delta),
-                                              );
-                                            },
-                                            checkAndSetActive: widget.checkAndSetActive,
-                                            removeActive: widget.removeActive,
-                                            id: row.id,
-                                          );
-
+                                          // final cachedFleatherCell =
                                           return ValueListenableBuilder<List<double>>(
                                             valueListenable: widthsNotifier,
-                                            child: cachedFleatherCell,
+                                            // child: cachedFleatherCell,
                                             builder: (context, currentWidths, child) {
                                               return Container(
                                                 width: currentWidths[columnIndex],
@@ -418,7 +407,19 @@ class _IndexContentState extends State<IndexContent> {
                                                         : BorderSide.none,
                                                   ),
                                                 ),
-                                                child: child,
+                                                child: EditableFleatherCell(
+                                                  initialDelta: dataDelta,
+                                                  saveData: (delta) {
+                                                    context.read<IndexCubit>().editUnitData(
+                                                      row.id,
+                                                      columnIndex,
+                                                      jsonEncode(delta),
+                                                    );
+                                                  },
+                                                  checkAndSetActive: widget.checkAndSetActive,
+                                                  removeActive: widget.removeActive,
+                                                  id: row.id,
+                                                ),
                                               );
                                             },
                                           );
@@ -433,7 +434,7 @@ class _IndexContentState extends State<IndexContent> {
                                       builder: (context, hoveredSeam, child) {
                                         if (hoveredSeam == rowIndex) {
                                           return Positioned(
-                                            top: -1, // Centers the 4px blue line over the 2px gray border
+                                            top: -1,
                                             left: 0,
                                             right: 0,
                                             child: Container(height: 4, color: Colors.blue),
@@ -540,13 +541,28 @@ class EditableFleatherCell extends StatefulWidget {
 class EditableFleatherCellState extends State<EditableFleatherCell> {
   FleatherController? controller;
   bool isEditing = false;
+  late Delta currentDelta;
+
+  @override
+  void initState() {
+    super.initState();
+    currentDelta = widget.initialDelta;
+  }
+
+  @override
+  void didUpdateWidget(covariant EditableFleatherCell oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    currentDelta = widget.initialDelta;
+  }
 
   void save() {
     widget.removeActive();
-    final Delta delta = controller!.document.toDelta();
-    debugPrint(delta.toString());
-    widget.saveData(delta);
+    // final Delta delta = controller!.document.toDelta();
+    currentDelta = controller!.document.toDelta();
+    debugPrint(currentDelta.toString());
+    widget.saveData(currentDelta);
     controller!.dispose();
+    controller = null;
     setState(() {
       isEditing = false;
     });
@@ -555,7 +571,7 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
   @override
   Widget build(BuildContext context) {
     if (isEditing) {
-      controller = FleatherController(document: .fromDelta(widget.initialDelta));
+      // controller = FleatherController(document: .fromDelta(widget.initialDelta));
       return CustomFleatherEditor(
         controller: controller!,
         contextMenuBuilder: (context, editorState) {
@@ -576,20 +592,22 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
             if (!widget.checkAndSetActive(save)) {
               return;
             }
+            controller = FleatherController(
+              document: .fromDelta(currentDelta)
+            );
             setState(() {
               isEditing = true;
             });
           },
-          child: IgnorePointer(child: FleatherViewer(delta: widget.initialDelta)),
+          child: IgnorePointer(child: FleatherViewer(delta: currentDelta)),
         );
       } else {
-        return FleatherViewer(delta: widget.initialDelta);
+        return FleatherViewer(delta: currentDelta);
       }
     }
   }
 }
 
-// 5. Completely stripped down: It is now just an invisible sensor.
 class HoverInsertBox extends StatelessWidget {
   final VoidCallback onInsert;
   final int seamIndex;
