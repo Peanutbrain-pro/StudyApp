@@ -20,13 +20,27 @@ class IndexRepository {
         .filter((f) => f.id.equals(notebookId))
         .map(
           (row) => (
-            headers: (jsonDecode(row.headers ?? "[]") as List<dynamic>).cast<String?>(),
+            headers: List<String?>.from(jsonDecode(row.headers ?? "[]") as List<dynamic>),
             noOfColumns: row.noOfColumns,
           ),
         )
         .getSingle();
 
     return headers;
+  }
+
+  Future<int> editHeader(int notebookId, int columnIndex, String? title) async {
+    var headers = await getHeaders(notebookId);
+    headers.headers[columnIndex] = title;
+
+    return _db.managers.notebooks
+        .filter((f) => f.id(notebookId))
+        .update((o) => o(headers: Value(jsonEncode(headers.headers))));
+  }
+
+  Future<int> removeHeader(int notebookId, int columnIndex) async {
+    // TODO: removeHeader function
+    return Future.value();
   }
 
   // Stream<List<IndexItem>> watchUnits(int notebookId) {

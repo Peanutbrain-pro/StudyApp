@@ -166,6 +166,25 @@ class IndexCubit extends Cubit<IndexState> {
     }
   }
 
+  void editHeader(int notebookId, String? title, int columnIndex) {
+    if (state is IndexReady) {
+      // update database
+      _indexRepository.editHeader(notebookId, columnIndex, title);
+
+      final currentState = state as IndexReady;
+
+      emit(
+        IndexReady(
+          content: currentState.content,
+          columnWidths: currentState.columnWidths,
+          headers: currentState.headers..replaceRange(columnIndex, columnIndex + 1, [title]),
+          inEditMode: currentState.inEditMode,
+          noOfColumns: currentState.noOfColumns,
+        ),
+      );
+    }
+  }
+
   void editUnitDesc(int id, String description) {
     if (state is IndexReady) {
       final currentState = state as IndexReady;
@@ -188,9 +207,8 @@ class IndexCubit extends Cubit<IndexState> {
   Future<void> editUnitData(int id, int columnIndex, String data) async {
     if (state is IndexReady) {
       // update database
-      final updated = await _indexRepository.updateUnit(id, data, columnIndex);
-      print("updated $updated row[s]");
-      
+      _indexRepository.updateUnit(id, data, columnIndex);
+
       final currentState = state as IndexReady;
       final index = currentState.content.indexWhere((tuple) => tuple.id == id);
       final newState = [...currentState.content];

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart' hide Delta;
 import 'package:interactive_viewer_2/interactive_viewer_2.dart';
@@ -243,6 +244,8 @@ class _IndexContentState extends State<IndexContent> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: widget.headers.mapIndexed((index, header) {
+              String? currentHeader = header;
+
               return ValueListenableBuilder<List<double>>(
                 valueListenable: widthsNotifier,
                 builder: (context, currentWidths, child) {
@@ -257,9 +260,27 @@ class _IndexContentState extends State<IndexContent> {
                     ),
                     child: Stack(
                       children: [
-                        Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Text(header ?? "", style: const TextStyle(fontWeight: FontWeight.bold)),
+                        CallbackShortcuts(
+                          bindings: {
+                            const SingleActivator(LogicalKeyboardKey.keyS, control: true): () {
+                              context.read<IndexCubit>().editHeader(widget.notebookId, currentHeader, index);
+                            },
+                          },
+                          child: TextField(
+                            readOnly: !inEditMode,
+                            decoration: const .new(border: .none),
+                            controller: .fromValue(.new(text: header ?? "")),
+                            onSubmitted: (value) {
+                              context.read<IndexCubit>().editHeader(widget.notebookId, value, index);
+                            },
+                            onChanged: (value) {
+                              currentHeader = value;
+                            },
+                            onTapOutside: (event) {
+                              context.read<IndexCubit>().editHeader(widget.notebookId, currentHeader, index);
+                            },
+                            style: const .new(fontWeight: .bold),
+                          ),
                         ),
                         Positioned(
                           top: 0,
@@ -592,9 +613,7 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
             if (!widget.checkAndSetActive(save)) {
               return;
             }
-            controller = FleatherController(
-              document: .fromDelta(currentDelta)
-            );
+            controller = FleatherController(document: .fromDelta(currentDelta));
             setState(() {
               isEditing = true;
             });
