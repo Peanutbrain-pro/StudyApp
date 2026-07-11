@@ -180,7 +180,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
 class IndexContent extends StatefulWidget {
   final int notebookId;
   final List<({int id, List<String?> data})> content;
-  final List<String> headers;
+  final List<String?> headers;
   final List<double> columnWidths;
   final double tableWidth;
   final int noOfColumns;
@@ -208,6 +208,7 @@ class _IndexContentState extends State<IndexContent> {
 
   late ValueNotifier<List<double>> widthsNotifier;
   final ValueNotifier<double?> dragPositionNotifier = ValueNotifier(null);
+
   int _draggingColIndex = -1;
 
   final ValueNotifier<int?> hoveredSeamNotifier = ValueNotifier(null);
@@ -258,7 +259,7 @@ class _IndexContentState extends State<IndexContent> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(12.0),
-                          child: Text(header, style: const TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text(header ?? "", style: const TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Positioned(
                           top: 0,
@@ -272,14 +273,18 @@ class _IndexContentState extends State<IndexContent> {
                               onHorizontalDragStart: (details) {
                                 _draggingColIndex = index;
                                 double startX = 0;
-                                for (int i = 0; i <= index; i++) startX += widthsNotifier.value[i];
+                                for (int i = 0; i <= index; i++) {
+                                  startX += widthsNotifier.value[i];
+                                }
                                 dragPositionNotifier.value = startX;
                               },
                               onHorizontalDragUpdate: (details) {
                                 if (dragPositionNotifier.value == null) return;
                                 double newX = dragPositionNotifier.value! + details.delta.dx;
                                 double minAllowedX = 0;
-                                for (int i = 0; i < index; i++) minAllowedX += widthsNotifier.value[i];
+                                for (int i = 0; i < index; i++) {
+                                  minAllowedX += widthsNotifier.value[i];
+                                }
                                 minAllowedX += minColumnWidth;
                                 if (newX >= minAllowedX) dragPositionNotifier.value = newX;
                               },
@@ -344,147 +349,153 @@ class _IndexContentState extends State<IndexContent> {
           spacing: 10,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: currentTableWidth,
-              decoration: BoxDecoration(
-                border: Border.all(color: colors.border, width: 2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              clipBehavior: Clip.hardEdge,
-              child: Stack(
-                children: [
-                  Column(
+            Stack(
+              clipBehavior: .none,
+              children: [
+                Container(
+                  // borderRadius: .circular(10),
+                  width: currentTableWidth,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: colors.border, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  clipBehavior: Clip.hardEdge,
+                  child: Stack(
                     children: [
-                      _buildHeaderRow(colors.border, inEditMode),
+                      Column(
+                        children: [
+                          _buildHeaderRow(colors.border, inEditMode),
 
-                      ...widget.content.mapIndexed((rowIndex, row) {
-                        final isLastRow = rowIndex == widget.content.length - 1;
+                          ...widget.content.mapIndexed((rowIndex, row) {
+                            final isLastRow = rowIndex == widget.content.length - 1;
 
-                        return ConstrainedBox(
-                          key: ValueKey(row.id),
-                          constraints: const .new(minHeight: 50),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border(top: BorderSide(color: colors.border, width: 2)),
-                                ),
-                                child: IntrinsicHeight(
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                                    children: List.generate(widget.noOfColumns, (index) {
-                                      if (index >= row.data.length) {
-                                        row.data.add(jsonEncode(Delta()..insert('\n')));
-                                      }
-                                      final List<dynamic> rawDelta = jsonDecode(row.data[index] ?? "[]");
-                                      final Delta dataDelta = rawDelta.isNotEmpty
-                                          ? Delta.fromJson(rawDelta)
-                                          : ParchmentDocument().toDelta();
+                            return ConstrainedBox(
+                              key: ValueKey(row.id),
+                              constraints: const .new(minHeight: 50),
+                              child: Stack(
+                                clipBehavior: Clip.none,
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      border: Border(top: BorderSide(color: colors.border, width: 2)),
+                                    ),
+                                    child: IntrinsicHeight(
+                                      child: Row(
+                                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                                        children: List.generate(widget.noOfColumns, (index) {
+                                          if (index >= row.data.length) {
+                                            row.data.add(jsonEncode(Delta()..insert('\n')));
+                                          }
+                                          final List<dynamic> rawDelta = jsonDecode(row.data[index] ?? "[]");
+                                          final Delta dataDelta = rawDelta.isNotEmpty
+                                              ? Delta.fromJson(rawDelta)
+                                              : ParchmentDocument().toDelta();
 
-                                      final cachedFleatherCell = EditableFleatherCell(
-                                        initialDelta: dataDelta,
-                                        saveData: (delta) {
-                                          context.read<IndexCubit>().editUnitData(
-                                            row.id,
-                                            index,
-                                            jsonEncode(delta),
+                                          final cachedFleatherCell = EditableFleatherCell(
+                                            initialDelta: dataDelta,
+                                            saveData: (delta) {
+                                              context.read<IndexCubit>().editUnitData(
+                                                row.id,
+                                                index,
+                                                jsonEncode(delta),
+                                              );
+                                            },
+                                            checkAndSetActive: widget.checkAndSetActive,
+                                            removeActive: widget.removeActive,
+                                            id: row.id,
                                           );
-                                        },
-                                        checkAndSetActive: widget.checkAndSetActive,
-                                        removeActive: widget.removeActive,
-                                        id: row.id,
-                                      );
 
-                                      return ValueListenableBuilder<List<double>>(
-                                        valueListenable: widthsNotifier,
-                                        child: cachedFleatherCell,
-                                        builder: (context, currentWidths, child) {
-                                          return Container(
-                                            width: currentWidths[index],
-                                            decoration: BoxDecoration(
-                                              border: Border(
-                                                right: index < widget.noOfColumns - 1
-                                                    ? BorderSide(color: colors.border, width: 2)
-                                                    : BorderSide.none,
-                                              ),
-                                            ),
-                                            child: child,
+                                          return ValueListenableBuilder<List<double>>(
+                                            valueListenable: widthsNotifier,
+                                            child: cachedFleatherCell,
+                                            builder: (context, currentWidths, child) {
+                                              return Container(
+                                                width: currentWidths[index],
+                                                decoration: BoxDecoration(
+                                                  border: Border(
+                                                    right: index < widget.noOfColumns - 1
+                                                        ? BorderSide(color: colors.border, width: 2)
+                                                        : BorderSide.none,
+                                                  ),
+                                                ),
+                                                child: child,
+                                              );
+                                            },
                                           );
-                                        },
-                                      );
-                                    }),
+                                        }),
+                                      ),
+                                    ),
                                   ),
-                                ),
+
+                                  if (inEditMode)
+                                    ValueListenableBuilder<int?>(
+                                      valueListenable: hoveredSeamNotifier,
+                                      builder: (context, hoveredSeam, child) {
+                                        if (hoveredSeam == rowIndex) {
+                                          return Positioned(
+                                            top: -1, // Centers the 4px blue line over the 2px gray border
+                                            left: 0,
+                                            right: 0,
+                                            child: Container(height: 4, color: Colors.blue),
+                                          );
+                                        }
+                                        return const SizedBox.shrink();
+                                      },
+                                    ),
+
+                                  if (inEditMode)
+                                    Positioned(
+                                      top: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: HoverInsertBox(
+                                        seamIndex: rowIndex,
+                                        hoveredSeamNotifier: hoveredSeamNotifier,
+                                        onInsert: () {
+                                          context.read<IndexCubit>().addUnit(position: rowIndex);
+                                          print("Inserting before row: $rowIndex");
+                                        },
+                                      ),
+                                    ),
+
+                                  if (inEditMode && !isLastRow)
+                                    Positioned(
+                                      bottom: 0,
+                                      left: 0,
+                                      right: 0,
+                                      child: HoverInsertBox(
+                                        seamIndex: rowIndex + 1,
+                                        hoveredSeamNotifier: hoveredSeamNotifier,
+                                        onInsert: () {
+                                          context.read<IndexCubit>().addUnit(position: rowIndex + 1);
+                                          print("Inserting before row: ${rowIndex + 1}");
+                                        },
+                                      ),
+                                    ),
+                                ],
                               ),
-
-                              if (inEditMode)
-                                ValueListenableBuilder<int?>(
-                                  valueListenable: hoveredSeamNotifier,
-                                  builder: (context, hoveredSeam, child) {
-                                    if (hoveredSeam == rowIndex) {
-                                      return Positioned(
-                                        top: -1, // Centers the 4px blue line over the 2px gray border
-                                        left: 0,
-                                        right: 0,
-                                        child: Container(height: 4, color: Colors.blue),
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
-                                ),
-
-                              if (inEditMode)
-                                Positioned(
-                                  top: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: HoverInsertBox(
-                                    seamIndex: rowIndex,
-                                    hoveredSeamNotifier: hoveredSeamNotifier,
-                                    onInsert: () {
-                                      context.read<IndexCubit>().addUnit(position: rowIndex);
-                                      print("Inserting before row: $rowIndex");
-                                    },
-                                  ),
-                                ),
-
-                              if (inEditMode && !isLastRow)
-                                Positioned(
-                                  bottom: 0,
-                                  left: 0,
-                                  right: 0,
-                                  child: HoverInsertBox(
-                                    seamIndex: rowIndex + 1,
-                                    hoveredSeamNotifier: hoveredSeamNotifier,
-                                    onInsert: () {
-                                      context.read<IndexCubit>().addUnit(position: rowIndex + 1);
-                                      print("Inserting before row: ${rowIndex + 1}");
-                                    },
-                                  ),
-                                ),
-                            ],
-                          ),
-                        );
-                      }),
+                            );
+                          }),
+                        ],
+                      ),
                     ],
                   ),
+                ),
 
-                  // Proxy Drag Line
-                  ValueListenableBuilder<double?>(
-                    valueListenable: dragPositionNotifier,
-                    builder: (context, dragX, child) {
-                      if (dragX == null) return const SizedBox.shrink();
-                      return Positioned(
-                        left: dragX,
-                        top: 0,
-                        bottom: 0,
-                        child: Container(width: 3, color: Colors.blue.withAlpha(200)),
-                      );
-                    },
-                  ),
-                ],
-              ),
+                // Proxy Drag Line
+                ValueListenableBuilder<double?>(
+                  valueListenable: dragPositionNotifier,
+                  builder: (context, dragX, child) {
+                    if (dragX == null) return const SizedBox.shrink();
+                    return Positioned(
+                      left: dragX,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(width: 3, color: Colors.blue.withAlpha(200)),
+                    );
+                  },
+                ),
+              ],
             ),
 
             if (inEditMode)
