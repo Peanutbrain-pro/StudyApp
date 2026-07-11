@@ -47,7 +47,7 @@ class FirstLaunchView extends StatelessWidget {
                                   child: FutureBuilder(
                                     future: context.read<AppCubit>().getDefaultAppSaveLocation(),
                                     builder: (context, asyncSnapshot) {
-                                      return SelectableText(asyncSnapshot.data!);
+                                      return SelectableText(asyncSnapshot.data ?? "");
                                     }
                                   )),
                               IconButton(

@@ -35,6 +35,33 @@ class $NotebooksTable extends Notebooks
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _noOfColumnsMeta = const VerificationMeta(
+    'noOfColumns',
+  );
+  @override
+  late final GeneratedColumn<int> noOfColumns = GeneratedColumn<int>(
+    'no_of_columns',
+    aliasedName,
+    false,
+    check: () =>
+        ComparableExpr(noOfColumns).isBiggerOrEqualValue(2) &
+        ComparableExpr(noOfColumns).isSmallerOrEqualValue(8),
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    clientDefault: () => 2,
+  );
+  static const VerificationMeta _headersMeta = const VerificationMeta(
+    'headers',
+  );
+  @override
+  late final GeneratedColumn<String> headers = GeneratedColumn<String>(
+    'headers',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    clientDefault: () => "[\"Title\", \"Description\"]",
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -48,7 +75,13 @@ class $NotebooksTable extends Notebooks
     clientDefault: () => DateTime.now(),
   );
   @override
-  List<GeneratedColumn> get $columns => [id, name, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    noOfColumns,
+    headers,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -71,6 +104,21 @@ class $NotebooksTable extends Notebooks
       );
     } else if (isInserting) {
       context.missing(_nameMeta);
+    }
+    if (data.containsKey('no_of_columns')) {
+      context.handle(
+        _noOfColumnsMeta,
+        noOfColumns.isAcceptableOrUnknown(
+          data['no_of_columns']!,
+          _noOfColumnsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('headers')) {
+      context.handle(
+        _headersMeta,
+        headers.isAcceptableOrUnknown(data['headers']!, _headersMeta),
+      );
     }
     if (data.containsKey('created_at')) {
       context.handle(
@@ -95,6 +143,14 @@ class $NotebooksTable extends Notebooks
         DriftSqlType.string,
         data['${effectivePrefix}name'],
       )!,
+      noOfColumns: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}no_of_columns'],
+      )!,
+      headers: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}headers'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -111,10 +167,14 @@ class $NotebooksTable extends Notebooks
 class Notebook extends DataClass implements Insertable<Notebook> {
   final int id;
   final String name;
+  final int noOfColumns;
+  final String? headers;
   final DateTime createdAt;
   const Notebook({
     required this.id,
     required this.name,
+    required this.noOfColumns,
+    this.headers,
     required this.createdAt,
   });
   @override
@@ -122,6 +182,10 @@ class Notebook extends DataClass implements Insertable<Notebook> {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['name'] = Variable<String>(name);
+    map['no_of_columns'] = Variable<int>(noOfColumns);
+    if (!nullToAbsent || headers != null) {
+      map['headers'] = Variable<String>(headers);
+    }
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -130,6 +194,10 @@ class Notebook extends DataClass implements Insertable<Notebook> {
     return NotebooksCompanion(
       id: Value(id),
       name: Value(name),
+      noOfColumns: Value(noOfColumns),
+      headers: headers == null && nullToAbsent
+          ? const Value.absent()
+          : Value(headers),
       createdAt: Value(createdAt),
     );
   }
@@ -142,6 +210,8 @@ class Notebook extends DataClass implements Insertable<Notebook> {
     return Notebook(
       id: serializer.fromJson<int>(json['id']),
       name: serializer.fromJson<String>(json['name']),
+      noOfColumns: serializer.fromJson<int>(json['noOfColumns']),
+      headers: serializer.fromJson<String?>(json['headers']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -151,19 +221,33 @@ class Notebook extends DataClass implements Insertable<Notebook> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'name': serializer.toJson<String>(name),
+      'noOfColumns': serializer.toJson<int>(noOfColumns),
+      'headers': serializer.toJson<String?>(headers),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
 
-  Notebook copyWith({int? id, String? name, DateTime? createdAt}) => Notebook(
+  Notebook copyWith({
+    int? id,
+    String? name,
+    int? noOfColumns,
+    Value<String?> headers = const Value.absent(),
+    DateTime? createdAt,
+  }) => Notebook(
     id: id ?? this.id,
     name: name ?? this.name,
+    noOfColumns: noOfColumns ?? this.noOfColumns,
+    headers: headers.present ? headers.value : this.headers,
     createdAt: createdAt ?? this.createdAt,
   );
   Notebook copyWithCompanion(NotebooksCompanion data) {
     return Notebook(
       id: data.id.present ? data.id.value : this.id,
       name: data.name.present ? data.name.value : this.name,
+      noOfColumns: data.noOfColumns.present
+          ? data.noOfColumns.value
+          : this.noOfColumns,
+      headers: data.headers.present ? data.headers.value : this.headers,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -173,44 +257,58 @@ class Notebook extends DataClass implements Insertable<Notebook> {
     return (StringBuffer('Notebook(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('noOfColumns: $noOfColumns, ')
+          ..write('headers: $headers, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, createdAt);
+  int get hashCode => Object.hash(id, name, noOfColumns, headers, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Notebook &&
           other.id == this.id &&
           other.name == this.name &&
+          other.noOfColumns == this.noOfColumns &&
+          other.headers == this.headers &&
           other.createdAt == this.createdAt);
 }
 
 class NotebooksCompanion extends UpdateCompanion<Notebook> {
   final Value<int> id;
   final Value<String> name;
+  final Value<int> noOfColumns;
+  final Value<String?> headers;
   final Value<DateTime> createdAt;
   const NotebooksCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
+    this.noOfColumns = const Value.absent(),
+    this.headers = const Value.absent(),
     this.createdAt = const Value.absent(),
   });
   NotebooksCompanion.insert({
     this.id = const Value.absent(),
     required String name,
+    this.noOfColumns = const Value.absent(),
+    this.headers = const Value.absent(),
     this.createdAt = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Notebook> custom({
     Expression<int>? id,
     Expression<String>? name,
+    Expression<int>? noOfColumns,
+    Expression<String>? headers,
     Expression<DateTime>? createdAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (name != null) 'name': name,
+      if (noOfColumns != null) 'no_of_columns': noOfColumns,
+      if (headers != null) 'headers': headers,
       if (createdAt != null) 'created_at': createdAt,
     });
   }
@@ -218,11 +316,15 @@ class NotebooksCompanion extends UpdateCompanion<Notebook> {
   NotebooksCompanion copyWith({
     Value<int>? id,
     Value<String>? name,
+    Value<int>? noOfColumns,
+    Value<String?>? headers,
     Value<DateTime>? createdAt,
   }) {
     return NotebooksCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
+      noOfColumns: noOfColumns ?? this.noOfColumns,
+      headers: headers ?? this.headers,
       createdAt: createdAt ?? this.createdAt,
     );
   }
@@ -236,6 +338,12 @@ class NotebooksCompanion extends UpdateCompanion<Notebook> {
     if (name.present) {
       map['name'] = Variable<String>(name.value);
     }
+    if (noOfColumns.present) {
+      map['no_of_columns'] = Variable<int>(noOfColumns.value);
+    }
+    if (headers.present) {
+      map['headers'] = Variable<String>(headers.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -247,6 +355,8 @@ class NotebooksCompanion extends UpdateCompanion<Notebook> {
     return (StringBuffer('NotebooksCompanion(')
           ..write('id: $id, ')
           ..write('name: $name, ')
+          ..write('noOfColumns: $noOfColumns, ')
+          ..write('headers: $headers, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -1026,12 +1136,16 @@ typedef $$NotebooksTableCreateCompanionBuilder =
     NotebooksCompanion Function({
       Value<int> id,
       required String name,
+      Value<int> noOfColumns,
+      Value<String?> headers,
       Value<DateTime> createdAt,
     });
 typedef $$NotebooksTableUpdateCompanionBuilder =
     NotebooksCompanion Function({
       Value<int> id,
       Value<String> name,
+      Value<int> noOfColumns,
+      Value<String?> headers,
       Value<DateTime> createdAt,
     });
 
@@ -1095,6 +1209,16 @@ class $$NotebooksTableFilterComposer
 
   ColumnFilters<String> get name => $composableBuilder(
     column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get noOfColumns => $composableBuilder(
+    column: $table.noOfColumns,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get headers => $composableBuilder(
+    column: $table.headers,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1173,6 +1297,16 @@ class $$NotebooksTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get noOfColumns => $composableBuilder(
+    column: $table.noOfColumns,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get headers => $composableBuilder(
+    column: $table.headers,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -1193,6 +1327,14 @@ class $$NotebooksTableAnnotationComposer
 
   GeneratedColumn<String> get name =>
       $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<int> get noOfColumns => $composableBuilder(
+    column: $table.noOfColumns,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get headers =>
+      $composableBuilder(column: $table.headers, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -1278,17 +1420,28 @@ class $$NotebooksTableTableManager
               ({
                 Value<int> id = const Value.absent(),
                 Value<String> name = const Value.absent(),
+                Value<int> noOfColumns = const Value.absent(),
+                Value<String?> headers = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-              }) =>
-                  NotebooksCompanion(id: id, name: name, createdAt: createdAt),
+              }) => NotebooksCompanion(
+                id: id,
+                name: name,
+                noOfColumns: noOfColumns,
+                headers: headers,
+                createdAt: createdAt,
+              ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
                 required String name,
+                Value<int> noOfColumns = const Value.absent(),
+                Value<String?> headers = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
               }) => NotebooksCompanion.insert(
                 id: id,
                 name: name,
+                noOfColumns: noOfColumns,
+                headers: headers,
                 createdAt: createdAt,
               ),
           withReferenceMapper: (p0) => p0

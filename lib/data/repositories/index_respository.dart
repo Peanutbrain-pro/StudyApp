@@ -8,53 +8,82 @@ class IndexRepository {
 
   IndexRepository({required AppDatabase db}) : _db = db;
 
-  ({int id, List<String?> data}) indexItemToContent(IndexItem item) {
-    final extra = (item.extraInfo != null) ? jsonDecode(item.extraInfo!) : [];
-    final ({int id, List<String?> data}) unit = (id: item.id, data: [item.title, item.description, ...extra]);
-    return unit;
+  Future<List<IndexItem>> getUnits(int notebookId) {
+    return _db.managers.indexItems
+        .filter((f) => f.notebookId.id(notebookId))
+        .orderBy((o) => o.position.asc())
+        .get();
   }
 
-  Future<({({int id, List<String?> data}) unit, int position})> addUnit(int notebookId, {int position = -1}) async {
-    int nextPos = position;
-    if (position == -1) {
-      final rows = await _db.indexItems
-          .count(where: (row) => row.notebookId.equals(notebookId))
-          .getSingleOrNull();
-      nextPos = rows ?? 0;
-    } else {
-      // Move all the next position rows by +1
-      (_db.update(_db.indexItems)..where(
-            (item) => item.notebookId.equals(notebookId) & item.position.isBiggerOrEqualValue(position),
-          ))
-          .write(IndexItemsCompanion.custom(position: _db.indexItems.position + const Variable(1)));
-    }
+  Future<({List<String?> headers, int noOfColumns})> getHeaders(int notebookId) async {
+    final headers = await _db.managers.notebooks
+        .filter((f) => f.id.equals(notebookId))
+        .map((row) => (headers: (jsonDecode(row.headers ?? "[]") as List<dynamic>).cast<String?>(), noOfColumns: row.noOfColumns))
+        .getSingle();
 
-    final addedResult = await _db
-        .into(_db.indexItems)
-        .insertReturning(IndexItemsCompanion.insert(notebookId: notebookId, position: nextPos));
-    final row = indexItemToContent(addedResult);
-    return (unit: row, position: nextPos);
+    return headers;
   }
 
-  Future<List<({int id, List<String?> data})>> getUnits(int notebookId) async {
-    final rows =
-        await (_db.select(_db.indexItems)
-              ..where((row) => row.notebookId.equals(notebookId))
-              ..orderBy([(row) => .asc(row.position)]))
-            .get();
-    List<({int id, List<String?> data})> units = [];
-    for (var row in rows) {
-      units.add(indexItemToContent(row));
-    }
+  // Stream<List<IndexItem>> watchUnits(int notebookId) {
+  //   return _db.managers.indexItems
+  //       .filter((f) => f.notebookId.id(notebookId))
+  //       .orderBy((o) => o.position.asc())
+  //       .watch();
+  // }
 
-    return units;
+  Future<IndexItem?> getUnit(int id) {
+    return _db.managers.indexItems.filter((f) => f.id(id)).getSingleOrNull();
   }
 
-  Future<void> deleteUnit(int notebookId, int unitId) async {
-    // TODO: do it
+  Future<int> countUnits(int notebookId) {
+    return _db.managers.indexItems.filter((f) => f.notebookId.id(notebookId)).count();
   }
 
-  Future<int> deleteAllItems(int notebookId) async {
-    return (_db.delete(_db.indexItems)..where((row) => row.notebookId.equals(notebookId))).go();
+  Future<IndexItem> addUnit(int notebookId, {int position = -1}) async {
+    return _db.transaction(() async {
+      int newPosition = position;
+
+      if (position == -1) {
+        newPosition = await _db.managers.indexItems.filter((f) => f.notebookId.id(notebookId)).count();
+      } else {
+        // position += 1 for all rows from given position
+        await (_db.update(_db.indexItems)
+              ..where((t) => t.notebookId.equals(notebookId) & t.position.isBiggerOrEqualValue(position)))
+            .write(IndexItemsCompanion.custom(position: _db.indexItems.position + const Constant(1)));
+      }
+
+      await _db.managers.indexItems.create((o) => o(notebookId: notebookId, position: newPosition));
+
+      return await _db.managers.indexItems
+          .filter((f) => f.notebookId.id(notebookId) & f.position(newPosition))
+          .orderBy((o) => o.id.desc())
+          .getSingle();
+    });
+  }
+
+  Future<int> deleteUnit(int id) {
+    return _db.managers.indexItems.filter((f) => f.id(id)).delete();
+  }
+
+  Future<int> deleteAllItems(int notebookId) {
+    return _db.managers.indexItems.filter((f) => f.notebookId.id(notebookId)).delete();
+  }
+
+  Future<int> updateTitle(int id, String? title) {
+    return _db.managers.indexItems
+        .filter((f) => f.id(id))
+        .update((o) => o(title: Value(title), modifiedAt: Value(DateTime.now())));
+  }
+
+  Future<int> updateDescription(int id, String? description) {
+    return _db.managers.indexItems
+        .filter((f) => f.id(id))
+        .update((o) => o(description: Value(description), modifiedAt: Value(DateTime.now())));
+  }
+
+  Future<int> updateExtraInfo(int id, List<String?> extra) {
+    return _db.managers.indexItems
+        .filter((f) => f.id(id))
+        .update((o) => o(extraInfo: Value(jsonEncode(extra)), modifiedAt: Value(DateTime.now())));
   }
 }

@@ -1,6 +1,9 @@
 // import 'package:flutter/material.dart';
+import 'dart:convert';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:path/path.dart';
+// import 'package:path/path.dart';
+import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/index_respository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 
@@ -15,7 +18,7 @@ class IndexReady extends IndexState {
   // ... }
   final List<({int id, List<String?> data})> content;
   final int noOfColumns;
-  final List<String> headers;
+  final List<String?> headers;
   final List<double> columnWidths;
   final bool inEditMode;
   IndexReady({
@@ -45,122 +48,14 @@ class IndexCubit extends Cubit<IndexState> {
   Future<void> initialize() async {
     if (isClosed) return;
 
+    final units = await getUnits(notebookId);
     emit(
       IndexReady(
+        content: units.content,
+        columnWidths: units.columnWidths,
+        headers: units.headers.headers,
         inEditMode: false,
-        noOfColumns: 5,
-        content: [
-          (
-            id: 101,
-            data: [
-              "[{\"insert\":\"Unit 1\\n\"}]",
-              "[{\"insert\":\"Quick Start\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Hello World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-            ],
-          ),
-          (
-            id: 102,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 103,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 104,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 105,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 106,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 107,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 108,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 109,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-          (
-            id: 110,
-            data: [
-              "[{\"insert\":\"Unit 2\\n\"}]",
-              "[{\"insert\":\"Quick Start 2\"},{\"insert\":\"\\n\",\"attributes\":{\"heading\":1}},{\"insert\":\"Goodbye World\\n\"}]",
-              "[{\"insert\":\"Extra Column\\n\"}]",
-              "[{\"insert\":\"Extra Column 2\\n\"}]",
-              "[{\"insert\":\"Extra Column 3\\n\"}]",
-              "",
-            ],
-          ),
-        ],
-        headers: ['Title', 'Description', 'e1', 'e2', 'e3'],
-        columnWidths: await getColumnWidths(notebookId, 5),
+        noOfColumns: units.headers.noOfColumns,
       ),
     );
   }
@@ -188,18 +83,60 @@ class IndexCubit extends Cubit<IndexState> {
     return columnWidths;
   }
 
+  Future<List<({int id, List<String?> data})>> _convertIndexItemsToContent(List<IndexItem> indexItems) async {
+    List<({int id, List<String?> data})> content = [];
+    for (IndexItem item in indexItems) {
+      List<String?> data = [];
+      data.add(item.title);
+      data.add(item.description);
+      data.addAll(jsonDecode((item.extraInfo ?? "[]")).cast<String?>());
+      content.add((id: item.id, data: data));
+    }
+    return content;
+  }
+
+  Future<
+    ({
+      List<IndexItem> items,
+      List<({List<String?> data, int id})> content,
+      ({List<String?> headers, int noOfColumns}) headers,
+      List<double> columnWidths,
+    })
+  >
+  getUnits(int notebookId) async {
+    final items = await _indexRepository.getUnits(notebookId);
+    final content = await _convertIndexItemsToContent(items);
+    final headers = await _indexRepository.getHeaders(notebookId);
+    final columnWidths = await getColumnWidths(notebookId, headers.noOfColumns);
+
+    return (items: items, content: content, headers: headers, columnWidths: columnWidths);
+    // emit(
+    //   IndexReady(
+    //     content: content,
+    //     inEditMode: false,
+    //     noOfColumns: headers.noOfColumns,
+    //     headers: headers.headers,
+    //     columnWidths: columnWidths,
+    //   ),
+    // );
+  }
+
   Future<void> addUnit({int position = -1}) async {
     if (state is IndexReady) {
       final currentState = state as IndexReady;
 
       final row = await _indexRepository.addUnit(notebookId, position: position);
+      final newUnit = (
+        id: row.id,
+        data: <String?>[row.title, row.description, (jsonDecode(row.extraInfo ?? "[]")).toString()],
+      );
 
       // final String jsonDesc = jsonEncode(unitDescription);
       // final ({int id, List<String> data}) unit = (
       //   id: DateTime.now().millisecondsSinceEpoch,
       //   data: [unitTitle],
       // );
-      final newStateContent = [...currentState.content]..insert(row.position, row.unit);
+      final newStateContent = [...currentState.content]..insert(row.position, newUnit);
       emit(
         IndexReady(
           content: newStateContent,

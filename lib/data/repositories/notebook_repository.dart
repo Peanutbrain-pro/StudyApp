@@ -1,33 +1,34 @@
 import 'dart:io';
-
 import 'package:drift/drift.dart';
 import 'package:path/path.dart' as p;
 import 'package:studyapp/data/database/app_database.dart';
-
-// import '../../domain/models/notebook.dart';
 
 class NotebookRepository {
   final String appSaveLocation;
   late Directory _notebooksDirectory;
   final AppDatabase _db;
 
-  NotebookRepository({required AppDatabase db, required this.appSaveLocation}) : _db = db;
+  NotebookRepository({
+    required AppDatabase db,
+    required this.appSaveLocation,
+  }) : _db = db;
 
   Future<void> initialize() async {
     final directory = Directory(p.join(appSaveLocation, "Notebooks"));
     if (!await directory.exists()) {
       await directory.create(recursive: true);
     }
-
     _notebooksDirectory = directory;
   }
 
   Future<List<Notebook>> getNotebooks() async {
-    final rows = await _db.select(_db.notebooks).get();
+    final rows = await _db.managers.notebooks.get();
 
-    // in case any folder was deleted it will create it back (right now its empty folder)
-    for (Notebook row in rows) {
-      final Directory notebookDirectory = Directory(p.join(_notebooksDirectory.path, row.id.toString()));
+    // Recreate folders if missing
+    for (final row in rows) {
+      final notebookDirectory = Directory(
+        p.join(_notebooksDirectory.path, row.id.toString()),
+      );
       if (!await notebookDirectory.exists()) {
         await notebookDirectory.create(recursive: true);
       }
@@ -36,40 +37,52 @@ class NotebookRepository {
   }
 
   Future<Notebook?> getNotebook(int id) async {
-    final notebook = await (_db.select(_db.notebooks)..where((notebook) => notebook.id.equals(id))).getSingleOrNull();
-    return notebook;
+    return await _db.managers.notebooks
+        .filter((f) => f.id(id))
+        .getSingleOrNull();
   }
 
   Future<Notebook> addNotebook(String name) async {
-    // Database
-    final newNotebook = NotebooksCompanion.insert(
-      name: name,
+    final insertedId = await _db.managers.notebooks.create(
+      (o) => o(name: name),
     );
-    final insertedNotebook = await _db.into(_db.notebooks).insertReturning(newNotebook);
+
+    final insertedNotebook = await _db.managers.notebooks
+        .filter((f) => f.id(insertedId))
+        .getSingle();
 
     // Folder creation
-    final Directory notebook =
-        Directory(p.join(_notebooksDirectory.path, insertedNotebook.id.toString()));
-    if (!await notebook.exists()) {
-      await notebook.create(recursive: true);
-    }
-    print("Notebook repository updated: Added: ${notebook.path}");
+    final notebookDir = Directory(
+      p.join(_notebooksDirectory.path, insertedNotebook.id.toString()),
+    );
 
+    if (!await notebookDir.exists()) {
+      await notebookDir.create(recursive: true);
+    }
+
+    print("Notebook repository updated: Added: ${notebookDir.path}");
     return insertedNotebook;
   }
 
   Future<bool> removeNotebook(int id) async {
-    // Database
-    final deletedNotebook = await (_db.delete(_db.notebooks)..where((t) => t.id.equals(id))).goAndReturn();
-    final Directory directoryToDelete =
-        Directory(p.join(_notebooksDirectory.path, deletedNotebook.first.id.toString()));
+    final deletedCount = await _db.managers.notebooks
+        .filter((f) => f.id(id))
+        .delete();
 
-    // Folder deletion
+    if (deletedCount == 0) {
+      return false;
+    }
+
+    // Delete folder
+    final directoryToDelete = Directory(
+      p.join(_notebooksDirectory.path, id.toString()),
+    );
+
     if (await directoryToDelete.exists()) {
       try {
         await directoryToDelete.delete(recursive: true);
       } catch (e) {
-        print("an error occured. Couldn't delete notebook");
+        print("An error occurred. Couldn't delete notebook folder");
         return false;
       }
     } else {
@@ -77,16 +90,14 @@ class NotebookRepository {
     }
 
     return true;
-    // return deletedNotebook.first;
   }
 
   Future<void> renameNotebook(int id, String name) async {
-    final updatedNotebook = NotebooksCompanion(id: Value(id), name: Value(name));
-
-    // Database
-    await _db.update(_db.notebooks).replace(updatedNotebook);
+    await _db.managers.notebooks
+        .filter((f) => f.id(id))
+        .update((o) => o(name: Value(name)));
   }
-  
+
   Future<bool> deleteNotebooksDirectory() async {
     if (await _notebooksDirectory.exists()) {
       print("Deleting the notebooks Directory now");
@@ -95,10 +106,9 @@ class NotebookRepository {
         print("No errors now! Notebooks directory got deleted");
         return true;
       } catch (e) {
-        print("An error occured. Trying again after some time");
+        print("An error occurred. Trying again after some time");
         return false;
       }
-      // await _notebooksDirectory.delete(recursive: true);
     }
     print("The directory doesn't even exist");
     return true;
@@ -106,7 +116,8 @@ class NotebookRepository {
 
   Future<void> resetDatabase() async {
     print("Trying to reset the database");
-    print("This is the current notebooksdirectory btw : ${_notebooksDirectory.path}");
+    print("Current notebooks directory: ${_notebooksDirectory.path}");
+
     await _db.close();
 
     final dbPath = p.join(appSaveLocation, "data", "appdb.sqlite");

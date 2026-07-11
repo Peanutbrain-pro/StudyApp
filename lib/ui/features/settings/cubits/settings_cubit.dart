@@ -82,14 +82,14 @@ class SettingsCubit extends Cubit<SettingsState> {
         context,
         true,
         "Reset App to Factory Settings",
-        "Are you sure you want to delete and reset everything? You will get the first launch screen on next startup. The app will close now",
+        "Are you sure you want to delete and reset everything? You would need to restart the app",
         "Yes");
     if (!confirmed) return;
 
     final notebooksDirectoryDeleted = await notebookRepository.deleteNotebooksDirectory();
     if (!notebooksDirectoryDeleted) {
       await DialogHelper.showError(context, "Unable to Delete Notebooks",
-          "Couldn't delete the notebook data. Please check that no other application is using that folder (including File Explorer)");
+          "Couldn't delete the notebook data. Please check that no other application is using that folder");
       return;
     }
     await notebookRepository.resetDatabase();
