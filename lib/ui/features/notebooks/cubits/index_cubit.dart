@@ -185,13 +185,16 @@ class IndexCubit extends Cubit<IndexState> {
     }
   }
 
-  void editUnitData(int id, int position, String data) {
+  Future<void> editUnitData(int id, int columnIndex, String data) async {
     if (state is IndexReady) {
-      final currentState = state as IndexReady;
+      // update database
+      final updated = await _indexRepository.updateUnit(id, data, columnIndex);
+      print("updated $updated row[s]");
 
+      final currentState = state as IndexReady;
       final index = currentState.content.indexWhere((tuple) => tuple.id == id);
       final newState = [...currentState.content];
-      newState[index].data[position] = data;
+      newState[index].data[columnIndex] = data;
       emit(
         IndexReady(
           content: newState,

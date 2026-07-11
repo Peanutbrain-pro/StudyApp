@@ -18,7 +18,12 @@ class IndexRepository {
   Future<({List<String?> headers, int noOfColumns})> getHeaders(int notebookId) async {
     final headers = await _db.managers.notebooks
         .filter((f) => f.id.equals(notebookId))
-        .map((row) => (headers: (jsonDecode(row.headers ?? "[]") as List<dynamic>).cast<String?>(), noOfColumns: row.noOfColumns))
+        .map(
+          (row) => (
+            headers: (jsonDecode(row.headers ?? "[]") as List<dynamic>).cast<String?>(),
+            noOfColumns: row.noOfColumns,
+          ),
+        )
         .getSingle();
 
     return headers;
@@ -67,6 +72,25 @@ class IndexRepository {
 
   Future<int> deleteAllItems(int notebookId) {
     return _db.managers.indexItems.filter((f) => f.notebookId.id(notebookId)).delete();
+  }
+
+  Future<int> updateUnit(int id, String? data, int columnIndex) async {
+    if (columnIndex == 0) {
+      return updateTitle(id, data);
+    } else if (columnIndex == 1) {
+      return updateDescription(id, data);
+    } else {
+      final rawExtraInfo = await _db.managers.indexItems
+          .filter((f) => f.id(id))
+          .map((row) => row.extraInfo)
+          .getSingle();
+      var extraInfo = List<String?>.from(jsonDecode(rawExtraInfo ?? "[]"));
+      final index = columnIndex - 2;
+      extraInfo[index] = data;
+      final encoded = jsonEncode(extraInfo);
+
+      return _db.managers.indexItems.filter((f) => f.id(id)).update((o) => o(extraInfo: Value(encoded)));
+    }
   }
 
   Future<int> updateTitle(int id, String? title) {
