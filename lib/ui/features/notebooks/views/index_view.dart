@@ -382,11 +382,11 @@ class _IndexContentState extends State<IndexContent> {
                                     child: IntrinsicHeight(
                                       child: Row(
                                         crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: List.generate(widget.noOfColumns, (index) {
-                                          if (index >= row.data.length) {
+                                        children: List.generate(widget.noOfColumns, (columnIndex) {
+                                          if (columnIndex >= row.data.length) {
                                             row.data.add(jsonEncode(Delta()..insert('\n')));
                                           }
-                                          final List<dynamic> rawDelta = jsonDecode(row.data[index] ?? "[]");
+                                          final List<dynamic> rawDelta = jsonDecode(row.data[columnIndex] ?? "[]");
                                           final Delta dataDelta = rawDelta.isNotEmpty
                                               ? Delta.fromJson(rawDelta)
                                               : ParchmentDocument().toDelta();
@@ -396,7 +396,7 @@ class _IndexContentState extends State<IndexContent> {
                                             saveData: (delta) {
                                               context.read<IndexCubit>().editUnitData(
                                                 row.id,
-                                                index,
+                                                columnIndex,
                                                 jsonEncode(delta),
                                               );
                                             },
@@ -410,10 +410,10 @@ class _IndexContentState extends State<IndexContent> {
                                             child: cachedFleatherCell,
                                             builder: (context, currentWidths, child) {
                                               return Container(
-                                                width: currentWidths[index],
+                                                width: currentWidths[columnIndex],
                                                 decoration: BoxDecoration(
                                                   border: Border(
-                                                    right: index < widget.noOfColumns - 1
+                                                    right: columnIndex < widget.noOfColumns - 1
                                                         ? BorderSide(color: colors.border, width: 2)
                                                         : BorderSide.none,
                                                   ),
