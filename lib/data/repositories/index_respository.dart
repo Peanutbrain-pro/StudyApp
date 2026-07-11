@@ -30,12 +30,24 @@ class IndexRepository {
   }
 
   Future<int> editHeader(int notebookId, int columnIndex, String? title) async {
-    var headers = await getHeaders(notebookId);
+    final headers = await getHeaders(notebookId);
     headers.headers[columnIndex] = title;
 
     return _db.managers.notebooks
         .filter((f) => f.id(notebookId))
         .update((o) => o(headers: Value(jsonEncode(headers.headers))));
+  }
+
+  Future<void> addHeader(int notebookId) async {
+    final headers = await getHeaders(notebookId);
+    await _db.managers.notebooks
+        .filter((f) => f.id(notebookId))
+        .update(
+          (o) => o(
+            headers: Value(jsonEncode(headers.headers..add(""))),
+            noOfColumns: Value(headers.noOfColumns + 1),
+          ),
+        );
   }
 
   Future<int> removeHeader(int notebookId, int columnIndex) async {
@@ -100,6 +112,9 @@ class IndexRepository {
           .getSingle();
       var extraInfo = List<String?>.from(jsonDecode(rawExtraInfo ?? "[]"));
       final index = columnIndex - 2;
+      while (extraInfo.length <= index) {
+        extraInfo.add("");
+      }
       extraInfo[index] = data;
       final encoded = jsonEncode(extraInfo);
 

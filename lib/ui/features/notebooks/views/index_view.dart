@@ -366,169 +366,189 @@ class _IndexContentState extends State<IndexContent> {
         final innerColumnsWidth = currentWidths.fold(0.0, (prev, width) => prev + width);
         final currentTableWidth = innerColumnsWidth + 4.0;
 
-        return Column(
+        return Row(
+          crossAxisAlignment: .start,
           spacing: 10,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Stack(
-              clipBehavior: .none,
+            Column(
+              spacing: 10,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  // borderRadius: .circular(10),
-                  width: currentTableWidth,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: colors.border, width: 2),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  clipBehavior: Clip.hardEdge,
-                  child: Stack(
-                    children: [
-                      Column(
+                Stack(
+                  clipBehavior: .none,
+                  children: [
+                    Container(
+                      // borderRadius: .circular(10),
+                      width: currentTableWidth,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: colors.border, width: 2),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      clipBehavior: Clip.hardEdge,
+                      child: Stack(
                         children: [
-                          _buildHeaderRow(colors.border, inEditMode),
+                          Column(
+                            children: [
+                              _buildHeaderRow(colors.border, inEditMode),
 
-                          ...widget.content.mapIndexed((rowIndex, row) {
-                            final isLastRow = rowIndex == widget.content.length - 1;
+                              ...widget.content.mapIndexed((rowIndex, row) {
+                                final isLastRow = rowIndex == widget.content.length - 1;
 
-                            return ConstrainedBox(
-                              key: ValueKey(row.id),
-                              constraints: const .new(minHeight: 50),
-                              child: Stack(
-                                clipBehavior: Clip.none,
-                                children: [
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      border: Border(top: BorderSide(color: colors.border, width: 2)),
-                                    ),
-                                    child: IntrinsicHeight(
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                                        children: List.generate(widget.noOfColumns, (columnIndex) {
-                                          if (columnIndex >= row.data.length) {
-                                            row.data.add(jsonEncode(Delta()..insert('\n')));
-                                          }
-                                          final List<dynamic> rawDelta = jsonDecode(
-                                            row.data[columnIndex] ?? "[]",
-                                          );
-                                          final Delta dataDelta = rawDelta.isNotEmpty
-                                              ? Delta.fromJson(rawDelta)
-                                              : ParchmentDocument().toDelta();
-
-                                          // final cachedFleatherCell =
-                                          return ValueListenableBuilder<List<double>>(
-                                            valueListenable: widthsNotifier,
-                                            // child: cachedFleatherCell,
-                                            builder: (context, currentWidths, child) {
-                                              return Container(
-                                                width: currentWidths[columnIndex],
-                                                decoration: BoxDecoration(
-                                                  border: Border(
-                                                    right: columnIndex < widget.noOfColumns - 1
-                                                        ? BorderSide(color: colors.border, width: 2)
-                                                        : BorderSide.none,
-                                                  ),
-                                                ),
-                                                child: EditableFleatherCell(
-                                                  initialDelta: dataDelta,
-                                                  saveData: (delta) {
-                                                    context.read<IndexCubit>().editUnitData(
-                                                      row.id,
-                                                      columnIndex,
-                                                      jsonEncode(delta),
-                                                    );
-                                                  },
-                                                  checkAndSetActive: widget.checkAndSetActive,
-                                                  removeActive: widget.removeActive,
-                                                  id: row.id,
-                                                ),
+                                return ConstrainedBox(
+                                  key: ValueKey(row.id),
+                                  constraints: const .new(minHeight: 50),
+                                  child: Stack(
+                                    clipBehavior: Clip.none,
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          border: Border(top: BorderSide(color: colors.border, width: 2)),
+                                        ),
+                                        child: IntrinsicHeight(
+                                          child: Row(
+                                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                                            children: List.generate(widget.noOfColumns, (columnIndex) {
+                                              if (columnIndex >= row.data.length) {
+                                                row.data.add(jsonEncode(Delta()..insert('\n')));
+                                              }
+                                              final rowData = row.data[columnIndex] ?? "";
+                                              final List<dynamic> rawDelta = jsonDecode(
+                                                rowData.isNotEmpty
+                                                    ? rowData
+                                                    : jsonEncode(Delta()..insert('\n')),
                                               );
+                                              final Delta dataDelta = rawDelta.isNotEmpty
+                                                  ? Delta.fromJson(rawDelta)
+                                                  : ParchmentDocument().toDelta();
+
+                                              return ValueListenableBuilder<List<double>>(
+                                                valueListenable: widthsNotifier,
+                                                builder: (context, currentWidths, child) {
+                                                  return Container(
+                                                    width: currentWidths[columnIndex],
+                                                    decoration: BoxDecoration(
+                                                      border: Border(
+                                                        right: columnIndex < widget.noOfColumns - 1
+                                                            ? BorderSide(color: colors.border, width: 2)
+                                                            : BorderSide.none,
+                                                      ),
+                                                    ),
+                                                    child: EditableFleatherCell(
+                                                      initialDelta: dataDelta,
+                                                      saveData: (delta) {
+                                                        context.read<IndexCubit>().editUnitData(
+                                                          row.id,
+                                                          columnIndex,
+                                                          jsonEncode(delta),
+                                                        );
+                                                      },
+                                                      checkAndSetActive: widget.checkAndSetActive,
+                                                      removeActive: widget.removeActive,
+                                                      id: row.id,
+                                                    ),
+                                                  );
+                                                },
+                                              );
+                                            }),
+                                          ),
+                                        ),
+                                      ),
+
+                                      if (inEditMode)
+                                        ValueListenableBuilder<int?>(
+                                          valueListenable: hoveredSeamNotifier,
+                                          builder: (context, hoveredSeam, child) {
+                                            if (hoveredSeam == rowIndex) {
+                                              return Positioned(
+                                                top: -1,
+                                                left: 0,
+                                                right: 0,
+                                                child: Container(height: 4, color: Colors.blue),
+                                              );
+                                            }
+                                            return const SizedBox.shrink();
+                                          },
+                                        ),
+
+                                      if (inEditMode)
+                                        Positioned(
+                                          top: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: HoverInsertBox(
+                                            seamIndex: rowIndex,
+                                            hoveredSeamNotifier: hoveredSeamNotifier,
+                                            onInsert: () {
+                                              context.read<IndexCubit>().addUnit(position: rowIndex);
+                                              print("Inserting before row: $rowIndex");
                                             },
-                                          );
-                                        }),
-                                      ),
-                                    ),
+                                          ),
+                                        ),
+
+                                      if (inEditMode && !isLastRow)
+                                        Positioned(
+                                          bottom: 0,
+                                          left: 0,
+                                          right: 0,
+                                          child: HoverInsertBox(
+                                            seamIndex: rowIndex + 1,
+                                            hoveredSeamNotifier: hoveredSeamNotifier,
+                                            onInsert: () {
+                                              context.read<IndexCubit>().addUnit(position: rowIndex + 1);
+                                              print("Inserting before row: ${rowIndex + 1}");
+                                            },
+                                          ),
+                                        ),
+                                    ],
                                   ),
-
-                                  if (inEditMode)
-                                    ValueListenableBuilder<int?>(
-                                      valueListenable: hoveredSeamNotifier,
-                                      builder: (context, hoveredSeam, child) {
-                                        if (hoveredSeam == rowIndex) {
-                                          return Positioned(
-                                            top: -1,
-                                            left: 0,
-                                            right: 0,
-                                            child: Container(height: 4, color: Colors.blue),
-                                          );
-                                        }
-                                        return const SizedBox.shrink();
-                                      },
-                                    ),
-
-                                  if (inEditMode)
-                                    Positioned(
-                                      top: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: HoverInsertBox(
-                                        seamIndex: rowIndex,
-                                        hoveredSeamNotifier: hoveredSeamNotifier,
-                                        onInsert: () {
-                                          context.read<IndexCubit>().addUnit(position: rowIndex);
-                                          print("Inserting before row: $rowIndex");
-                                        },
-                                      ),
-                                    ),
-
-                                  if (inEditMode && !isLastRow)
-                                    Positioned(
-                                      bottom: 0,
-                                      left: 0,
-                                      right: 0,
-                                      child: HoverInsertBox(
-                                        seamIndex: rowIndex + 1,
-                                        hoveredSeamNotifier: hoveredSeamNotifier,
-                                        onInsert: () {
-                                          context.read<IndexCubit>().addUnit(position: rowIndex + 1);
-                                          print("Inserting before row: ${rowIndex + 1}");
-                                        },
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            );
-                          }),
+                                );
+                              }),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+
+                    // Proxy Drag Line
+                    ValueListenableBuilder<double?>(
+                      valueListenable: dragPositionNotifier,
+                      builder: (context, dragX, child) {
+                        if (dragX == null) return const SizedBox.shrink();
+                        return Positioned(
+                          left: dragX,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(width: 3, color: Colors.blue.withAlpha(200)),
+                        );
+                      },
+                    ),
+                  ],
                 ),
 
-                // Proxy Drag Line
-                ValueListenableBuilder<double?>(
-                  valueListenable: dragPositionNotifier,
-                  builder: (context, dragX, child) {
-                    if (dragX == null) return const SizedBox.shrink();
-                    return Positioned(
-                      left: dragX,
-                      top: 0,
-                      bottom: 0,
-                      child: Container(width: 3, color: Colors.blue.withAlpha(200)),
-                    );
-                  },
-                ),
+                if (inEditMode)
+                  SizedBox(
+                    width: currentTableWidth,
+                    child: FButton(
+                      size: .lg,
+                      variant: .outline,
+                      onPress: () {
+                        print("Appending to bottom of table");
+                        context.read<IndexCubit>().addUnit();
+                      },
+                      child: const Icon(FIcons.plus),
+                    ),
+                  ),
               ],
             ),
 
-            if (inEditMode)
+            if (inEditMode & (widget.noOfColumns < 8))
               SizedBox(
-                width: currentTableWidth,
+                height: 50,
+                width: 40,
                 child: FButton(
                   variant: .outline,
-                  onPress: () {
-                    print("Appending to bottom of table");
-                    context.read<IndexCubit>().addUnit();
-                  },
+                  size: .lg,
+                  onPress: () => context.read<IndexCubit>().addHeader(widget.notebookId),
                   child: const Icon(FIcons.plus),
                 ),
               ),

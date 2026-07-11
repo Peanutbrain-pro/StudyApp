@@ -62,7 +62,7 @@ class IndexCubit extends Cubit<IndexState> {
 
   void saveColumnWidths(int notebookId, List<double> columnWidths) {
     print("saving to database the column widths $columnWidths");
-    _uiPreferencesRepository.saveColumnWidths(notebookId, columnWidths);
+    _uiPreferencesRepository.saveColumnWidths(notebookId, "Index", columnWidths);
   }
 
   Future<List<double>> getColumnWidths(int notebookId, int noOfColumns) async {
@@ -89,7 +89,7 @@ class IndexCubit extends Cubit<IndexState> {
       List<String?> data = [];
       data.add(item.title);
       data.add(item.description);
-      data.addAll(jsonDecode((item.extraInfo ?? "[]")).cast<String?>());
+      data.addAll(List<String?>.from(jsonDecode((item.extraInfo ?? "[]"))));
       content.add((id: item.id, data: data));
     }
     return content;
@@ -128,7 +128,7 @@ class IndexCubit extends Cubit<IndexState> {
       final row = await _indexRepository.addUnit(notebookId, position: position);
       final newUnit = (
         id: row.id,
-        data: <String?>[row.title, row.description, (jsonDecode(row.extraInfo ?? "[]")).toString()],
+        data: [row.title, row.description, ...List<String?>.from(jsonDecode(row.extraInfo ?? "[]"))],
       );
 
       // final String jsonDesc = jsonEncode(unitDescription);
@@ -161,6 +161,25 @@ class IndexCubit extends Cubit<IndexState> {
           inEditMode: currentState.inEditMode,
           noOfColumns: currentState.noOfColumns,
           headers: currentState.headers,
+        ),
+      );
+    }
+  }
+
+  void addHeader(int notebookId) {
+    if (state is IndexReady) {
+      _indexRepository.addHeader(notebookId);
+      _uiPreferencesRepository.addColumn(notebookId);
+      final currentState = state as IndexReady;
+      var headers = [...currentState.headers, null];
+      var columnWidths = [...currentState.columnWidths, 100.0];
+      emit(
+        IndexReady(
+          content: currentState.content,
+          columnWidths: columnWidths,
+          headers: headers,
+          inEditMode: currentState.inEditMode,
+          noOfColumns: currentState.noOfColumns + 1,
         ),
       );
     }
