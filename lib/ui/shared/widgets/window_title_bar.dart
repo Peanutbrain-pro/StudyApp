@@ -10,6 +10,11 @@ class WindowsButtonListener extends WindowListener {
   @override
   void onWindowUnmaximize() => isMaximized.value = false;
 
+  @override
+  void onWindowRestore() async {
+    isMaximized.value = await windowManager.isMaximized();
+  }
+
   void dispose() => isMaximized.dispose();
 }
 
@@ -30,7 +35,6 @@ class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> {
     windowsButtonListener = WindowsButtonListener();
     windowManager.addListener(windowsButtonListener);
     windowsButtonListener.isMaximized.addListener(_isMaximizedChanged);
-
     windowManager.isMaximized().then((v) {
       if (mounted) setState(() => isMaximized = v);
     });
@@ -57,43 +61,56 @@ class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> {
 
     return SizedBox(
       height: 32,
-      child: DragToMoveArea(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const SizedBox(width: 12),
-            const FlutterLogo(size: 16),
+      child: Row(
+        children: [
+          Expanded(
+            child: DragToMoveArea(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 12),
+                  const FlutterLogo(size: 16),
 
-            // Image.asset(
-            //   'assets/pdf_icon.png',
-            //   width: 16,
-            //   height: 16,
-            //   errorBuilder: (context, error, stackTrace) =>
-            //       Icon(Icons.book, size: 16, color: isDark ? Colors.white70 : Colors.black87),
-            // ),
-            const SizedBox(width: 12),
-            Text(
-              'StudyApp',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1E1E1E),
+                  // Image.asset(
+                  //   'assets/pdf_icon.png',
+                  //   width: 16,
+                  //   height: 16,
+                  //   errorBuilder: (context, error, stackTrace) =>
+                  //       Icon(Icons.book, size: 16, color: isDark ? Colors.white70 : Colors.black87),
+                  // ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'StudyApp',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1E1E1E),
+                    ),
+                  ),
+
+                  const Spacer(),
+                ],
               ),
             ),
+          ),
 
-            const Spacer(),
-
-            WindowCaptionButton.minimize(brightness: brightness, onPressed: () => windowManager.minimize()),
-            if (isMaximized)
-              WindowCaptionButton.unmaximize(
-                brightness: brightness,
-                onPressed: () => windowManager.unmaximize(),
-              )
-            else
-              WindowCaptionButton.maximize(brightness: brightness, onPressed: () => windowManager.maximize()),
-            WindowCaptionButton.close(brightness: brightness, onPressed: () => windowManager.close()),
-          ],
-        ),
+          WindowCaptionButton.minimize(
+            brightness: brightness,
+            onPressed: () async {
+              await windowManager.minimize();
+            },
+          ),
+          if (isMaximized)
+            WindowCaptionButton.unmaximize(
+              brightness: brightness,
+              onPressed: () async {
+                await windowManager.unmaximize();
+              },
+            )
+          else
+            WindowCaptionButton.maximize(brightness: brightness, onPressed: () async => await windowManager.maximize()),
+          WindowCaptionButton.close(brightness: brightness, onPressed: () async => await windowManager.close()),
+        ],
       ),
     );
   }
