@@ -41,10 +41,6 @@ class _NotesViewState extends State<NotesView> {
     controller = FleatherController(document: doc);
 
     controller.replaceText(controller.document.length - 1, 0, "\n");
-    // final imageEmbed = {
-    //   'image':
-    //       'https://images.unsplash.com/photo-1626808642875-0aa545482dfb?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-    // };
     final imageEmbed = EmbeddableObject(
       'image',
       inline: false,
@@ -96,22 +92,24 @@ class _NotesViewState extends State<NotesView> {
                     padding: const .all(48),
                     child: Column(
                       children: [
-                        // FleatherToolbar.basic(controller: controller),
                         FleatherEditor(
                           controller: controller,
                           autofocus: true,
                           embedBuilder: (BuildContext context, EmbedNode node) {
-                            // 1. Handle your custom types first
-                            // if (node.value.type == 'customWidget') {
-                            //   return MyCustomWidget(node: node);
-                            // }
+                            // Handling source pills
+                            if (node.value.type == 'source') {
+                              return SourceEmbed(
+                                filename: node.value.data['filename'],
+                                filetype: node.value.data['filetype'],
+                                url: node.value.data['url'],
+                              );
+                            }
 
-                            // 2. Handle image types explicitly (since Fleather doesn't do it for you)
+                            // Handling images
                             if (node.value.type == 'image') {
                               final imageUrl = node.value.data['source'] as String;
                               final currentWidth = (node.value.data['width'] as double?) ?? 300.0;
 
-                              // return Image.network(imageUrl);
                               return ImageEmbed(
                                 imageUrl: imageUrl,
                                 initialWidth: currentWidth,
@@ -154,12 +152,7 @@ class ImageEmbed extends StatefulWidget {
 
   final Function(double newWidth) onResizeEnd;
 
-  const ImageEmbed({
-    super.key,
-    required this.imageUrl,
-    this.initialWidth = 300,
-    required this.onResizeEnd,
-  });
+  const ImageEmbed({super.key, required this.imageUrl, this.initialWidth = 300, required this.onResizeEnd});
 
   @override
   State<ImageEmbed> createState() => _ImageEmbedState();
@@ -168,7 +161,7 @@ class ImageEmbed extends StatefulWidget {
 class _ImageEmbedState extends State<ImageEmbed> {
   late double _width;
   bool _isHovered = false;
-  bool _isDragging = false; // Track active drag gesture
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -188,7 +181,6 @@ class _ImageEmbedState extends State<ImageEmbed> {
 
   @override
   Widget build(BuildContext context) {
-    // Keep handles visible if hovered OR actively dragging
     final showHandles = _isHovered || _isDragging;
 
     return Padding(
@@ -212,21 +204,11 @@ class _ImageEmbedState extends State<ImageEmbed> {
 
               // 2. The Right Handle
               if (showHandles)
-                Positioned(
-                  right: 4,
-                  top: 0,
-                  bottom: 0,
-                  child: _buildDragHandle(isRightHandle: true),
-                ),
+                Positioned(right: 4, top: 0, bottom: 0, child: _buildDragHandle(isRightHandle: true)),
 
               // 3. The Left Handle
               if (showHandles)
-                Positioned(
-                  left: 4,
-                  top: 0,
-                  bottom: 0,
-                  child: _buildDragHandle(isRightHandle: false),
-                ),
+                Positioned(left: 4, top: 0, bottom: 0, child: _buildDragHandle(isRightHandle: false)),
             ],
           ),
         ),
@@ -240,7 +222,7 @@ class _ImageEmbedState extends State<ImageEmbed> {
       child: GestureDetector(
         onHorizontalDragStart: (_) {
           setState(() {
-            _isDragging = true; // Prevent handles from unmounting during drag
+            _isDragging = true;
           });
         },
         onHorizontalDragUpdate: (details) {
@@ -251,7 +233,7 @@ class _ImageEmbedState extends State<ImageEmbed> {
         },
         onHorizontalDragEnd: (_) {
           setState(() {
-            _isDragging = false; // Release lock on drag end
+            _isDragging = false;
           });
           widget.onResizeEnd(_width);
         },
@@ -267,6 +249,33 @@ class _ImageEmbedState extends State<ImageEmbed> {
             color: Colors.grey.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(4),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class SourceEmbed extends StatelessWidget {
+  final String filename;
+  final String filetype;
+  final String url;
+
+  const SourceEmbed({super.key, required this.filename, required this.filetype, required this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(borderRadius: .circular(10)),
+      // width: 80,
+      // height: 20,
+      child: UnconstrainedBox(
+        child: FButton(
+          style: const .delta(contentStyle: .delta(padding: .value(.symmetric(horizontal: 6, vertical: 2)))),
+          size: .sm,
+          variant: .outline,
+          onPress: () {},
+          prefix: Icon(filetype == 'pdf' ? FIcons.file : FIcons.menu),
+          child: Text(filename.length <= 15 ? filename : '${filename.substring(0, 12)}...'),
         ),
       ),
     );
