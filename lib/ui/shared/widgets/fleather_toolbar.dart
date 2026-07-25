@@ -1,6 +1,7 @@
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:mobkit_dashed_border/mobkit_dashed_border.dart';
 
 class CustomFleatherToolbar extends StatelessWidget {
   final FleatherController _controller;
@@ -79,6 +80,7 @@ class CustomFleatherToolbar extends StatelessWidget {
 
           // Insert Image at the cursor position
           ImageButton(controller: _controller),
+          SourceButton(controller: _controller),
         ],
       ),
     );
@@ -138,28 +140,110 @@ class AlignmentButton extends StatelessWidget {
 }
 
 class ImageButton extends StatelessWidget {
-  final FleatherController controller;
+  final FleatherController _controller;
 
-  const ImageButton({super.key, required this.controller});
+  const ImageButton({super.key, required FleatherController controller}) : _controller = controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.theme.colors;
+    return FPopover(
+      offset: const .new(0, 7),
+      style: .delta(
+        decoration: .boxDelta(
+          border: DashedBorder.all(dashLength: 9, color: colors.foreground.withValues(alpha: 0.3)),
+          color: colors.secondary,
+        ),
+      ),
+      popoverBuilder: (BuildContext context, FPopoverController _) {
+        return Column(
+          children: [
+            SizedBox(
+              width: 300,
+              height: 250,
+              child: Column(
+                children: [
+                  const SizedBox(height: 10),
+                  Container(
+                    width: 280,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: colors.border,
+                      borderRadius: .circular(10),
+                      border: .all(),
+                    ),
+                    child: FButton(
+                      size: .lg,
+                      variant: .ghost,
+                      onPress: () {
+                        int index = _controller.selection.baseOffset;
+                        int length = _controller.selection.extentOffset - index;
+                        if (index < 0) {
+                          index = _controller.document.length - 1;
+                          length = 0;
+                        }
+                        _controller.replaceText(
+                          index,
+                          length,
+                          EmbeddableObject(
+                            'image',
+                            inline: false,
+                            data: {
+                              'source':
+                                  'https://cdn.pixabay.com/photo/2024/09/21/10/53/anime-9063542_1280.png',
+                            },
+                          ),
+                        );
+                      },
+                      child: const Icon(FIcons.imagePlus),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+      builder: (_, controller, _) {
+        return FButton(variant: .ghost, onPress: controller.toggle, child: const Icon(FIcons.image));
+      },
+    );
+  }
+}
+
+class SourceButton extends StatelessWidget {
+  final FleatherController _controller;
+
+  const SourceButton({super.key, required FleatherController controller}) : _controller = controller;
 
   @override
   Widget build(BuildContext context) {
     return FButton(
       variant: .ghost,
       onPress: () {
-        int index = controller.selection.baseOffset;
-        int length = controller.selection.extentOffset - index;
+        final selection = _controller.selection;
+        int index = selection.isCollapsed ? selection.baseOffset : selection.start;
+        int length = selection.isCollapsed ? 0 : (selection.end - selection.start);
+
         if (index < 0) {
-          index = controller.document.length - 1;
+          index = _controller.document.length - 1;
           length = 0;
         }
-        controller.replaceText(
+        _controller.replaceText(
           index,
           length,
-          EmbeddableObject('image', inline: false, data:{'source': 'https://cdn.pixabay.com/photo/2024/09/21/10/53/anime-9063542_1280.png'}),
+          EmbeddableObject(
+            'source',
+            inline: true,
+            data: {
+              'filename': 'filename very very long.pdf',
+              'filetype': 'pdf',
+              'url': 'C:\\Users\\KIIT0001\\Downloads\\Resume_Julaiba_Academic-20250415113753.docx',
+            },
+          ),
         );
       },
-      child: const Icon(FIcons.image),
+      child: const Icon(FIcons.squareArrowOutUpRight),
     );
   }
 }

@@ -33,7 +33,7 @@ migrate_working_dir/
 .pub/
 /build/
 .fdemon/
-
+.zed/
 # Symbolication related
 app.*.symbols
 
