@@ -57,9 +57,13 @@ class _HomeViewState extends State<HomeView> {
                   }
                   if (nochange) break;
                 }
-            
+
                 // String result = "New Notebook $i";
-                String? result = await DialogHelper.getStringInput(context, "Notebook Name", "New Notebook $i");
+                String? result = await DialogHelper.getStringInput(
+                  context,
+                  "Notebook Name",
+                  "New Notebook $i",
+                );
                 if (result == null || result == "") {
                   return;
                 }
@@ -182,7 +186,7 @@ class NotebookItem extends StatelessWidget {
                                 "Delete",
                               );
                               if (!confirmed) return;
-                              
+
                               await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
                               gridKey.currentState?.removeItem(index, (context, animation) {
                                 return ScaleTransition(
@@ -203,6 +207,13 @@ class NotebookItem extends StatelessWidget {
                               );
                               if (result == null || result == "") {
                                 return;
+                              } else if (result.length >= 100) {
+                                await DialogHelper.showError(
+                                  context,
+                                  "Name too long",
+                                  "The name of the notebook is way too long. Please choose a smaller name.",
+                                );
+                                return;
                               }
                               context.read<HomeCubit>().renameNotebook(notebook.id, result);
                             },
@@ -211,7 +222,11 @@ class NotebookItem extends StatelessWidget {
                       ),
                     ],
                     builder: (context, controller, child) {
-                      return FButton.icon(variant: .ghost, onPress: controller.toggle, child: const Icon(FIcons.ellipsisVertical));
+                      return FButton.icon(
+                        variant: .ghost,
+                        onPress: controller.toggle,
+                        child: const Icon(FIcons.ellipsisVertical),
+                      );
                     },
                   ),
                 ),
@@ -226,7 +241,7 @@ class NotebookItem extends StatelessWidget {
                 //         bool confirmed = await DialogHelper.getConfirmation(context, "Delete Notebook",
                 //             "Are you sure you want to delete the Notebook: ${notebook.name}", "Delete");
                 //         if (!confirmed) return;
-              
+
                 //         await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
                 //         gridKey.currentState?.removeItem(
                 //           index,

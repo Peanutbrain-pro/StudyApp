@@ -2,23 +2,22 @@ import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
-class CustomFleatherToolbar extends StatelessWidget {
+class CustomFleatherContextToolbar extends StatelessWidget {
   final FleatherController _controller;
-
-  const CustomFleatherToolbar({super.key, required FleatherController controller}) : _controller = controller;
+  const CustomFleatherContextToolbar({super.key, required FleatherController controller}) : _controller = controller;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     return Container(
-      height: 50,
+      // height: 50,
       // width: 400,
       margin: const .all(5),
-      // padding: .zero,
+      padding: .zero,
       decoration: BoxDecoration(
         color: colors.card,
         borderRadius: .circular(10),
-        // border: .all(color: colors.primary.withAlpha(170), width: 2),
+        border: .all(color: colors.primary.withAlpha(170), width: 4),
       ),
       child: FleatherToolbar(
         children: [
@@ -75,10 +74,6 @@ class CustomFleatherToolbar extends StatelessWidget {
             icon: Icons.format_list_numbered,
             controller: _controller,
           ),
-          const VerticalDivider(),
-
-          // Insert Image at the cursor position
-          ImageButton(controller: _controller),
         ],
       ),
     );
@@ -89,7 +84,6 @@ class AlignmentButton extends StatelessWidget {
   final ParchmentAttribute attribute;
   final IconData icon;
   final FleatherController controller;
-
   const AlignmentButton({super.key, required this.attribute, required this.icon, required this.controller});
 
   @override
@@ -133,33 +127,6 @@ class AlignmentButton extends StatelessWidget {
           child: Icon(icon),
         );
       },
-    );
-  }
-}
-
-class ImageButton extends StatelessWidget {
-  final FleatherController controller;
-
-  const ImageButton({super.key, required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return FButton(
-      variant: .ghost,
-      onPress: () {
-        int index = controller.selection.baseOffset;
-        int length = controller.selection.extentOffset - index;
-        if (index < 0) {
-          index = controller.document.length - 1;
-          length = 0;
-        }
-        controller.replaceText(
-          index,
-          length,
-          EmbeddableObject('image', inline: false, data:{'source': 'https://cdn.pixabay.com/photo/2024/09/21/10/53/anime-9063542_1280.png'}),
-        );
-      },
-      child: const Icon(FIcons.image),
     );
   }
 }

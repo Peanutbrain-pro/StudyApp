@@ -12,10 +12,6 @@ sealed class IndexState {}
 class IndexLoading extends IndexState {}
 
 class IndexReady extends IndexState {
-  // final List<List<String?>> content;
-  // something like this for a single unit
-  // {id: 1, data: ["Unit Title", "JSON  unit description", "extra column", "extra column" ...]
-  // ... }
   final List<({int id, List<String?> data})> content;
   final int noOfColumns;
   final List<String?> headers;

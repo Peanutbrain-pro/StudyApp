@@ -33,3 +33,8 @@ class Sources extends Table {
   late final TextColumn path = text()();
   late final TextColumn type = text()();
 }
+
+class Notes extends Table {
+  late final IntColumn notebookId = integer().references(Notebooks, #id, onDelete: .cascade)();
+  late final TextColumn data = text()();
+}
