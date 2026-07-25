@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
@@ -172,10 +173,15 @@ class ImageButton extends StatelessWidget {
                       borderRadius: .circular(10),
                       border: .all(),
                     ),
+                    // Local files
                     child: FButton(
                       size: .lg,
                       variant: .ghost,
-                      onPress: () {
+                      onPress: () async {
+                        FilePickerResult? result = await FilePicker.pickFiles();
+                        if (result == null) {
+                          return;
+                        }
                         int index = _controller.selection.baseOffset;
                         int length = _controller.selection.extentOffset - index;
                         if (index < 0) {
@@ -188,14 +194,40 @@ class ImageButton extends StatelessWidget {
                           EmbeddableObject(
                             'image',
                             inline: false,
-                            data: {
-                              'source':
-                                  'https://cdn.pixabay.com/photo/2024/09/21/10/53/anime-9063542_1280.png',
-                            },
+                            data: {'source': '${result.files.single.path}', 'isNetwork': false},
                           ),
                         );
                       },
-                      child: const Icon(FIcons.imagePlus),
+                      child: const Column(
+                        crossAxisAlignment: .center,
+                        mainAxisAlignment: .center,
+                        spacing: 20,
+                        children: [Icon(FIcons.imagePlus, size: 24), Text("Pick a file from your computer")],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: TextField(
+                      decoration: const InputDecoration(hintText: 'URL : e.g. https://unsplash.com/xxxx'),
+                      onSubmitted: (text) {
+                        int index = _controller.selection.baseOffset;
+                        int length = _controller.selection.extentOffset - index;
+                        if (index < 0) {
+                          index = _controller.document.length - 1;
+                          length = 0;
+                        }
+                        _controller.replaceText(
+                          index,
+                          length,
+                          EmbeddableObject(
+                            'image',
+                            inline: false,
+                            data: {'source': text, 'isNetwork': true},
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
