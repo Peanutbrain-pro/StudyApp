@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/index_respository.dart';
+import 'package:studyapp/data/repositories/note_repository.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 import 'package:studyapp/ui/router.dart';
@@ -26,6 +27,7 @@ void main() async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.show();
     await windowManager.focus();
+    await windowManager.setMinimumSize(const Size(960, 450));
   });
 
   final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -44,6 +46,10 @@ void main() async {
         RepositoryProvider<UiPreferencesRepository>(
           lazy: true,
           create: (context) => UiPreferencesRepository(db: context.read<AppDatabase>()),
+        ),
+        RepositoryProvider<NoteRepository>(
+          lazy: true,
+          create: (context) => NoteRepository(db: context.read<AppDatabase>()),
         ),
         RepositoryProvider<IndexRepository>(
           lazy: true,

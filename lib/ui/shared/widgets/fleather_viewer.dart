@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 class FleatherViewer extends StatefulWidget {
   final Delta delta;
+
   const FleatherViewer({super.key, required this.delta});
 
   @override
@@ -24,6 +25,7 @@ class _FleatherViewerState extends State<FleatherViewer> {
     controller.dispose();
     super.dispose();
   }
+
   // late Delta _currentDelta;
   // bool _isEditing = false;
 

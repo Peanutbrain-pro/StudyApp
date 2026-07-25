@@ -10,7 +10,7 @@ import 'package:studyapp/data/repositories/index_respository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/index_cubit.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_editor.dart';
-import 'package:studyapp/ui/shared/widgets/fleather_toolbar.dart';
+import 'package:studyapp/ui/shared/widgets/fleather_context_toolbar.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_viewer.dart';
 
 class IndexPage extends StatelessWidget {
@@ -128,6 +128,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                           decoration: BoxDecoration(
                             color: colors.card,
                             border: .all(width: 2, color: colors.border),
+                            borderRadius: .circular(10)
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,11 +157,15 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                                 ),
                               ),
 
-                              FButton(
-                                onPress: () {
-                                  context.read<IndexCubit>().deleteAllItems();
-                                },
-                                child: const Text("Delete everything"),
+                              Padding(
+                                padding: const .only(left: 48),
+                                child: FButton(
+                                  variant: .destructive,
+                                  onPress: () {
+                                    context.read<IndexCubit>().deleteAllItems();
+                                  },
+                                  child: const Text("Delete everything"),
+                                ),
                               ),
                             ],
                           ),
@@ -619,8 +624,8 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
           final anchors = editorState.contextMenuAnchors;
           print(anchors.primaryAnchor);
           return Transform.translate(
-            offset: Offset(anchors.primaryAnchor.dx - 501, anchors.primaryAnchor.dy - 410),
-            child: UnconstrainedBox(child: CustomFleatherToolbar(controller: controller!)),
+            offset: Offset(anchors.primaryAnchor.dx - 351, anchors.primaryAnchor.dy - 410),
+            child: UnconstrainedBox(child: CustomFleatherContextToolbar(controller: controller!)),
           );
         },
         save: save,

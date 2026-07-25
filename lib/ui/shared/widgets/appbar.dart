@@ -20,7 +20,7 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         mainAxisSize: .min,
         children: [
           if (prefixes.isNotEmpty) Row(children: prefixes),
-          title,
+          Expanded(child: title),
         ],
       ),
       suffixes: [

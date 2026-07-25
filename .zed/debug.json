@@ -1,0 +1,33 @@
+// Project-local debug tasks
+//
+// For more documentation on how to configure debug tasks,
+// see: https://zed.dev/docs/debugger
+[
+    {
+        "adapter": "flutter",
+        "label": "Launch Windows",
+        "request": "launch",
+        "program": "lib/main.dart",
+        "deviceId": "windows",
+    },
+    {
+        "adapter": "flutter",
+        "label": "Launch Chrome",
+        "request": "launch",
+        "program": "lib/main.dart",
+        "deviceId": "chrome",
+    },
+    {
+        "adapter": "flutter",
+        "label": "Attach to Running App",
+        "request": "attach",
+        "vmServiceUri": "ws://127.0.0.1:50645/jtSVup0rS24=/ws",
+    },
+    // {
+    //     "adapter": "flutter",
+    //     "label": "Launch Android",
+    //     "request": "launch",
+    //     "program": "lib/main.dart",
+    //     "deviceId": "android"
+    // }
+]

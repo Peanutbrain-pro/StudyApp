@@ -46,16 +46,19 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     return BlocBuilder<NotebookCubit, NotebookState>(
       builder: (context, state) {
-        final bool nameTooLong = state.notebookName.length > 35;
+        // final bool nameTooLong = state.notebookName.length > 35;
 
         return FScaffold(
           header: MainAppBar(
             title: Row(
               children: [
-                const SizedBox(width: 5),
-                Text(state.notebookName),
+                TabHeader(tabController: _tabController),
                 const SizedBox(width: 40),
-                if (!nameTooLong) TabHeader(tabController: _tabController),
+                Expanded(
+                  // Make the gradient disappear when near the end of the text
+                  child: Text(state.notebookName, overflow: .ellipsis),
+                ),
+                // const SizedBox(width: 40),
               ],
             ),
             prefixes: [
@@ -71,21 +74,21 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
           child: Column(
             spacing: 10,
             children: [
-              if (nameTooLong)
-                Align(
-                  alignment: .centerLeft,
-                  child: Padding(
-                    padding: const .only(left: 48),
-                    child: TabHeader(tabController: _tabController),
-                  ),
-                ),
+              // if (nameTooLong)
+              //   Align(
+              //     alignment: .centerLeft,
+              //     child: Padding(
+              //       padding: const .only(left: 48),
+              //       child: TabHeader(tabController: _tabController),
+              //     ),
+              //   ),
               Expanded(
                 child: TabBarView(
                   physics: const NeverScrollableScrollPhysics(),
                   controller: _tabController,
                   children: [
                     IndexPage(notebookId: widget.notebookId),
-                    const NotesView(),
+                    const NotesPage(),
                     const PyqsView(),
                   ],
                 ),
@@ -108,7 +111,7 @@ class TabHeader extends StatelessWidget {
     final colors = context.theme.colors;
     return Container(
       height: 40,
-      width: 600,
+      width: 300,
       decoration: BoxDecoration(color: colors.secondary, borderRadius: .circular(15)),
       child: TabBar(
         labelColor: colors.primaryForeground,
@@ -123,9 +126,9 @@ class TabHeader extends StatelessWidget {
         labelPadding: .zero,
         indicator: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(15)),
         tabs: [
-          const SizedBox(width: 200, child: Tab(text: "Index")),
-          const SizedBox(width: 200, child: Tab(text: 'Notes')),
-          const SizedBox(width: 200, child: Tab(text: 'PYQs')),
+          const SizedBox(width: 100, child: Tab(text: "Index")),
+          const SizedBox(width: 100, child: Tab(text: 'Notes')),
+          const SizedBox(width: 100, child: Tab(text: 'PYQs')),
         ],
       ),
     );
