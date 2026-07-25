@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:fleather/fleather.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -47,6 +49,7 @@ class _NotesViewState extends State<NotesView> {
       data: {
         'source':
             'https://images.unsplash.com/photo-1626808642875-0aa545482dfb?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        'isNetwork': true,
       },
     );
 
@@ -109,10 +112,12 @@ class _NotesViewState extends State<NotesView> {
                             if (node.value.type == 'image') {
                               final imageUrl = node.value.data['source'] as String;
                               final currentWidth = (node.value.data['width'] as double?) ?? 300.0;
+                              final isNetwork = node.value.data['isNetwork'] as bool;
 
                               return ImageEmbed(
                                 imageUrl: imageUrl,
                                 initialWidth: currentWidth,
+                                isNetwork: isNetwork,
                                 onResizeEnd: (newWidth) {
                                   final index = node.documentOffset;
                                   final length = node.length;
@@ -147,12 +152,19 @@ class _NotesViewState extends State<NotesView> {
 }
 
 class ImageEmbed extends StatefulWidget {
+  final bool isNetwork;
   final String imageUrl;
   final double initialWidth;
 
   final Function(double newWidth) onResizeEnd;
 
-  const ImageEmbed({super.key, required this.imageUrl, this.initialWidth = 300, required this.onResizeEnd});
+  const ImageEmbed({
+    super.key,
+    required this.imageUrl,
+    this.initialWidth = 300,
+    required this.onResizeEnd,
+    required this.isNetwork,
+  });
 
   @override
   State<ImageEmbed> createState() => _ImageEmbedState();
@@ -193,12 +205,13 @@ class _ImageEmbedState extends State<ImageEmbed> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // 1. The Image
               ConstrainedBox(
                 constraints: const BoxConstraints(minWidth: 100),
                 child: SizedBox(
                   width: _width,
-                  child: Image.network(widget.imageUrl, fit: BoxFit.contain),
+                  child: widget.isNetwork
+                      ? Image.network(widget.imageUrl, fit: BoxFit.contain, errorBuilder: _buildErrorImage)
+                      : Image.file(File(widget.imageUrl), errorBuilder: _buildErrorImage),
                 ),
               ),
 
@@ -211,6 +224,28 @@ class _ImageEmbedState extends State<ImageEmbed> {
                 Positioned(left: 4, top: 0, bottom: 0, child: _buildDragHandle(isRightHandle: false)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildErrorImage(BuildContext context, Object error, StackTrace? stackTrace) {
+    debugPrint('Image load error ($widget.imageUrl): $error');
+    return Container(
+      height: 180,
+      decoration: BoxDecoration(
+        color: Colors.grey.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.withValues(alpha: 0.3)),
+      ),
+      child: const Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.broken_image_outlined, size: 36, color: Colors.grey),
+            SizedBox(height: 8),
+            Text('Unable to load image', style: TextStyle(fontSize: 12, color: Colors.grey)),
+          ],
         ),
       ),
     );
