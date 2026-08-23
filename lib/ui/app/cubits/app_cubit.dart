@@ -123,7 +123,7 @@ class AppCubit extends Cubit<AppState> {
 
   Future<void> restartApp() async {
     final result = await Restart.restartApp();
-    if (!result) {
+    if (!result.success) {
       print("Couldn't restart the app");
     }
   }

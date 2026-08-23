@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:fleather/fleather.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart' hide Delta;
 import 'package:interactive_viewer_2/interactive_viewer_2.dart';
-import 'package:studyapp/data/repositories/index_respository.dart';
+import 'package:studyapp/data/repositories/index_repository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/index_cubit.dart';
 import 'package:studyapp/ui/shared/widgets/fleather_editor.dart';

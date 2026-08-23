@@ -28,7 +28,7 @@ part 'app_database.g.dart';
 //   TextColumn get preferences => text().nullable()();
 // }
 
-@DriftDatabase(tables: [Notebooks, IndexItems, UiPreferences])
+@DriftDatabase(tables: [Notebooks, IndexItems, UiPreferences, Notes])
 class AppDatabase extends _$AppDatabase {
   AppDatabase(String saveLocation) : super(_openConnection(saveLocation));
 

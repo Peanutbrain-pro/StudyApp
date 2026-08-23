@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:flutter_bloc/flutter_bloc.dart';
 // import 'package:path/path.dart';
 import 'package:studyapp/data/database/app_database.dart';
-import 'package:studyapp/data/repositories/index_respository.dart';
+import 'package:studyapp/data/repositories/index_repository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 
 sealed class IndexState {}
