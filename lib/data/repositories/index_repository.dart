@@ -50,10 +50,10 @@ class IndexRepository {
         );
   }
 
-  Future<int> removeHeader(int notebookId, int columnIndex) async {
-    // TODO: removeHeader function
-    return Future.value();
-  }
+  // Future<int> removeHeader(int notebookId, int columnIndex) async {
+  //   // TODO: remove Index Header function
+  //   return Future.value();
+  // }
 
   // Stream<List<IndexItem>> watchUnits(int notebookId) {
   //   return _db.managers.indexItems

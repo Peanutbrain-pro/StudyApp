@@ -36,5 +36,6 @@ class Sources extends Table {
 
 class Notes extends Table {
   late final IntColumn notebookId = integer().references(Notebooks, #id, onDelete: .cascade)();
+  late final IntColumn indexId = integer().references(IndexItems, #id, onDelete: .cascade)();
   late final TextColumn data = text()();
 }

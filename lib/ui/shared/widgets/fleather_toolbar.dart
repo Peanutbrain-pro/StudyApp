@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:fleather/fleather.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:forui/forui.dart';
 import 'package:mobkit_dashed_border/mobkit_dashed_border.dart';
 
@@ -111,7 +111,6 @@ class AlignmentButton extends StatelessWidget {
           onPress: () {
             final selection = controller.selection;
 
-            // Only run the empty-line hack if the user hasn't highlighted text
             if (selection.isCollapsed) {
               final lookup = controller.document.lookupLine(selection.baseOffset);
 
@@ -122,7 +121,7 @@ class AlignmentButton extends StatelessWidget {
                   0,
                   // '\u200B',
                   '\n\u200B',
-                  // Fix: Highlight the invisible character instead of collapsing past it!
+                  // Fix: Highlight the invisible character instead of collapsing past it
                   selection: TextSelection.collapsed(
                     offset: selection.baseOffset,
                     // extentOffset: selection.baseOffset + 1,
