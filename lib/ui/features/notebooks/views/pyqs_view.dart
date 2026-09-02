@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 class PyqsView extends StatefulWidget {
   const PyqsView({super.key});
@@ -10,6 +10,6 @@ class PyqsView extends StatefulWidget {
 class _PyqsViewState extends State<PyqsView> {
   @override
   Widget build(BuildContext context) {
-    return Container(color: Colors.red,);
+    return Container(color: Colors.red);
   }
 }

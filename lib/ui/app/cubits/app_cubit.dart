@@ -20,28 +20,28 @@ class AppLoading extends AppState {
   // AppLoading({required super.savePath});
 }
 
-// class AppClosing extends AppState {
-//   AppClosing({required super.savePath});
-// }
-
 class AppFirstLaunch extends AppState {
   // AppFirstLaunch({required super.savePath});
 }
 
 class AppReady extends AppState {
   final bool requiresRestart;
-  AppReady({this.requiresRestart = false});
+  final String appFont;
+  final String editorFont;
+
+  AppReady({
+    this.requiresRestart = false,
+    this.appFont = 'System Default',
+    this.editorFont = 'System Default',
+  });
 }
 
 class AppCubit extends Cubit<AppState> {
   final AppRepository _appRepository;
-  // final NotebookRepository _notebookRepository;
 
   AppCubit({
-    // required NotebookRepository notebookRepository,
     required AppRepository appRepository,
   })  : _appRepository = appRepository,
-        // _notebookRepository = notebookRepository,
         super(AppLoading()) {
     _initialize();
   }
@@ -57,29 +57,20 @@ class AppCubit extends Cubit<AppState> {
 
       case AppInitStatus.ready:
         final saveLocation = _appRepository.getSaveLocation();
-        // await _notebookRepository.initialize(saveLocation!);
+        final appFont = _appRepository.getAppFont();
+        final editorFont = _appRepository.getEditorFont();
 
         print("Save location is set to : $saveLocation");
         print("The app is ready (supposedly)");
-        emit(AppReady());
+        emit(AppReady(appFont: appFont, editorFont: editorFont));
     }
   }
 
-  // Future<void> reInitializeApp() async {
-  //   emit(AppLoading(savePath: ''));
-  //   await _initialize();
-  // }
-
   void resetSettings() {
     _appRepository.clearAppSettings();
-    // TODO:
-    // Also reset other things but they haven't been implemented yet
   }
 
   void setDefaultFirstLaunch() async {
-    // final Directory documentsDirectory =
-    //     await getApplicationDocumentsDirectory();
-    // final String saveLocation = p.join(documentsDirectory.path, appName);
     final String saveLocation = await getDefaultAppSaveLocation();
     _appRepository.setSaveLocation(saveLocation);
     print("The save location is saved to the default");
@@ -108,16 +99,14 @@ class AppCubit extends Cubit<AppState> {
     emit(AppFirstLaunch());
   }
 
-
   void onFirstConfigFinished() async {
-    // await _notebookRepository.initialize(appSaveLocation);
     _appRepository.removeFirstLaunch();
-    // _appRepository.setSaveLocation(saveLocation);
-    emit(AppReady());
+    final appFont = _appRepository.getAppFont();
+    final editorFont = _appRepository.getEditorFont();
+    emit(AppReady(appFont: appFont, editorFont: editorFont));
   }
 
   Future<void> closeApp() async {
-    // emit(AppClosing(savePath: '')); 
     await windowManager.close();
   }
 
@@ -129,6 +118,43 @@ class AppCubit extends Cubit<AppState> {
   }
 
   void setRequiresRestart() {
-    emit(AppReady(requiresRestart: true));
+    final currentState = state;
+    if (currentState is AppReady) {
+      emit(AppReady(
+        requiresRestart: true,
+        appFont: currentState.appFont,
+        editorFont: currentState.editorFont,
+      ));
+    } else {
+      emit(AppReady(requiresRestart: true));
+    }
+  }
+
+  Future<void> setAppFont(String font) async {
+    await _appRepository.setAppFont(font);
+    final currentState = state;
+    if (currentState is AppReady) {
+      emit(AppReady(
+        requiresRestart: currentState.requiresRestart,
+        appFont: font,
+        editorFont: currentState.editorFont,
+      ));
+    } else {
+      emit(AppReady(appFont: font));
+    }
+  }
+
+  Future<void> setEditorFont(String font) async {
+    await _appRepository.setEditorFont(font);
+    final currentState = state;
+    if (currentState is AppReady) {
+      emit(AppReady(
+        requiresRestart: currentState.requiresRestart,
+        appFont: currentState.appFont,
+        editorFont: font,
+      ));
+    } else {
+      emit(AppReady(editorFont: font));
+    }
   }
 }

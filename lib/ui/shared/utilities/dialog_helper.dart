@@ -1,45 +1,57 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-// import 'package:forui/forui.dart';
+import 'package:studyapp/adaptive_dialog.dart';
 import 'package:studyapp/ui/shared/widgets/text_input_dialog.dart';
 
 class DialogHelper {
-  static Future<String?> getStringInput(BuildContext context, String title, String defaultValue) async {
-    String? result = await showFDialog<String>(
-      barrierDismissible: true,
+  static Future<String?> getStringInput(
+      BuildContext context,
+      String title,
+      String defaultValue,
+      ) async {
+    final String? result = await showFDialog<String>(
       context: context,
-      builder: (dialogContext, fdialogStyle, animation) {
-        return TextInputWidget(defaultValue: defaultValue, title: title, dialogContext: context);
+      barrierDismissible: true,
+      useRootNavigator: true,
+      builder: (dialogCtx, style, animation) {
+        // Pass dialogCtx (the actual dialog route context), NOT the outer context
+        return TextInputWidget(
+          defaultValue: defaultValue,
+          title: title,
+          // dialogContext: dialogCtx,
+        );
       },
     );
 
-    // textEditingController.dispose();
     return result;
   }
 
   static Future<bool> getConfirmation(
-    BuildContext context,
-    bool isDestructive,
-    String title,
-    String content,
-    String confirmationText,
-  ) async {
-    bool? out = await showFDialog(
-      barrierDismissible: true,
+      BuildContext context,
+      bool isDestructive,
+      String title,
+      String content,
+      String confirmationText,
+      ) async {
+    final bool? out = await showFDialog<bool>(
       context: context,
-      builder: (context, fDialogStyle, animation) {
-        return FDialog(
-          direction: .horizontal,
-          constraints: const BoxConstraints(maxWidth: 500),
+      barrierDismissible: true,
+      useRootNavigator: true,
+      builder: (dialogCtx, style, animation) {
+        return AdaptiveDialog(
           title: Text(title),
           body: Text(content),
           actions: [
             FButton(
-              variant: isDestructive ? .destructive : .primary,
-              onPress: () => Navigator.pop(context, true),
+              variant: isDestructive ? FButtonVariant.destructive : FButtonVariant.primary,
+              onPress: () => Navigator.of(dialogCtx).pop(true),
               child: Text(confirmationText),
             ),
-            FButton(variant: .outline, onPress: () => Navigator.pop(context, false), child: const Text("Cancel")),
+            FButton(
+              variant: FButtonVariant.outline,
+              onPress: () => Navigator.of(dialogCtx).pop(false),
+              child: const Text("Cancel"),
+            ),
           ],
         );
       },
@@ -48,24 +60,46 @@ class DialogHelper {
     return out ?? false;
   }
 
-  static Future<void> showError(BuildContext context, String title, String content) async {
-    showFDialog(
+  static Future<void> showError(
+      BuildContext context,
+      String title,
+      String content,
+      ) async {
+    await showFDialog(
       context: context,
-      builder: (context, fDialogStyle, animation) {
-        return FDialog(
+      barrierDismissible: true,
+      useRootNavigator: true,
+      builder: (dialogCtx, style, animation) {
+        return AdaptiveDialog(
           title: Text(title),
           body: Text(content),
-          actions: [FButton(variant: .outline, child: const Text("OK"), onPress: () => Navigator.of(context).pop())],
+          actions: [
+            FButton(
+              variant: FButtonVariant.outline,
+              child: const Text("OK"),
+              onPress: () => Navigator.of(dialogCtx).pop(),
+            ),
+          ],
         );
       },
     );
   }
 
-  static Future<void> showAlert(BuildContext context, String title, String content) async {
-    showFDialog(
+  static Future<void> showAlert(
+      BuildContext context,
+      String title,
+      String content,
+      ) async {
+    await showFDialog(
       context: context,
-      builder: (context, fDialogStyle, animation) {
-        return FDialog(title: Text(title), body: Text(content), actions: [],);
+      barrierDismissible: true,
+      useRootNavigator: true,
+      builder: (dialogCtx, style, animation) {
+        return AdaptiveDialog(
+          title: Text(title),
+          body: Text(content),
+          actions: const [],
+        );
       },
     );
   }

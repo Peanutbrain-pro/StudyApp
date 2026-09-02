@@ -1,17 +1,12 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:studyapp/ui/app/cubits/app_cubit.dart';
 
 class FirstLaunchView extends StatelessWidget {
-  // final SharedPreferences prefs;
   const FirstLaunchView({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // final String displayString = prefs.getKeys()
-    // .map((key) => "$key: ${prefs.get(key)}")
-    // .join("\n");
-
     return Scaffold(
       body: Center(
         child: Column(
@@ -21,7 +16,6 @@ class FirstLaunchView extends StatelessWidget {
               "Welcome",
               style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold),
             ),
-            // Text(displayString),
             Container(
               decoration:
                   BoxDecoration(border: Border.all(width: 2), borderRadius: BorderRadius.circular(15)),
@@ -33,7 +27,6 @@ class FirstLaunchView extends StatelessWidget {
                   spacing: 20,
                   children: [
                     Row(
-                      // mainAxisSize: MainAxisSize.min,
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Expanded(flex: 3, child: Text("App save location: ")),
@@ -60,7 +53,7 @@ class FirstLaunchView extends StatelessWidget {
                     ),
                     OutlinedButton(
                       style: ButtonStyle(
-                        shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadiusGeometry.circular(12)))
+                        shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))
                       ),
                       child: const Text("Done"),
                       onPressed: () => context.read<AppCubit>().onFirstConfigFinished(),

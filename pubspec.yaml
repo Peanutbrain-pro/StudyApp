@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
   cupertino_icons: ^1.0.8
   collection: ^1.19.1
   custom_interactive_viewer: ^0.0.10
@@ -30,8 +32,6 @@ dependencies:
   trina_grid: ^2.2.2
   window_manager: ^0.5.1
   flutter_inappwebview: ^6.1.5
-  material_ui: ^1.0.1
-  cupertino_ui: ^1.0.0
 
 dev_dependencies:
   build_runner: ^2.13.1
@@ -39,9 +39,11 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   flutter_test:
     sdk: flutter
+  forui_cli: ^0.25.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/pdf_icon.png
-    - assets/milkdown_editor/
+    - assets/tiptap_editor/
+    - assets/editor_bundle/

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:collection/collection.dart';
 import 'package:fleather/fleather.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart' hide Delta;
@@ -64,6 +64,8 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
   Widget build(BuildContext context) {
     super.build(context);
     final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
     return BlocBuilder<IndexCubit, IndexState>(
       builder: (context, state) {
         switch (state) {
@@ -84,10 +86,10 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                               style: .delta(
                                 decoration: .delta([
                                   .base(const .boxDelta(color: Colors.green)),
-                                  .exact({.hovered}, .boxDelta(color: Colors.green[700])),
+                                  .exact({.hovered}, const .boxDelta(color: Colors.green)),
                                   .match({
                                     .disabled,
-                                  }, .boxDelta(color: Colors.green.withAlpha((0.4 * 255).toInt()))),
+                                  }, const .boxDelta(color: Colors.green)),
                                 ]),
                               ),
                               size: .lg,
@@ -95,16 +97,16 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                                 context.read<IndexCubit>().toggleEditMode();
                                 if (activeSaveCallback != null) activeSaveCallback!();
                               },
-                              prefix: const Icon(FIcons.check, size: 20),
-                              child: const Text("Done", style: .new(fontSize: 18)),
+                              prefix: const Icon(FLucideIcons.check, size: 20),
+                              child: const Text("Done", style: TextStyle(fontSize: 18)),
                             )
                           : FButton(
                               size: .lg,
                               onPress: () {
                                 context.read<IndexCubit>().toggleEditMode();
                               },
-                              prefix: const Icon(FIcons.pencilLine, size: 20),
-                              child: const Text("Edit", style: .new(fontSize: 18)),
+                              prefix: const Icon(FLucideIcons.pencilLine, size: 20),
+                              child: const Text("Edit", style: TextStyle(fontSize: 18)),
                             ),
                     ),
                   ),
@@ -127,8 +129,8 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                           constraints: const BoxConstraints(minHeight: 1000),
                           decoration: BoxDecoration(
                             color: colors.card,
-                            border: .all(width: 2, color: colors.border),
-                            borderRadius: .circular(10)
+                            border: Border.all(width: 2, color: colors.border),
+                            borderRadius: BorderRadius.circular(10),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -137,10 +139,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                                 padding: const EdgeInsets.all(72.0),
                                 child: Text(
                                   "Index",
-                                  style: context.theme.typography.xl7.copyWith(
-                                    fontFamily: 'Source Sans 3',
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: typography.display.xl7.copyWith(color: colors.foreground),
                                 ),
                               ),
                               Padding(
@@ -156,9 +155,8 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                                   notebookId: widget.notebookId,
                                 ),
                               ),
-
                               Padding(
-                                padding: const .only(left: 48),
+                                padding: const EdgeInsets.only(left: 48),
                                 child: FButton(
                                   variant: .destructive,
                                   onPress: () {
@@ -241,7 +239,7 @@ class _IndexContentState extends State<IndexContent> {
     super.dispose();
   }
 
-  Widget _buildHeaderRow(Color borderColor, bool inEditMode) {
+  Widget _buildHeaderRow(Color borderColor, bool inEditMode, Color foregroundColor) {
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -273,8 +271,8 @@ class _IndexContentState extends State<IndexContent> {
                           },
                           child: TextField(
                             readOnly: !inEditMode,
-                            decoration: const .new(border: .none),
-                            controller: .fromValue(.new(text: header ?? "")),
+                            decoration: const InputDecoration(border: InputBorder.none),
+                            controller: TextEditingController.fromValue(TextEditingValue(text: header ?? "")),
                             onSubmitted: (value) {
                               context.read<IndexCubit>().editHeader(widget.notebookId, value, index);
                             },
@@ -284,7 +282,7 @@ class _IndexContentState extends State<IndexContent> {
                             onTapOutside: (event) {
                               context.read<IndexCubit>().editHeader(widget.notebookId, currentHeader, index);
                             },
-                            style: const .new(fontWeight: .bold),
+                            style: TextStyle(fontWeight: FontWeight.bold, color: foregroundColor),
                           ),
                         ),
                         Positioned(
@@ -352,7 +350,6 @@ class _IndexContentState extends State<IndexContent> {
               hoveredSeamNotifier: hoveredSeamNotifier,
               onInsert: () {
                 context.read<IndexCubit>().addUnit(position: 0);
-                print("Adding to the first row");
               },
             ),
           ),
@@ -372,7 +369,7 @@ class _IndexContentState extends State<IndexContent> {
         final currentTableWidth = innerColumnsWidth + 4.0;
 
         return Row(
-          crossAxisAlignment: .start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           spacing: 10,
           children: [
             Column(
@@ -380,10 +377,9 @@ class _IndexContentState extends State<IndexContent> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Stack(
-                  clipBehavior: .none,
+                  clipBehavior: Clip.none,
                   children: [
                     Container(
-                      // borderRadius: .circular(10),
                       width: currentTableWidth,
                       decoration: BoxDecoration(
                         border: Border.all(color: colors.border, width: 2),
@@ -394,14 +390,14 @@ class _IndexContentState extends State<IndexContent> {
                         children: [
                           Column(
                             children: [
-                              _buildHeaderRow(colors.border, inEditMode),
+                              _buildHeaderRow(colors.border, inEditMode, colors.foreground),
 
                               ...widget.content.mapIndexed((rowIndex, row) {
                                 final isLastRow = rowIndex == widget.content.length - 1;
 
                                 return ConstrainedBox(
                                   key: ValueKey(row.id),
-                                  constraints: const .new(minHeight: 50),
+                                  constraints: const BoxConstraints(minHeight: 50),
                                   child: Stack(
                                     clipBehavior: Clip.none,
                                     children: [
@@ -485,7 +481,6 @@ class _IndexContentState extends State<IndexContent> {
                                             hoveredSeamNotifier: hoveredSeamNotifier,
                                             onInsert: () {
                                               context.read<IndexCubit>().addUnit(position: rowIndex);
-                                              print("Inserting before row: $rowIndex");
                                             },
                                           ),
                                         ),
@@ -500,7 +495,6 @@ class _IndexContentState extends State<IndexContent> {
                                             hoveredSeamNotifier: hoveredSeamNotifier,
                                             onInsert: () {
                                               context.read<IndexCubit>().addUnit(position: rowIndex + 1);
-                                              print("Inserting before row: ${rowIndex + 1}");
                                             },
                                           ),
                                         ),
@@ -537,10 +531,9 @@ class _IndexContentState extends State<IndexContent> {
                       size: .lg,
                       variant: .outline,
                       onPress: () {
-                        print("Appending to bottom of table");
                         context.read<IndexCubit>().addUnit();
                       },
-                      child: const Icon(FIcons.plus),
+                      child: const Icon(FLucideIcons.plus),
                     ),
                   ),
               ],
@@ -554,7 +547,7 @@ class _IndexContentState extends State<IndexContent> {
                   variant: .outline,
                   size: .lg,
                   onPress: () => context.read<IndexCubit>().addHeader(widget.notebookId),
-                  child: const Icon(FIcons.plus),
+                  child: const Icon(FLucideIcons.plus),
                 ),
               ),
           ],
@@ -603,9 +596,7 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
 
   void save() {
     widget.removeActive();
-    // final Delta delta = controller!.document.toDelta();
     currentDelta = controller!.document.toDelta();
-    debugPrint(currentDelta.toString());
     widget.saveData(currentDelta);
     controller!.dispose();
     controller = null;
@@ -617,12 +608,10 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
   @override
   Widget build(BuildContext context) {
     if (isEditing) {
-      // controller = FleatherController(document: .fromDelta(widget.initialDelta));
       return CustomFleatherEditor(
         controller: controller!,
         contextMenuBuilder: (context, editorState) {
           final anchors = editorState.contextMenuAnchors;
-          print(anchors.primaryAnchor);
           return Transform.translate(
             offset: Offset(anchors.primaryAnchor.dx - 351, anchors.primaryAnchor.dy - 410),
             child: UnconstrainedBox(child: CustomFleatherContextToolbar(controller: controller!)),
@@ -638,7 +627,7 @@ class EditableFleatherCellState extends State<EditableFleatherCell> {
             if (!widget.checkAndSetActive(save)) {
               return;
             }
-            controller = FleatherController(document: .fromDelta(currentDelta));
+            controller = FleatherController(document: ParchmentDocument.fromDelta(currentDelta));
             setState(() {
               isEditing = true;
             });
@@ -670,7 +659,6 @@ class HoverInsertBox extends StatelessWidget {
       cursor: SystemMouseCursors.click,
       onEnter: (_) => hoveredSeamNotifier.value = seamIndex,
       onExit: (_) {
-        // Only clear it if a new box hasn't already claimed the state
         if (hoveredSeamNotifier.value == seamIndex) {
           hoveredSeamNotifier.value = null;
         }

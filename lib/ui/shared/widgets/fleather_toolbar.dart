@@ -1,6 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:fleather/fleather.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:mobkit_dashed_border/mobkit_dashed_border.dart';
 
@@ -14,13 +14,10 @@ class CustomFleatherToolbar extends StatelessWidget {
     final colors = context.theme.colors;
     return Container(
       height: 50,
-      // width: 400,
-      margin: const .all(5),
-      // padding: .zero,
+      margin: const EdgeInsets.all(5),
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: .circular(10),
-        // border: .all(color: colors.primary.withAlpha(170), width: 2),
+        borderRadius: BorderRadius.circular(10),
       ),
       child: FleatherToolbar(
         children: [
@@ -114,24 +111,20 @@ class AlignmentButton extends StatelessWidget {
             if (selection.isCollapsed) {
               final lookup = controller.document.lookupLine(selection.baseOffset);
 
-              // length == 1 means the line is completely empty (only contains '\n')
               if (lookup.node != null && lookup.node!.length == 1) {
                 controller.replaceText(
                   selection.baseOffset,
                   0,
-                  // '\u200B',
                   '\n\u200B',
-                  // Fix: Highlight the invisible character instead of collapsing past it
                   selection: TextSelection.collapsed(
                     offset: selection.baseOffset,
-                    // extentOffset: selection.baseOffset + 1,
                   ),
                 );
               }
             }
 
             controller.formatSelection(attribute);
-          }, // icon: Icon(icon),
+          },
           child: Icon(icon),
         );
       },
@@ -148,7 +141,7 @@ class ImageButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     return FPopover(
-      offset: const .new(0, 7),
+      offset: const Offset(0, 7),
       style: .delta(
         decoration: .boxDelta(
           border: DashedBorder.all(dashLength: 9, color: colors.foreground.withValues(alpha: 0.3)),
@@ -169,15 +162,14 @@ class ImageButton extends StatelessWidget {
                     height: 150,
                     decoration: BoxDecoration(
                       color: colors.border,
-                      borderRadius: .circular(10),
-                      border: .all(),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(),
                     ),
-                    // Local files
                     child: FButton(
                       size: .lg,
                       variant: .ghost,
                       onPress: () async {
-                        FilePickerResult? result = await FilePicker.pickFiles();
+                        final result = await FilePicker.pickFile();
                         if (result == null) {
                           return;
                         }
@@ -193,15 +185,15 @@ class ImageButton extends StatelessWidget {
                           EmbeddableObject(
                             'image',
                             inline: false,
-                            data: {'source': '${result.files.single.path}', 'isNetwork': false},
+                            data: {'source': result.path, 'isNetwork': false},
                           ),
                         );
                       },
                       child: const Column(
-                        crossAxisAlignment: .center,
-                        mainAxisAlignment: .center,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         spacing: 20,
-                        children: [Icon(FIcons.imagePlus, size: 24), Text("Pick a file from your computer")],
+                        children: [Icon(FLucideIcons.imagePlus, size: 24), Text("Pick a file from your computer")],
                       ),
                     ),
                   ),
@@ -236,7 +228,7 @@ class ImageButton extends StatelessWidget {
         );
       },
       builder: (_, controller, _) {
-        return FButton(variant: .ghost, onPress: controller.toggle, child: const Icon(FIcons.image));
+        return FButton(variant: .ghost, onPress: controller.toggle, child: const Icon(FLucideIcons.image));
       },
     );
   }
@@ -269,12 +261,12 @@ class SourceButton extends StatelessWidget {
             data: {
               'filename': 'filename very very long.pdf',
               'filetype': 'pdf',
-              'url': 'C:\\Users\\KIIT0001\\Downloads\\Resume_Julaiba_Academic-20250415113753.docx',
+              'url': r'C:\Users\KIIT0001\Downloads\Resume_Julaiba_Academic-20250415113753.docx',
             },
           ),
         );
       },
-      child: const Icon(FIcons.squareArrowOutUpRight),
+      child: const Icon(FLucideIcons.squareArrowOutUpRight),
     );
   }
 }

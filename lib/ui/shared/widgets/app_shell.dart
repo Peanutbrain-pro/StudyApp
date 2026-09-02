@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -6,8 +6,6 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return FScaffold(
-    //   header: MainAppBar(title: "Notebooks", actions: actions),
-      return const Placeholder();
+    return const Placeholder();
   }
 }

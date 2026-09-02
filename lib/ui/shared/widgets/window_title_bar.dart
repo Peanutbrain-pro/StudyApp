@@ -1,22 +1,6 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
-
-class WindowsButtonListener extends WindowListener {
-  final ValueNotifier<bool> isMaximized = ValueNotifier(false);
-
-  @override
-  void onWindowMaximize() => isMaximized.value = true;
-
-  @override
-  void onWindowUnmaximize() => isMaximized.value = false;
-
-  @override
-  void onWindowRestore() async {
-    isMaximized.value = await windowManager.isMaximized();
-  }
-
-  void dispose() => isMaximized.dispose();
-}
 
 class CustomWindowTitleBar extends StatefulWidget {
   const CustomWindowTitleBar({super.key});
@@ -25,33 +9,76 @@ class CustomWindowTitleBar extends StatefulWidget {
   State<CustomWindowTitleBar> createState() => _CustomWindowTitleBarState();
 }
 
-class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> {
-  late final WindowsButtonListener windowsButtonListener;
-  bool isMaximized = false;
+class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> with WindowListener {
+  bool _isMaximized = false;
+  SharedPreferences? _prefs;
 
   @override
   void initState() {
     super.initState();
-    windowsButtonListener = WindowsButtonListener();
-    windowManager.addListener(windowsButtonListener);
-    windowsButtonListener.isMaximized.addListener(_isMaximizedChanged);
-    windowManager.isMaximized().then((v) {
-      if (mounted) setState(() => isMaximized = v);
-    });
+    windowManager.addListener(this);
+    _initPreferences();
   }
 
-  void _isMaximizedChanged() {
+  Future<void> _initPreferences() async {
+    _prefs = await SharedPreferences.getInstance();
     if (mounted) {
-      setState(() => isMaximized = windowsButtonListener.isMaximized.value);
+      setState(() {
+        _isMaximized = _prefs?.getBool('window_is_maximized') ?? false;
+      });
     }
   }
 
   @override
   void dispose() {
-    windowManager.removeListener(windowsButtonListener);
-    windowsButtonListener.isMaximized.removeListener(_isMaximizedChanged);
-    windowsButtonListener.dispose();
+    windowManager.removeListener(this);
     super.dispose();
+  }
+
+  @override
+  void onWindowMaximize() {
+    _isMaximized = true;
+    _prefs?.setBool('window_is_maximized', true);
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void onWindowUnmaximize() {
+    _isMaximized = false;
+    _prefs?.setBool('window_is_maximized', false);
+    _saveNormalBounds();
+    if (mounted) setState(() {});
+  }
+
+  @override
+  void onWindowResized() {
+    if (!_isMaximized) _saveNormalBounds();
+  }
+
+  @override
+  void onWindowMoved() {
+    if (!_isMaximized) _saveNormalBounds();
+  }
+
+  Future<void> _saveNormalBounds() async {
+    if (_isMaximized || _prefs == null) return;
+    final size = await windowManager.getSize();
+    final position = await windowManager.getPosition();
+    if (position.dx < -10000 || position.dy < -10000) return;
+    if (size.width < 960 || size.height < 450) return;
+
+    await _prefs!.setDouble('window_width', size.width);
+    await _prefs!.setDouble('window_height', size.height);
+    await _prefs!.setDouble('window_x', position.dx);
+    await _prefs!.setDouble('window_y', position.dy);
+  }
+
+  Future<void> _toggleMaximize() async {
+    if (_isMaximized) {
+      await windowManager.unmaximize();
+    } else {
+      await windowManager.maximize();
+    }
   }
 
   @override
@@ -70,14 +97,6 @@ class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> {
                 children: [
                   const SizedBox(width: 12),
                   const FlutterLogo(size: 16),
-
-                  // Image.asset(
-                  //   'assets/pdf_icon.png',
-                  //   width: 16,
-                  //   height: 16,
-                  //   errorBuilder: (context, error, stackTrace) =>
-                  //       Icon(Icons.book, size: 16, color: isDark ? Colors.white70 : Colors.black87),
-                  // ),
                   const SizedBox(width: 12),
                   Text(
                     'StudyApp',
@@ -87,29 +106,29 @@ class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> {
                       color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1E1E1E),
                     ),
                   ),
-
                   const Spacer(),
                 ],
               ),
             ),
           ),
-
           WindowCaptionButton.minimize(
             brightness: brightness,
-            onPressed: () async {
-              await windowManager.minimize();
-            },
+            onPressed: () async => await windowManager.minimize(),
           ),
-          if (isMaximized)
+          if (_isMaximized)
             WindowCaptionButton.unmaximize(
               brightness: brightness,
-              onPressed: () async {
-                await windowManager.unmaximize();
-              },
+              onPressed: _toggleMaximize,
             )
           else
-            WindowCaptionButton.maximize(brightness: brightness, onPressed: () async => await windowManager.maximize()),
-          WindowCaptionButton.close(brightness: brightness, onPressed: () async => await windowManager.close()),
+            WindowCaptionButton.maximize(
+              brightness: brightness,
+              onPressed: _toggleMaximize,
+            ),
+          WindowCaptionButton.close(
+            brightness: brightness,
+            onPressed: () async => await windowManager.close(),
+          ),
         ],
       ),
     );
