@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
@@ -66,7 +66,7 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
                 size: .lg,
                 variant: .ghost,
                 onPress: () => context.pop(),
-                child: const Icon(FIcons.chevronLeft),
+                child: const Icon(FLucideIcons.chevronLeft),
               ),
             ],
             actions: [],
@@ -75,8 +75,7 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
             spacing: 10,
             children: [
               // if (nameTooLong)
-              //   Align(
-              //     alignment: .centerLeft,
+              //   Align(\n              //     alignment: .centerLeft,
               //     child: Padding(
               //       padding: const .only(left: 48),
               //       child: TabHeader(tabController: _tabController),
@@ -115,6 +114,7 @@ class TabHeader extends StatelessWidget {
       decoration: BoxDecoration(color: colors.secondary, borderRadius: .circular(15)),
       child: TabBar(
         labelColor: colors.primaryForeground,
+        unselectedLabelColor: colors.mutedForeground,
         splashBorderRadius: .circular(15),
         tabAlignment: .start,
         isScrollable: true,
@@ -125,10 +125,10 @@ class TabHeader extends StatelessWidget {
         indicatorSize: .tab,
         labelPadding: .zero,
         indicator: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(15)),
-        tabs: [
-          const SizedBox(width: 100, child: Tab(text: "Index")),
-          const SizedBox(width: 100, child: Tab(text: 'Notes')),
-          const SizedBox(width: 100, child: Tab(text: 'PYQs')),
+        tabs: const [
+          SizedBox(width: 100, child: Tab(text: "Index")),
+          SizedBox(width: 100, child: Tab(text: 'Notes')),
+          SizedBox(width: 100, child: Tab(text: 'PYQs')),
         ],
       ),
     );

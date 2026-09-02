@@ -1,10 +1,11 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
+import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/note_repository.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/note_cubit.dart';
-import 'package:studyapp/ui/shared/widgets/markdown_toolbar.dart';
-import 'package:studyapp/ui/shared/widgets/markdown_webview_editor.dart';
+import 'package:studyapp/ui/shared/widgets/MilkdownEditor.dart';
+import 'package:studyapp/ui/shared/widgets/tiptap_editor.dart';
 
 class NotesPage extends StatelessWidget {
   final int notebookId;
@@ -13,10 +14,12 @@ class NotesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final saveLocation = context.read<AppRepository>().getSaveLocation();
     return BlocProvider(
       create: (context) => NoteCubit(
         noteRepository: context.read<NoteRepository>(),
         notebookId: notebookId,
+        saveLocation: saveLocation,
       ),
       child: const NotesView(),
     );
@@ -31,7 +34,8 @@ class NotesView extends StatefulWidget {
 }
 
 class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixin {
-  late final MarkdownEditorController _markdownController;
+  // ignore: unused_field
+  late final TipTapEditorController _tiptapController;
 
   @override
   bool get wantKeepAlive => true;
@@ -39,12 +43,12 @@ class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixi
   @override
   void initState() {
     super.initState();
-    _markdownController = MarkdownEditorController();
+    _tiptapController = TipTapEditorController();
   }
 
   @override
   void dispose() {
-    _markdownController.dispose();
+    _tiptapController.dispose();
     super.dispose();
   }
 
@@ -52,18 +56,19 @@ class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixi
   Widget build(BuildContext context) {
     super.build(context);
     final colors = context.theme.colors;
+    final noteCubit = context.read<NoteCubit>();
 
     return BlocConsumer<NoteCubit, NoteState>(
-      listenWhen: (previous, current) => previous.markdown != current.markdown && !_markdownController.isReady,
+      buildWhen: (previous, current) => previous.isLoading != current.isLoading,
+      listenWhen: (previous, current) => previous.markdown != current.markdown && !_tiptapController.isReady,
       listener: (context, state) {
         if (state.markdown.isNotEmpty) {
-          _markdownController.setMarkdown(state.markdown);
+          // _tiptapController.setMarkdown(state.markdown);
         }
       },
       builder: (context, state) {
         return Column(
           children: [
-            MarkdownToolbar(controller: _markdownController),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
@@ -74,17 +79,13 @@ class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixi
                     borderRadius: BorderRadius.circular(12),
                   ),
                   clipBehavior: Clip.antiAlias,
-                  child: MarkdownWebviewEditor(
-                    controller: _markdownController,
-                    initialMarkdown: state.markdown,
+                  child: MilkdownFileEditorScreen(
+                    key: ValueKey('milkdown_${noteCubit.notebookId}'),
+                    notebookId: noteCubit.notebookId,
+                    noteFilePath: noteCubit.notePath(),
+                    sourcesDirectoryPath: noteCubit.sourcesDirectory(),
                     onContentChanged: (markdown) {
-                      context.read<NoteCubit>().saveMarkdown(markdown);
-                    },
-                    onSourceClicked: (filename, filetype, url) {
-                      debugPrint('Source clicked: $filename ($filetype) at $url');
-                    },
-                    onImageClicked: (url) {
-                      debugPrint('Image clicked: $url');
+                      noteCubit.saveMarkdown(markdown);
                     },
                   ),
                 ),

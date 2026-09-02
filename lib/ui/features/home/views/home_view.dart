@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:studyapp/data/repositories/notebook_repository.dart';
@@ -36,7 +36,6 @@ class _HomeViewState extends State<HomeView> {
     return FScaffold(
       header: MainAppBar(
         title: const Text("Notebooks"),
-        // prefixes: [],
         actions: [
           FTooltip(
             tipAnchor: .topRight,
@@ -58,27 +57,27 @@ class _HomeViewState extends State<HomeView> {
                   if (nochange) break;
                 }
 
-                // String result = "New Notebook $i";
+                if (!context.mounted) return;
                 String? result = await DialogHelper.getStringInput(
                   context,
                   "Notebook Name",
                   "New Notebook $i",
                 );
-                if (result == null || result == "") {
+                if (result == null || result.isEmpty) {
                   return;
                 }
-                context.read<HomeCubit>().addNotebook(result);
+                if (context.mounted) {
+                  context.read<HomeCubit>().addNotebook(result);
+                }
               },
               size: .md,
-              child: const Icon(FIcons.plus),
+              child: const Icon(FLucideIcons.plus),
             ),
           ),
         ],
       ),
       child: BlocConsumer<HomeCubit, HomeState>(
         listenWhen: (previous, current) {
-          print("prvious: ${previous.notebooks.toString()}");
-          print("current: ${current.notebooks.toString()}");
           if (previous is HomeReady && current is HomeReady) {
             return current.notebooks.length == previous.notebooks.length + 1;
           }
@@ -86,8 +85,6 @@ class _HomeViewState extends State<HomeView> {
         },
         listener: (BuildContext context, HomeState state) {
           final newIndex = state.notebooks.length - 1;
-          print("state: ${state.notebooks.toString()}");
-          print(newIndex);
           _gridKey.currentState?.insertItem(newIndex);
         },
         builder: (BuildContext context, state) {
@@ -125,7 +122,7 @@ class _HomeViewState extends State<HomeView> {
             );
           }
 
-          return const Center(child: Text("The state is neither loading nor ready. What did you do?"));
+          return const Center(child: Text("The state is neither loading nor ready."));
         },
       ),
     );
@@ -137,7 +134,6 @@ class NotebookItem extends StatelessWidget {
   final int index;
   final Animation<double> animation;
   final GlobalKey<AnimatedGridState> gridKey;
-  // final TextEditingController _textEditingController = TextEditingController();
 
   const NotebookItem({
     super.key,
@@ -158,13 +154,16 @@ class NotebookItem extends StatelessWidget {
         },
         child: Card(
           color: colors.card,
-          // color: Theme.of(context).primaryColorLight,
           child: Stack(
-            // fit: .expand,
             children: [
               Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: Center(child: Text(notebook.name)),
+                child: Center(
+                  child: Text(
+                    notebook.name,
+                    style: TextStyle(color: colors.foreground),
+                  ),
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.all(8.0),
@@ -175,7 +174,7 @@ class NotebookItem extends StatelessWidget {
                       .group(
                         children: [
                           .item(
-                            prefix: const Icon(FIcons.trash),
+                            prefix: const Icon(FLucideIcons.trash),
                             title: const Text("Delete"),
                             onPress: () async {
                               bool confirmed = await DialogHelper.getConfirmation(
@@ -185,7 +184,7 @@ class NotebookItem extends StatelessWidget {
                                 "Are you sure you want to delete the Notebook: ${notebook.name}",
                                 "Delete",
                               );
-                              if (!confirmed) return;
+                              if (!confirmed || !context.mounted) return;
 
                               await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
                               gridKey.currentState?.removeItem(index, (context, animation) {
@@ -197,7 +196,7 @@ class NotebookItem extends StatelessWidget {
                             },
                           ),
                           .item(
-                            prefix: const Icon(FIcons.pencilLine),
+                            prefix: const Icon(FLucideIcons.pencilLine),
                             title: const Text("Rename"),
                             onPress: () async {
                               String? result = await DialogHelper.getStringInput(
@@ -205,17 +204,21 @@ class NotebookItem extends StatelessWidget {
                                 "Rename",
                                 notebook.name,
                               );
-                              if (result == null || result == "") {
+                              if (result == null || result.isEmpty) {
                                 return;
                               } else if (result.length >= 100) {
-                                await DialogHelper.showError(
-                                  context,
-                                  "Name too long",
-                                  "The name of the notebook is way too long. Please choose a smaller name.",
-                                );
+                                if (context.mounted) {
+                                  await DialogHelper.showError(
+                                    context,
+                                    "Name too long",
+                                    "The name of the notebook is way too long. Please choose a smaller name.",
+                                  );
+                                }
                                 return;
                               }
-                              context.read<HomeCubit>().renameNotebook(notebook.id, result);
+                              if (context.mounted) {
+                                context.read<HomeCubit>().renameNotebook(notebook.id, result);
+                              }
                             },
                           ),
                         ],
@@ -225,50 +228,11 @@ class NotebookItem extends StatelessWidget {
                       return FButton.icon(
                         variant: .ghost,
                         onPress: controller.toggle,
-                        child: const Icon(FIcons.ellipsisVertical),
+                        child: const Icon(FLucideIcons.ellipsisVertical),
                       );
                     },
                   ),
                 ),
-                // child: PopupMenuButton(itemBuilder: (BuildContext context) {
-                //   return <PopupMenuItem>[
-                //     PopupMenuItem(
-                //       child: Text(
-                //         "Delete",
-                //         style: TextStyle(color: Colors.red),
-                //       ),
-                //       onTap: () async {
-                //         bool confirmed = await DialogHelper.getConfirmation(context, "Delete Notebook",
-                //             "Are you sure you want to delete the Notebook: ${notebook.name}", "Delete");
-                //         if (!confirmed) return;
-
-                //         await context.read<HomeCubit>().deleteNotebook(context, notebook.id);
-                //         gridKey.currentState?.removeItem(
-                //           index,
-                //           (context, animation) {
-                //             return ScaleTransition(
-                //               scale: CurvedAnimation(parent: animation, curve: Curves.easeInQuint),
-                //               child: Card(
-                //                 color: Colors.amber,
-                //               ),
-                //             );
-                //           },
-                //         );
-                //       },
-                //     ),
-                //     PopupMenuItem(
-                //       child: Text("Rename"),
-                //       onTap: () async {
-                //         String result =
-                //             await DialogHelper.getStringInput(context, "Rename", "${notebook.name}");
-                //         if (result == "") {
-                //           return;
-                //         }
-                //         context.read<HomeCubit>().renameNotebook(notebook.id, result);
-                //       },
-                //     )
-                //   ];
-                // }),
               ),
             ],
           ),

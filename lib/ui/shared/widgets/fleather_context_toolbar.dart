@@ -1,5 +1,5 @@
 import 'package:fleather/fleather.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
 class CustomFleatherContextToolbar extends StatelessWidget {
@@ -10,14 +10,12 @@ class CustomFleatherContextToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     return Container(
-      // height: 50,
-      // width: 400,
-      margin: const .all(5),
-      padding: .zero,
+      margin: const EdgeInsets.all(5),
+      padding: EdgeInsets.zero,
       decoration: BoxDecoration(
         color: colors.card,
-        borderRadius: .circular(10),
-        border: .all(color: colors.primary.withAlpha(170), width: 4),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: colors.primary.withAlpha(170), width: 4),
       ),
       child: FleatherToolbar(
         children: [
@@ -102,28 +100,23 @@ class AlignmentButton extends StatelessWidget {
           onPress: () {
             final selection = controller.selection;
 
-            // Only run the empty-line hack if the user hasn't highlighted text
             if (selection.isCollapsed) {
               final lookup = controller.document.lookupLine(selection.baseOffset);
 
-              // length == 1 means the line is completely empty (only contains '\n')
               if (lookup.node != null && lookup.node!.length == 1) {
                 controller.replaceText(
                   selection.baseOffset,
                   0,
-                  // '\u200B',
                   '\n\u200B',
-                  // Fix: Highlight the invisible character instead of collapsing past it!
                   selection: TextSelection.collapsed(
                     offset: selection.baseOffset,
-                    // extentOffset: selection.baseOffset + 1,
                   ),
                 );
               }
             }
 
             controller.formatSelection(attribute);
-          }, // icon: Icon(icon),
+          },
           child: Icon(icon),
         );
       },

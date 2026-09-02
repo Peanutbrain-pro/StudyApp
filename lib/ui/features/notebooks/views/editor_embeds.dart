@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 
 class ImageEmbed extends StatefulWidget {
@@ -82,7 +82,7 @@ class _ImageEmbedState extends State<ImageEmbed> {
   }
 
   Widget _buildErrorImage(BuildContext context, Object error, StackTrace? stackTrace) {
-    debugPrint('Image load error ($widget.imageUrl): $error');
+    debugPrint('Image load error (${widget.imageUrl}): $error');
     return Container(
       height: 180,
       decoration: BoxDecoration(
@@ -152,7 +152,7 @@ class SourceEmbed extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(borderRadius: .circular(10)),
+      decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
       child: UnconstrainedBox(
         child: FButton(
           style: const .delta(contentStyle: .delta(padding: .value(.symmetric(horizontal: 6, vertical: 2)))),
@@ -161,7 +161,7 @@ class SourceEmbed extends StatelessWidget {
           onPress: () {},
           prefix: switch (filetype) {
             'pdf' => const ImageIcon(AssetImage('assets/pdf_icon.png')),
-            _ => const Icon(FIcons.file),
+            _ => const Icon(FLucideIcons.file),
           },
           child: Text(filename.length <= 15 ? filename : '${filename.substring(0, 12)}...'),
         ),

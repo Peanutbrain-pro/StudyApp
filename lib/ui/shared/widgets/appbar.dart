@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
 import 'package:studyapp/ui/app/cubits/app_cubit.dart';
@@ -15,7 +15,6 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
   Widget build(BuildContext context) {
     return FHeader(
       title: Row(
-        // mainAxisAlignment: .spaceBetween,
         spacing: 10,
         mainAxisSize: .min,
         children: [
@@ -45,10 +44,9 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
                   barrierLabel: "settings-barrier-label",
                   barrierDismissible: true,
                   context: context,
-                  // transitionDuration: Duration(milliseconds: 20),
                   builder: (context, fdialogstyle, animation) => const SettingsPage(),
                 ),
-                child: const Icon(FIcons.menu),
+                child: const Icon(FLucideIcons.menu),
               ),
             ),
           ],

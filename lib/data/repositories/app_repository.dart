@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/constants.dart';
 import 'package:studyapp/data/database/app_database.dart';
@@ -18,21 +20,35 @@ class AppRepository {
 
   Future<AppInitStatus> getAppStatus() async {
     final bool? firstLaunch = _prefs.getBool(keyFirstLaunch);
-    if (firstLaunch == null || firstLaunch == true) {
+    final String? saveLocation = _prefs.getString(keySaveLocation);
+
+    // If firstLaunch flag is true/unset, or saveLocation is missing or was deleted from disk
+    if (firstLaunch == null || firstLaunch == true || saveLocation == null || !Directory(saveLocation).existsSync()) {
       _prefs.setBool(keyFirstLaunch, true);
       return AppInitStatus.firstLaunch;
     }
 
-    final String? saveLocation = _prefs.getString(keySaveLocation);
-    if (saveLocation == null) {
-      throw Exception("saveLocation is missing.");
-    } else {
-      return AppInitStatus.ready;
-    }
+    return AppInitStatus.ready;
   }
 
   void setSaveLocation(String saveLocation) {
     _prefs.setString(keySaveLocation, saveLocation);
+  }
+
+  String getAppFont() {
+    return _prefs.getString(keyAppFont) ?? 'System Default';
+  }
+
+  Future<void> setAppFont(String font) async {
+    await _prefs.setString(keyAppFont, font);
+  }
+
+  String getEditorFont() {
+    return _prefs.getString(keyEditorFont) ?? 'System Default';
+  }
+
+  Future<void> setEditorFont(String font) async {
+    await _prefs.setString(keyEditorFont, font);
   }
 
   void clearAppSettings() {
@@ -44,13 +60,9 @@ class AppRepository {
   }
 
   void completeHardReset() {
-    print("Completely deleting everything in the app. No setting no databases");
+    debugPrint("Completely deleting everything in the app. No setting no databases");
     _prefs.clear();
   }
-
-  // void closeApp() {
-  //   windowManager.destroy();
-  // }
 
   Future<AppDatabase> getAppDatabase() async {
     final saveLocation = getSaveLocation();

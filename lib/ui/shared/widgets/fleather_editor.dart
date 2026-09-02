@@ -1,5 +1,5 @@
 import 'package:fleather/fleather.dart';
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class CustomFleatherEditor extends StatefulWidget {
@@ -63,13 +63,11 @@ class _CustomFleatherEditorState extends State<CustomFleatherEditor> {
       },
       child: Container(
         decoration: BoxDecoration(
-          border: .all(color: Colors.blue, width: 2),
-          // borderRadius: .circular(8),
+          border: Border.all(color: Colors.blue, width: 2),
         ),
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: FleatherEditor(
-            // expands: true,
             autofocus: true,
             contextMenuBuilder: (context, editorState) {
               return widget.contextMenuBuilder(context, editorState);

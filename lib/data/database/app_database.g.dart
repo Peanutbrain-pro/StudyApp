@@ -1115,283 +1115,12 @@ class UiPreferencesCompanion extends UpdateCompanion<UiPreference> {
   }
 }
 
-class $NotesTable extends Notes with TableInfo<$NotesTable, Note> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $NotesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _notebookIdMeta = const VerificationMeta(
-    'notebookId',
-  );
-  @override
-  late final GeneratedColumn<int> notebookId = GeneratedColumn<int>(
-    'notebook_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES notebooks (id) ON DELETE CASCADE',
-    ),
-  );
-  static const VerificationMeta _indexIdMeta = const VerificationMeta(
-    'indexId',
-  );
-  @override
-  late final GeneratedColumn<int> indexId = GeneratedColumn<int>(
-    'index_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES index_items (id) ON DELETE CASCADE',
-    ),
-  );
-  static const VerificationMeta _dataMeta = const VerificationMeta('data');
-  @override
-  late final GeneratedColumn<String> data = GeneratedColumn<String>(
-    'data',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [notebookId, indexId, data];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'notes';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<Note> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('notebook_id')) {
-      context.handle(
-        _notebookIdMeta,
-        notebookId.isAcceptableOrUnknown(data['notebook_id']!, _notebookIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_notebookIdMeta);
-    }
-    if (data.containsKey('index_id')) {
-      context.handle(
-        _indexIdMeta,
-        indexId.isAcceptableOrUnknown(data['index_id']!, _indexIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_indexIdMeta);
-    }
-    if (data.containsKey('data')) {
-      context.handle(
-        _dataMeta,
-        this.data.isAcceptableOrUnknown(data['data']!, _dataMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_dataMeta);
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => const {};
-  @override
-  Note map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return Note(
-      notebookId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}notebook_id'],
-      )!,
-      indexId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}index_id'],
-      )!,
-      data: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}data'],
-      )!,
-    );
-  }
-
-  @override
-  $NotesTable createAlias(String alias) {
-    return $NotesTable(attachedDatabase, alias);
-  }
-}
-
-class Note extends DataClass implements Insertable<Note> {
-  final int notebookId;
-  final int indexId;
-  final String data;
-  const Note({
-    required this.notebookId,
-    required this.indexId,
-    required this.data,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['notebook_id'] = Variable<int>(notebookId);
-    map['index_id'] = Variable<int>(indexId);
-    map['data'] = Variable<String>(data);
-    return map;
-  }
-
-  NotesCompanion toCompanion(bool nullToAbsent) {
-    return NotesCompanion(
-      notebookId: Value(notebookId),
-      indexId: Value(indexId),
-      data: Value(data),
-    );
-  }
-
-  factory Note.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return Note(
-      notebookId: serializer.fromJson<int>(json['notebookId']),
-      indexId: serializer.fromJson<int>(json['indexId']),
-      data: serializer.fromJson<String>(json['data']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'notebookId': serializer.toJson<int>(notebookId),
-      'indexId': serializer.toJson<int>(indexId),
-      'data': serializer.toJson<String>(data),
-    };
-  }
-
-  Note copyWith({int? notebookId, int? indexId, String? data}) => Note(
-    notebookId: notebookId ?? this.notebookId,
-    indexId: indexId ?? this.indexId,
-    data: data ?? this.data,
-  );
-  Note copyWithCompanion(NotesCompanion data) {
-    return Note(
-      notebookId: data.notebookId.present
-          ? data.notebookId.value
-          : this.notebookId,
-      indexId: data.indexId.present ? data.indexId.value : this.indexId,
-      data: data.data.present ? data.data.value : this.data,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('Note(')
-          ..write('notebookId: $notebookId, ')
-          ..write('indexId: $indexId, ')
-          ..write('data: $data')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(notebookId, indexId, data);
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is Note &&
-          other.notebookId == this.notebookId &&
-          other.indexId == this.indexId &&
-          other.data == this.data);
-}
-
-class NotesCompanion extends UpdateCompanion<Note> {
-  final Value<int> notebookId;
-  final Value<int> indexId;
-  final Value<String> data;
-  final Value<int> rowid;
-  const NotesCompanion({
-    this.notebookId = const Value.absent(),
-    this.indexId = const Value.absent(),
-    this.data = const Value.absent(),
-    this.rowid = const Value.absent(),
-  });
-  NotesCompanion.insert({
-    required int notebookId,
-    required int indexId,
-    required String data,
-    this.rowid = const Value.absent(),
-  }) : notebookId = Value(notebookId),
-       indexId = Value(indexId),
-       data = Value(data);
-  static Insertable<Note> custom({
-    Expression<int>? notebookId,
-    Expression<int>? indexId,
-    Expression<String>? data,
-    Expression<int>? rowid,
-  }) {
-    return RawValuesInsertable({
-      if (notebookId != null) 'notebook_id': notebookId,
-      if (indexId != null) 'index_id': indexId,
-      if (data != null) 'data': data,
-      if (rowid != null) 'rowid': rowid,
-    });
-  }
-
-  NotesCompanion copyWith({
-    Value<int>? notebookId,
-    Value<int>? indexId,
-    Value<String>? data,
-    Value<int>? rowid,
-  }) {
-    return NotesCompanion(
-      notebookId: notebookId ?? this.notebookId,
-      indexId: indexId ?? this.indexId,
-      data: data ?? this.data,
-      rowid: rowid ?? this.rowid,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (notebookId.present) {
-      map['notebook_id'] = Variable<int>(notebookId.value);
-    }
-    if (indexId.present) {
-      map['index_id'] = Variable<int>(indexId.value);
-    }
-    if (data.present) {
-      map['data'] = Variable<String>(data.value);
-    }
-    if (rowid.present) {
-      map['rowid'] = Variable<int>(rowid.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('NotesCompanion(')
-          ..write('notebookId: $notebookId, ')
-          ..write('indexId: $indexId, ')
-          ..write('data: $data, ')
-          ..write('rowid: $rowid')
-          ..write(')'))
-        .toString();
-  }
-}
-
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $NotebooksTable notebooks = $NotebooksTable(this);
   late final $IndexItemsTable indexItems = $IndexItemsTable(this);
   late final $UiPreferencesTable uiPreferences = $UiPreferencesTable(this);
-  late final $NotesTable notes = $NotesTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -1400,7 +1129,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     notebooks,
     indexItems,
     uiPreferences,
-    notes,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -1417,20 +1145,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('ui_preferences', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'notebooks',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('notes', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'index_items',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('notes', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -1487,25 +1201,6 @@ final class $$NotebooksTableReferences
     ).filter((f) => f.notebookId.id.sqlEquals($_itemColumn<int>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_uiPreferencesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$NotesTable, List<Note>> _notesRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.notes,
-    aliasName: 'notebooks__id__notes__notebook_id',
-  );
-
-  $$NotesTableProcessedTableManager get notesRefs {
-    final manager = $$NotesTableTableManager(
-      $_db,
-      $_db.notes,
-    ).filter((f) => f.notebookId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_notesRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -1587,31 +1282,6 @@ class $$NotebooksTableFilterComposer
           }) => $$UiPreferencesTableFilterComposer(
             $db: $db,
             $table: $db.uiPreferences,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> notesRefs(
-    Expression<bool> Function($$NotesTableFilterComposer f) f,
-  ) {
-    final $$NotesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.notes,
-      getReferencedColumn: (t) => t.notebookId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$NotesTableFilterComposer(
-            $db: $db,
-            $table: $db.notes,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -1732,31 +1402,6 @@ class $$NotebooksTableAnnotationComposer
     );
     return f(composer);
   }
-
-  Expression<T> notesRefs<T extends Object>(
-    Expression<T> Function($$NotesTableAnnotationComposer a) f,
-  ) {
-    final $$NotesTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.notes,
-      getReferencedColumn: (t) => t.notebookId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$NotesTableAnnotationComposer(
-            $db: $db,
-            $table: $db.notes,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$NotebooksTableTableManager
@@ -1772,11 +1417,7 @@ class $$NotebooksTableTableManager
           $$NotebooksTableUpdateCompanionBuilder,
           (Notebook, $$NotebooksTableReferences),
           Notebook,
-          PrefetchHooks Function({
-            bool indexItemsRefs,
-            bool uiPreferencesRefs,
-            bool notesRefs,
-          })
+          PrefetchHooks Function({bool indexItemsRefs, bool uiPreferencesRefs})
         > {
   $$NotebooksTableTableManager(_$AppDatabase db, $NotebooksTable table)
     : super(
@@ -1826,17 +1467,12 @@ class $$NotebooksTableTableManager
               )
               .toList(),
           prefetchHooksCallback:
-              ({
-                indexItemsRefs = false,
-                uiPreferencesRefs = false,
-                notesRefs = false,
-              }) {
+              ({indexItemsRefs = false, uiPreferencesRefs = false}) {
                 return PrefetchHooks(
                   db: db,
                   explicitlyWatchedTables: [
                     if (indexItemsRefs) db.indexItems,
                     if (uiPreferencesRefs) db.uiPreferences,
-                    if (notesRefs) db.notes,
                   ],
                   addJoins: null,
                   getPrefetchedDataCallback: (items) async {
@@ -1883,27 +1519,6 @@ class $$NotebooksTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (notesRefs)
-                        await $_getPrefetchedData<
-                          Notebook,
-                          $NotebooksTable,
-                          Note
-                        >(
-                          currentTable: table,
-                          referencedTable: $$NotebooksTableReferences
-                              ._notesRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$NotebooksTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).notesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.notebookId == item.id,
-                              ),
-                          typedResults: items,
-                        ),
                     ];
                   },
                 );
@@ -1924,11 +1539,7 @@ typedef $$NotebooksTableProcessedTableManager =
       $$NotebooksTableUpdateCompanionBuilder,
       (Notebook, $$NotebooksTableReferences),
       Notebook,
-      PrefetchHooks Function({
-        bool indexItemsRefs,
-        bool uiPreferencesRefs,
-        bool notesRefs,
-      })
+      PrefetchHooks Function({bool indexItemsRefs, bool uiPreferencesRefs})
     >;
 typedef $$IndexItemsTableCreateCompanionBuilder =
     IndexItemsCompanion Function({
@@ -1971,25 +1582,6 @@ final class $$IndexItemsTableReferences
     if (item == null) return manager;
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static MultiTypedResultKey<$NotesTable, List<Note>> _notesRefsTable(
-    _$AppDatabase db,
-  ) => MultiTypedResultKey.fromTable(
-    db.notes,
-    aliasName: 'index_items__id__notes__index_id',
-  );
-
-  $$NotesTableProcessedTableManager get notesRefs {
-    final manager = $$NotesTableTableManager(
-      $_db,
-      $_db.notes,
-    ).filter((f) => f.indexId.id.sqlEquals($_itemColumn<int>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_notesRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
     );
   }
 }
@@ -2059,31 +1651,6 @@ class $$IndexItemsTableFilterComposer
           ),
     );
     return composer;
-  }
-
-  Expression<bool> notesRefs(
-    Expression<bool> Function($$NotesTableFilterComposer f) f,
-  ) {
-    final $$NotesTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.notes,
-      getReferencedColumn: (t) => t.indexId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$NotesTableFilterComposer(
-            $db: $db,
-            $table: $db.notes,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
   }
 }
 
@@ -2211,31 +1778,6 @@ class $$IndexItemsTableAnnotationComposer
     );
     return composer;
   }
-
-  Expression<T> notesRefs<T extends Object>(
-    Expression<T> Function($$NotesTableAnnotationComposer a) f,
-  ) {
-    final $$NotesTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.notes,
-      getReferencedColumn: (t) => t.indexId,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$NotesTableAnnotationComposer(
-            $db: $db,
-            $table: $db.notes,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$IndexItemsTableTableManager
@@ -2251,7 +1793,7 @@ class $$IndexItemsTableTableManager
           $$IndexItemsTableUpdateCompanionBuilder,
           (IndexItem, $$IndexItemsTableReferences),
           IndexItem,
-          PrefetchHooks Function({bool notebookId, bool notesRefs})
+          PrefetchHooks Function({bool notebookId})
         > {
   $$IndexItemsTableTableManager(_$AppDatabase db, $IndexItemsTable table)
     : super(
@@ -2312,10 +1854,10 @@ class $$IndexItemsTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({notebookId = false, notesRefs = false}) {
+          prefetchHooksCallback: ({notebookId = false}) {
             return PrefetchHooks(
               db: db,
-              explicitlyWatchedTables: [if (notesRefs) db.notes],
+              explicitlyWatchedTables: [],
               addJoins:
                   <
                     T extends TableManagerState<
@@ -2349,23 +1891,7 @@ class $$IndexItemsTableTableManager
                     return state;
                   },
               getPrefetchedDataCallback: (items) async {
-                return [
-                  if (notesRefs)
-                    await $_getPrefetchedData<
-                      IndexItem,
-                      $IndexItemsTable,
-                      Note
-                    >(
-                      currentTable: table,
-                      referencedTable: $$IndexItemsTableReferences
-                          ._notesRefsTable(db),
-                      managerFromTypedResult: (p0) =>
-                          $$IndexItemsTableReferences(db, table, p0).notesRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where((e) => e.indexId == item.id),
-                      typedResults: items,
-                    ),
-                ];
+                return [];
               },
             );
           },
@@ -2385,7 +1911,7 @@ typedef $$IndexItemsTableProcessedTableManager =
       $$IndexItemsTableUpdateCompanionBuilder,
       (IndexItem, $$IndexItemsTableReferences),
       IndexItem,
-      PrefetchHooks Function({bool notebookId, bool notesRefs})
+      PrefetchHooks Function({bool notebookId})
     >;
 typedef $$UiPreferencesTableCreateCompanionBuilder =
     UiPreferencesCompanion Function({
@@ -2653,368 +2179,6 @@ typedef $$UiPreferencesTableProcessedTableManager =
       UiPreference,
       PrefetchHooks Function({bool notebookId})
     >;
-typedef $$NotesTableCreateCompanionBuilder =
-    NotesCompanion Function({
-      required int notebookId,
-      required int indexId,
-      required String data,
-      Value<int> rowid,
-    });
-typedef $$NotesTableUpdateCompanionBuilder =
-    NotesCompanion Function({
-      Value<int> notebookId,
-      Value<int> indexId,
-      Value<String> data,
-      Value<int> rowid,
-    });
-
-final class $$NotesTableReferences
-    extends BaseReferences<_$AppDatabase, $NotesTable, Note> {
-  $$NotesTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $NotebooksTable _notebookIdTable(_$AppDatabase db) =>
-      db.notebooks.createAlias('notes__notebook_id__notebooks__id');
-
-  $$NotebooksTableProcessedTableManager get notebookId {
-    final $_column = $_itemColumn<int>('notebook_id')!;
-
-    final manager = $$NotebooksTableTableManager(
-      $_db,
-      $_db.notebooks,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_notebookIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-
-  static $IndexItemsTable _indexIdTable(_$AppDatabase db) =>
-      db.indexItems.createAlias('notes__index_id__index_items__id');
-
-  $$IndexItemsTableProcessedTableManager get indexId {
-    final $_column = $_itemColumn<int>('index_id')!;
-
-    final manager = $$IndexItemsTableTableManager(
-      $_db,
-      $_db.indexItems,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_indexIdTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
-class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
-  $$NotesTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<String> get data => $composableBuilder(
-    column: $table.data,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  $$NotebooksTableFilterComposer get notebookId {
-    final $$NotebooksTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.notebookId,
-      referencedTable: $db.notebooks,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$NotebooksTableFilterComposer(
-            $db: $db,
-            $table: $db.notebooks,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$IndexItemsTableFilterComposer get indexId {
-    final $$IndexItemsTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.indexId,
-      referencedTable: $db.indexItems,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$IndexItemsTableFilterComposer(
-            $db: $db,
-            $table: $db.indexItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$NotesTableOrderingComposer
-    extends Composer<_$AppDatabase, $NotesTable> {
-  $$NotesTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<String> get data => $composableBuilder(
-    column: $table.data,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  $$NotebooksTableOrderingComposer get notebookId {
-    final $$NotebooksTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.notebookId,
-      referencedTable: $db.notebooks,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$NotebooksTableOrderingComposer(
-            $db: $db,
-            $table: $db.notebooks,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$IndexItemsTableOrderingComposer get indexId {
-    final $$IndexItemsTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.indexId,
-      referencedTable: $db.indexItems,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$IndexItemsTableOrderingComposer(
-            $db: $db,
-            $table: $db.indexItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$NotesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $NotesTable> {
-  $$NotesTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<String> get data =>
-      $composableBuilder(column: $table.data, builder: (column) => column);
-
-  $$NotebooksTableAnnotationComposer get notebookId {
-    final $$NotebooksTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.notebookId,
-      referencedTable: $db.notebooks,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$NotebooksTableAnnotationComposer(
-            $db: $db,
-            $table: $db.notebooks,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-
-  $$IndexItemsTableAnnotationComposer get indexId {
-    final $$IndexItemsTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.indexId,
-      referencedTable: $db.indexItems,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$IndexItemsTableAnnotationComposer(
-            $db: $db,
-            $table: $db.indexItems,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
-}
-
-class $$NotesTableTableManager
-    extends
-        RootTableManager<
-          _$AppDatabase,
-          $NotesTable,
-          Note,
-          $$NotesTableFilterComposer,
-          $$NotesTableOrderingComposer,
-          $$NotesTableAnnotationComposer,
-          $$NotesTableCreateCompanionBuilder,
-          $$NotesTableUpdateCompanionBuilder,
-          (Note, $$NotesTableReferences),
-          Note,
-          PrefetchHooks Function({bool notebookId, bool indexId})
-        > {
-  $$NotesTableTableManager(_$AppDatabase db, $NotesTable table)
-    : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$NotesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$NotesTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$NotesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> notebookId = const Value.absent(),
-                Value<int> indexId = const Value.absent(),
-                Value<String> data = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => NotesCompanion(
-                notebookId: notebookId,
-                indexId: indexId,
-                data: data,
-                rowid: rowid,
-              ),
-          createCompanionCallback:
-              ({
-                required int notebookId,
-                required int indexId,
-                required String data,
-                Value<int> rowid = const Value.absent(),
-              }) => NotesCompanion.insert(
-                notebookId: notebookId,
-                indexId: indexId,
-                data: data,
-                rowid: rowid,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map(
-                (e) =>
-                    (e.readTable(table), $$NotesTableReferences(db, table, e)),
-              )
-              .toList(),
-          prefetchHooksCallback: ({notebookId = false, indexId = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (notebookId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.notebookId,
-                                referencedTable: $$NotesTableReferences
-                                    ._notebookIdTable(db),
-                                referencedColumn: $$NotesTableReferences
-                                    ._notebookIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-                    if (indexId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.indexId,
-                                referencedTable: $$NotesTableReferences
-                                    ._indexIdTable(db),
-                                referencedColumn: $$NotesTableReferences
-                                    ._indexIdTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
-        ),
-      );
-}
-
-typedef $$NotesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$AppDatabase,
-      $NotesTable,
-      Note,
-      $$NotesTableFilterComposer,
-      $$NotesTableOrderingComposer,
-      $$NotesTableAnnotationComposer,
-      $$NotesTableCreateCompanionBuilder,
-      $$NotesTableUpdateCompanionBuilder,
-      (Note, $$NotesTableReferences),
-      Note,
-      PrefetchHooks Function({bool notebookId, bool indexId})
-    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -3025,6 +2189,4 @@ class $AppDatabaseManager {
       $$IndexItemsTableTableManager(_db, _db.indexItems);
   $$UiPreferencesTableTableManager get uiPreferences =>
       $$UiPreferencesTableTableManager(_db, _db.uiPreferences);
-  $$NotesTableTableManager get notes =>
-      $$NotesTableTableManager(_db, _db.notes);
 }

@@ -1,4 +1,4 @@
-import 'package:material_ui/material_ui.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
@@ -56,19 +56,24 @@ class NotebookItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = context.theme.colors;
     return ScaleTransition(
       scale: CurvedAnimation(parent: animation, curve: Curves.easeInOutQuint),
       child: Stack(
         children: [
           Card(
-            color: Theme.of(context).primaryColorLight,
+            color: colors.card,
             child: InkWell(
               borderRadius: BorderRadius.circular(12),
-              // highlightColor: const Color.fromARGB(20, 0, 0, 0),
               onTap: () => context.go('/notebook/${notebook.id}'),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: Center(child: Text(notebook.name)),
+                child: Center(
+                  child: Text(
+                    notebook.name,
+                    style: TextStyle(color: colors.foreground),
+                  ),
+                ),
               ),
             ),
           ),
@@ -81,26 +86,27 @@ class NotebookItem extends StatelessWidget {
                   .group(
                     children: [
                       .item(
-                        prefix: const Icon(FIcons.pencilLine),
+                        prefix: const Icon(FLucideIcons.pencilLine),
                         title: const Text("Rename"),
                         onPress: () async {
                           String? result = await DialogHelper.getStringInput(
                             context,
                             "Rename",
                             notebook.name,
-                            // 64,
                           );
-                          if (result == null || result == "") {
+                          if (result == null || result.isEmpty) {
                             return;
                           }
-                          context.read<HomeCubit>().renameNotebook(
-                            notebook.id,
-                            result,
-                          );
+                          if (context.mounted) {
+                            context.read<HomeCubit>().renameNotebook(
+                              notebook.id,
+                              result,
+                            );
+                          }
                         },
                       ),
                       .item(
-                        prefix: const Icon(FIcons.trash),
+                        prefix: const Icon(FLucideIcons.trash),
                         title: const Text("Delete"),
                         onPress: () async {
                           bool confirmed = await DialogHelper.getConfirmation(
@@ -110,7 +116,7 @@ class NotebookItem extends StatelessWidget {
                             "Are you sure you want to delete the Notebook: ${notebook.name}",
                             "Delete",
                           );
-                          if (!confirmed) return;
+                          if (!confirmed || !context.mounted) return;
 
                           await context.read<HomeCubit>().deleteNotebook(
                             context,
@@ -137,7 +143,7 @@ class NotebookItem extends StatelessWidget {
                   return FButton.icon(
                     variant: .ghost,
                     onPress: controller.toggle,
-                    child: const Icon(FIcons.ellipsisVertical),
+                    child: const Icon(FLucideIcons.ellipsisVertical),
                   );
                 },
               ),
