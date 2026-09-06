@@ -5,7 +5,6 @@ import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/note_repository.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/note_cubit.dart';
 import 'package:studyapp/ui/shared/widgets/MilkdownEditor.dart';
-import 'package:studyapp/ui/shared/widgets/tiptap_editor.dart';
 
 class NotesPage extends StatelessWidget {
   final int notebookId;
@@ -35,22 +34,8 @@ class NotesView extends StatefulWidget {
 
 class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixin {
   // ignore: unused_field
-  late final TipTapEditorController _tiptapController;
-
   @override
   bool get wantKeepAlive => true;
-
-  @override
-  void initState() {
-    super.initState();
-    _tiptapController = TipTapEditorController();
-  }
-
-  @override
-  void dispose() {
-    _tiptapController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,14 +43,14 @@ class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixi
     final colors = context.theme.colors;
     final noteCubit = context.read<NoteCubit>();
 
-    return BlocConsumer<NoteCubit, NoteState>(
+    return BlocBuilder<NoteCubit, NoteState>(
       buildWhen: (previous, current) => previous.isLoading != current.isLoading,
-      listenWhen: (previous, current) => previous.markdown != current.markdown && !_tiptapController.isReady,
-      listener: (context, state) {
-        if (state.markdown.isNotEmpty) {
-          // _tiptapController.setMarkdown(state.markdown);
-        }
-      },
+      // listenWhen: (previous, current) => previous.markdown != current.markdown && !_tiptapController.isReady,
+      // listener: (context, state) {
+      //   if (state.markdown.isNotEmpty) {
+      //     // _tiptapController.setMarkdown(state.markdown);
+      //   }
+      // },
       builder: (context, state) {
         return Column(
           children: [
