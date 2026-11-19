@@ -1,7 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart' hide GlobalMaterialLocalizations;
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:forui/forui.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/data/database/app_database.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
@@ -11,6 +12,7 @@ import 'package:studyapp/data/repositories/notebook_repository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
 import 'package:studyapp/services/font_service.dart';
 import 'package:studyapp/theme/theme.dart';
+
 import 'package:studyapp/ui/router.dart';
 import 'package:studyapp/ui/shared/widgets/window_title_bar.dart';
 import 'package:window_manager/window_manager.dart';
@@ -50,7 +52,7 @@ void main() async {
     await windowManager.show();
     await windowManager.focus();
   });
-
+  // debugRepaintRainbowEnabled = true;
   runApp(
     MultiRepositoryProvider(
       providers: [
@@ -104,28 +106,22 @@ class MyApp extends StatelessWidget {
       },
       builder: (context, state) {
         final String appFont = (state is AppReady) ? state.appFont : 'System Default';
-        final String? effectiveFont = (appFont.isNotEmpty && appFont != 'System Default')
-            ? appFont
-            : null;
+        final String? effectiveFont = (appFont.isNotEmpty && appFont != 'System Default') ? appFont : null;
 
-        final FThemeData customLightTheme = getLightTheme(fontFamily: effectiveFont);
-        final FThemeData customDarkTheme = getDarkTheme(fontFamily: effectiveFont);
+        final FThemeData customLightTheme = lightTheme(effectiveFont);
+        final FThemeData customDarkTheme = darkTheme(effectiveFont);
 
         ThemeData lightMat = customLightTheme.toApproximateMaterialTheme();
         ThemeData darkMat = customDarkTheme.toApproximateMaterialTheme();
 
         if (effectiveFont != null) {
-          lightMat = lightMat.copyWith(
-            textTheme: lightMat.textTheme.apply(fontFamily: effectiveFont),
-          );
-          darkMat = darkMat.copyWith(
-            textTheme: darkMat.textTheme.apply(fontFamily: effectiveFont),
-          );
+          lightMat = lightMat.copyWith(textTheme: lightMat.textTheme.apply(fontFamily: effectiveFont));
+          darkMat = darkMat.copyWith(textTheme: darkMat.textTheme.apply(fontFamily: effectiveFont));
         }
 
         return MaterialApp.router(
           supportedLocales: FLocalizations.supportedLocales,
-          localizationsDelegates: const [
+          localizationsDelegates: [
             ...FLocalizations.localizationsDelegates,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,

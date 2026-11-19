@@ -3,9 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  flutter_inappwebview_windows
+  fullscreen_window
   restart_app
   screen_retriever_windows
+  webview_win_floating
   window_manager
 )
 

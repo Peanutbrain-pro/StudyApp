@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/note_repository.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/note_cubit.dart';
-import 'package:studyapp/ui/shared/widgets/MilkdownEditor.dart';
+import 'package:studyapp/ui/shared/widgets/milkdown_editor.dart';
 
 class NotesPage extends StatelessWidget {
   final int notebookId;

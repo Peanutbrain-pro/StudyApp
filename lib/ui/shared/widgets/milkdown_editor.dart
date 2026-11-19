@@ -2,14 +2,14 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:forui/forui.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:studyapp/ui/app/cubits/app_cubit.dart';
+import 'package:webview_flutter_platform_interface/webview_flutter_platform_interface.dart';
+import 'package:webview_win_floating/webview_win_floating.dart';
 
 class MilkdownFileEditorScreen extends StatefulWidget {
   final int notebookId;
@@ -30,7 +30,7 @@ class MilkdownFileEditorScreen extends StatefulWidget {
 }
 
 class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
-  InAppWebViewController? _webViewController;
+  late final WinWebViewController _webViewController;
   String _currentMarkdown = '';
   Timer? _debounceSaveTimer;
   bool _editorInitialized = false;
@@ -44,9 +44,77 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
   @override
   void initState() {
     super.initState();
+    _webViewController = WinWebViewController();
+    _setupController();
     _loadExistingNoteContent();
     _loadSavedWidth();
     _locateHtmlBundle();
+  }
+
+  void _setupController() {
+    _webViewController.setJavaScriptMode(JavaScriptMode.unrestricted);
+    _webViewController.setNavigationDelegate(
+      WinNavigationDelegate(
+        onPageFinished: (url) {
+          _applyThemeToEditor();
+          _applyFontToEditor();
+        },
+      ),
+    );
+    _webViewController.addJavaScriptChannel(
+      'FlutterBridge',
+      onMessageReceived: (JavaScriptMessage message) {
+        _handleMessageFromEditor(message.message);
+      },
+    );
+  }
+
+  void _handleMessageFromEditor(String rawMessage) async {
+    try {
+      final data = jsonDecode(rawMessage);
+      if (data is! Map) return;
+
+      final type = data['type'] as String?;
+      final content = data['content'];
+
+      switch (type) {
+        case 'ready':
+          _applyThemeToEditor();
+          _applyFontToEditor();
+          if (!_editorInitialized) {
+            _editorInitialized = true;
+            final file = File(widget.noteFilePath);
+            if (await file.exists()) {
+              _currentMarkdown = await file.readAsString();
+            }
+            if (_currentMarkdown.isNotEmpty) {
+              await _loadContentIntoEditor(_currentMarkdown);
+            }
+            _applyWidthToEditor();
+          }
+          break;
+        case 'auto_save':
+          if (content is String) {
+            _onContentChanged(content);
+          }
+          break;
+        case 'upload_image':
+          if (content is Map) {
+            final fileName = content['fileName'] as String? ?? 'image.png';
+            final base64Str = content['base64'] as String? ?? '';
+            _handleImageBlobUpload(fileName, base64Str);
+          }
+          break;
+        case 'pick_image':
+          _handleImagePick();
+          break;
+        case 'error':
+          debugPrint('[Milkdown] Editor error: $content');
+          break;
+      }
+    } catch (e) {
+      debugPrint('[Milkdown] Error parsing message from editor: $e');
+    }
   }
 
   @override
@@ -70,12 +138,20 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
   }
 
   void _applyFontToEditor([String? font]) {
-    if (_webViewController == null) return;
     final fontToUse = font ?? _lastAppliedFont;
     if (fontToUse == null) return;
-    _webViewController!.evaluateJavascript(
-      source: 'if (window.AppBridge && window.AppBridge.setFont) { window.AppBridge.setFont(${jsonEncode(fontToUse)}); }',
-    );
+    final fontJson = jsonEncode(fontToUse);
+    _webViewController.runJavaScript('''
+      (() => {
+        if (window.setEditorFont) {
+          window.setEditorFont('default', $fontJson);
+          window.setEditorFont('title', $fontJson);
+        }
+        if (window.AppBridge && window.AppBridge.setFont) {
+          window.AppBridge.setFont($fontJson);
+        }
+      })();
+    ''');
   }
 
   bool get _isAppDark {
@@ -87,25 +163,21 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
   }
 
   void _applyThemeToEditor() {
-    if (_webViewController == null) return;
     final isDark = _isAppDark;
-    _webViewController!.evaluateJavascript(
-      source: '''
-        if (window.AppBridge && window.AppBridge.setTheme) {
-          window.AppBridge.setTheme($isDark);
+    _webViewController.runJavaScript('''
+      (() => {
+        const isDark = $isDark;
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+          document.documentElement.setAttribute('data-theme', 'dark');
         } else {
-          if ($isDark) {
-            document.documentElement.classList.add('dark');
-            document.documentElement.classList.remove('light');
-            document.documentElement.setAttribute('data-theme', 'dark');
-          } else {
-            document.documentElement.classList.remove('dark');
-            document.documentElement.classList.add('light');
-            document.documentElement.setAttribute('data-theme', 'light');
-          }
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+          document.documentElement.setAttribute('data-theme', 'light');
         }
-      ''',
-    );
+      })();
+    ''');
   }
 
   Future<void> _loadExistingNoteContent() async {
@@ -150,20 +222,32 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
           htmlPath = devPath;
         }
       }
+    } else if (Platform.isLinux) {
+      final exeDir = p.dirname(Platform.resolvedExecutable);
+      final bundlePath = p.join(exeDir, 'data', 'flutter_assets', 'assets', 'editor_bundle', 'index.html');
+      if (File(bundlePath).existsSync()) {
+        htmlPath = bundlePath;
+      } else {
+        final devPath = p.join(Directory.current.path, 'assets', 'editor_bundle', 'index.html');
+        htmlPath = devPath;
+      }
     } else {
       final currentDir = Directory.current.path;
       htmlPath = p.join(currentDir, 'assets', 'editor_bundle', 'index.html');
     }
 
+    final fileUri = Uri.file(htmlPath).toString();
     setState(() {
-      _htmlFileUri = Uri.file(htmlPath).toString();
+      _htmlFileUri = fileUri;
     });
+    _webViewController.loadRequest(Uri.parse(fileUri));
   }
 
   @override
   void dispose() {
     _debounceSaveTimer?.cancel();
     _saveNoteFileSync(_currentMarkdown);
+    _webViewController.dispose();
     super.dispose();
   }
 
@@ -196,11 +280,16 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
   }
 
   Future<void> _loadContentIntoEditor(String content) async {
-    if (_webViewController == null) return;
-    await _webViewController!.callAsyncJavaScript(
-      functionBody: 'window.AppBridge.setContent(content);',
-      arguments: {'content': content},
-    );
+    final contentJson = jsonEncode(content);
+    await _webViewController.runJavaScript('''
+      (() => {
+        if (window.setEditorContent) {
+          window.setEditorContent($contentJson);
+        } else if (window.AppBridge && window.AppBridge.setContent) {
+          window.AppBridge.setContent($contentJson);
+        }
+      })();
+    ''');
   }
 
   void _onContentChanged(String newMarkdown) {
@@ -214,13 +303,29 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
   void _applyWidthToEditor() {
     final effectiveWidth = _isFullWidth ? 0 : _customWidth.round();
     final paddingX = _isFullWidth ? 64 : 32;
-    _webViewController?.evaluateJavascript(
-      source: 'window.AppBridge.setCustomWidth($effectiveWidth, $paddingX);',
-    );
+    final maxWidthVal = effectiveWidth > 0 ? '${effectiveWidth}px' : '100%';
+    _webViewController.runJavaScript('''
+      (() => {
+        if (window.AppBridge && window.AppBridge.setCustomWidth) {
+          window.AppBridge.setCustomWidth($effectiveWidth, $paddingX);
+        }
+        const el = document.querySelector('.milkdown');
+        if (el) {
+          el.style.maxWidth = '$maxWidthVal';
+          el.style.margin = '0 auto';
+          el.style.paddingLeft = '${paddingX}px';
+          el.style.paddingRight = '${paddingX}px';
+        }
+      })();
+    ''');
   }
 
-  void _openWidthAdjuster(BuildContext context) {
-    showDialog(
+  Future<void> _openWidthAdjuster(BuildContext context) async {
+    // Hide floating webview while dialog is open so dialog is not obscured
+    await _webViewController.setVisibility(false);
+    if (!context.mounted) return;
+
+    await showDialog(
       context: context,
       builder: (dialogCtx) {
         return StatefulBuilder(
@@ -291,17 +396,16 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogCtx),
-                  child: const Text('Close'),
-                ),
-              ],
+              actions: [TextButton(onPressed: () => Navigator.pop(dialogCtx), child: const Text('Close'))],
             );
           },
         );
       },
     );
+
+    if (mounted) {
+      await _webViewController.setVisibility(true);
+    }
   }
 
   Widget _buildPresetChip(String label, double width, StateSetter setDialogState) {
@@ -358,7 +462,7 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
 
     final fileName = p.basename(sourcePath);
     final destinationFile = File(p.join(sourcesDir.path, fileName));
-    
+
     await File(sourcePath).copy(destinationFile.path);
     return Uri.file(destinationFile.path).toString();
   }
@@ -370,119 +474,64 @@ class MilkdownFileEditorScreenState extends State<MilkdownFileEditorScreen> {
     }
 
     final cardColor = context.theme.colors.card;
+    final borderColor = context.theme.colors.border;
 
     return Container(
       color: cardColor,
-      child: Stack(
+      child: Column(
         children: [
-          // Webview Editor (fills whole container cleanly)
-          InAppWebView(
-            initialUrlRequest: URLRequest(
-              url: WebUri(_htmlFileUri!),
+          // Header bar with Document Width control (placed outside floating webview so it's never covered)
+          Container(
+            height: 34,
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            decoration: BoxDecoration(
+              color: cardColor,
+              border: Border(bottom: BorderSide(color: borderColor, width: 1)),
             ),
-            initialSettings: InAppWebViewSettings(
-              transparentBackground: false,
-              supportZoom: false,
-              isInspectable: kDebugMode,
-              allowFileAccess: true,
-              allowFileAccessFromFileURLs: true,
-              allowUniversalAccessFromFileURLs: true,
-            ),
-            onLoadStop: (controller, url) {
-              _applyThemeToEditor();
-              _applyFontToEditor();
-            },
-            onWebViewCreated: (controller) {
-              _webViewController = controller;
-
-              controller.addJavaScriptHandler(
-                handlerName: 'onEditorReady',
-                callback: (args) async {
-                  _applyThemeToEditor();
-                  _applyFontToEditor();
-                  if (!_editorInitialized) {
-                    _editorInitialized = true;
-                    final file = File(widget.noteFilePath);
-                    if (await file.exists()) {
-                      _currentMarkdown = await file.readAsString();
-                    }
-                    if (_currentMarkdown.isNotEmpty) {
-                      await _loadContentIntoEditor(_currentMarkdown);
-                    }
-                    _applyWidthToEditor();
-                  }
-                },
-              );
-
-              controller.addJavaScriptHandler(
-                handlerName: 'onContentChanged',
-                callback: (args) {
-                  final markdown = args.first['markdown'] as String? ?? '';
-                  _onContentChanged(markdown);
-                },
-              );
-
-              // Single file upload via Base64 (from browser's 1st file picker)
-              controller.addJavaScriptHandler(
-                handlerName: 'onUploadImageBlob',
-                callback: (args) async {
-                  final argMap = (args.isNotEmpty && args.first is Map) ? args.first as Map : {};
-                  final fileName = argMap['fileName'] as String? ?? 'img_${DateTime.now().millisecondsSinceEpoch}.png';
-                  final base64String = argMap['base64'] as String? ?? '';
-                  return await _handleImageBlobUpload(fileName, base64String);
-                },
-              );
-
-              // Fallback
-              controller.addJavaScriptHandler(
-                handlerName: 'onPickLocalImagePath',
-                callback: (args) async {
-                  return await _handleImagePick();
-                },
-              );
-            },
-          ),
-
-          // Minimal floating width button in top-right corner
-          Positioned(
-            top: 10,
-            right: 14,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                borderRadius: BorderRadius.circular(20),
-                onTap: () => _openWidthAdjuster(context),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
-                        blurRadius: 4,
-                        offset: const Offset(0, 1),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
+                    onTap: () => _openWidthAdjuster(context),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.85),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.2)),
                       ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.tune_rounded, size: 13, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6)),
-                      const SizedBox(width: 4),
-                      Text(
-                        _isFullWidth ? 'Full' : '${_customWidth.round()}px',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                          fontWeight: FontWeight.w500,
-                        ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.tune_rounded,
+                            size: 13,
+                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isFullWidth ? 'Full' : '${_customWidth.round()}px',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
-              ),
+              ],
+            ),
+          ),
+          // Webview Editor fills remaining height cleanly
+          Expanded(
+            child: WinWebViewWidget(
+              controller: _webViewController,
             ),
           ),
         ],

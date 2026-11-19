@@ -10,17 +10,7 @@ FStyle _style({
   required FTypography typography,
   required bool touch,
 }) {
-  const borderRadius = FBorderRadius(
-    xs2: .all(.circular(3.0)),
-    xs: .all(.circular(4.0)),
-    sm: .all(.circular(6.0)),
-    md: .all(.circular(7.0)),
-    lg: .all(.circular(10.0)),
-    xl: .all(.circular(13.0)),
-    xl2: .all(.circular(16.0)),
-    xl3: .all(.circular(19.0)),
-    pill: .all(.circular(100.0)),
-  );
+  const borderRadius = FBorderRadius();
   return FStyle(
     formFieldStyle: .inherit(
       colors: colors,
@@ -37,17 +27,7 @@ FStyle _style({
       size: typography.body.lg.fontSize,
     ),
     tappableStyle: FTappableStyle(),
-    borderRadius: const FBorderRadius(
-      xs2: .all(.circular(3.0)),
-      xs: .all(.circular(4.0)),
-      sm: .all(.circular(6.0)),
-      md: .all(.circular(7.0)),
-      lg: .all(.circular(10.0)),
-      xl: .all(.circular(13.0)),
-      xl2: .all(.circular(16.0)),
-      xl3: .all(.circular(19.0)),
-      pill: .all(.circular(100.0)),
-    ),
+    borderRadius: const FBorderRadius(),
     borderWidth: 1,
     pagePadding: const .symmetric(vertical: 8, horizontal: 12),
     shadow: const [

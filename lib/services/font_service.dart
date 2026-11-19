@@ -81,6 +81,25 @@ class FontService {
       } catch (e) {
         debugPrint('Error querying Windows registry fonts: $e');
       }
+    } else if (!kIsWeb && Platform.isLinux) {
+      try {
+        final result = await Process.run('fc-list', [':', 'family']);
+        if (result.exitCode == 0) {
+          final lines = (result.stdout as String).split('\n');
+          for (final line in lines) {
+            final trimmedLine = line.trim();
+            if (trimmedLine.isEmpty) continue;
+            for (final family in trimmedLine.split(',')) {
+              final trimmedFamily = family.trim();
+              if (trimmedFamily.isNotEmpty) {
+                fontNames.add(trimmedFamily);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        debugPrint('Error querying Linux fonts via fc-list: $e');
+      }
     }
 
     fontNames.addAll(defaultFallbackFonts);

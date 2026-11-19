@@ -1,0 +1,10 @@
+# GitHub Linguist language overrides
+# Exclude assets and HTML files from language statistics calculation
+
+# Assets directory
+assets/** linguist-detectable=false
+assets/** linguist-vendored
+
+# All HTML files
+*.html linguist-detectable=false
+*.html linguist-vendored

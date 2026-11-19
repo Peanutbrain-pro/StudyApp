@@ -1,10 +1,11 @@
-import 'package:drift/drift.dart';
 import 'package:studyapp/data/database/app_database.dart';
 
 class NoteRepository {
   final AppDatabase _db;
 
   NoteRepository({required AppDatabase db}) : _db = db;
+
+  AppDatabase get db => _db;
 
   // Future<Note?> getNotes(int indexId, int notebookId) async {
   //   final note = await _db.managers.notes.filter((f) => f.notebookId.id(notebookId)).getSingleOrNull();

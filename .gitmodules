@@ -1,0 +1,3 @@
+[submodule "editor"]
+	path = editor
+	url = https://github.com/Peanutbrain-pro/milkdown-flutter-webview.git

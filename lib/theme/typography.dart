@@ -6,17 +6,11 @@ part of 'theme.dart';
 FTypography _typography({
   required FColors colors,
   required bool touch,
-  String? fontFamily,
-}) {
-  final resolvedFamily = (fontFamily != null && fontFamily.isNotEmpty && fontFamily != 'System Default')
-      ? fontFamily
-      : FTypeface.defaultFontFamily;
-
-  return FTypography(
-    display: _display(colors: colors, touch: touch, fontFamily: resolvedFamily),
-    body: _body(colors: colors, touch: touch, fontFamily: resolvedFamily),
-  );
-}
+  String fontFamily = FTypeface.defaultFontFamily,
+}) => FTypography(
+  display: _display(colors: colors, touch: touch, fontFamily: fontFamily),
+  body: _body(colors: colors, touch: touch, fontFamily: fontFamily),
+);
 
 /// The typographical tokens used for prominent text such as headings.
 FTypeface _display({
@@ -25,10 +19,7 @@ FTypeface _display({
   String fontFamily = FTypeface.defaultFontFamily,
   List<String>? fontFamilyFallback,
 }) {
-  assert(
-    fontFamily.isNotEmpty,
-    'fontFamily ($fontFamily) should not be empty.',
-  );
+  assert(fontFamily.isNotEmpty, 'fontFamily ($fontFamily) should not be empty.');
   final color = colors.foreground;
   if (touch) {
     return FTypeface(
@@ -274,10 +265,7 @@ FTypeface _body({
   String fontFamily = FTypeface.defaultFontFamily,
   List<String>? fontFamilyFallback,
 }) {
-  assert(
-    fontFamily.isNotEmpty,
-    'fontFamily ($fontFamily) should not be empty.',
-  );
+  assert(fontFamily.isNotEmpty, 'fontFamily ($fontFamily) should not be empty.');
   final color = colors.foreground;
   if (touch) {
     return FTypeface(

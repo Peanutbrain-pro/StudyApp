@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:window_manager/window_manager.dart';
 
@@ -116,15 +117,9 @@ class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> with Window
             onPressed: () async => await windowManager.minimize(),
           ),
           if (_isMaximized)
-            WindowCaptionButton.unmaximize(
-              brightness: brightness,
-              onPressed: _toggleMaximize,
-            )
+            WindowCaptionButton.unmaximize(brightness: brightness, onPressed: _toggleMaximize)
           else
-            WindowCaptionButton.maximize(
-              brightness: brightness,
-              onPressed: _toggleMaximize,
-            ),
+            WindowCaptionButton.maximize(brightness: brightness, onPressed: _toggleMaximize),
           WindowCaptionButton.close(
             brightness: brightness,
             onPressed: () async => await windowManager.close(),
