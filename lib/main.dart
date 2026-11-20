@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart' hide GlobalMaterialLocalizations;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -46,7 +47,7 @@ void main() async {
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.setMinimumSize(const Size(960, 450));
     if (hasValidPosition && !Platform.isLinux) {
-      await windowManager.setPosition(Offset(x!, y!));
+      await windowManager.setPosition(Offset(x, y));
     }
     if (wasMaximized) {
       await windowManager.maximize();
@@ -94,6 +95,10 @@ void main() async {
   );
 }
 
+class ClearFocusIntent extends Intent {
+  const ClearFocusIntent();
+}
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -122,12 +127,34 @@ class MyApp extends StatelessWidget {
         }
 
         return MaterialApp.router(
+          shortcuts: {
+            ...WidgetsApp.defaultShortcuts,
+            // Disable bare arrow keys from jumping focus between random UI buttons:
+            const SingleActivator(LogicalKeyboardKey.arrowDown): const DoNothingAndStopPropagationIntent(),
+            const SingleActivator(LogicalKeyboardKey.arrowUp): const DoNothingAndStopPropagationIntent(),
+            const SingleActivator(LogicalKeyboardKey.arrowLeft): const DoNothingAndStopPropagationIntent(),
+            const SingleActivator(LogicalKeyboardKey.arrowRight): const DoNothingAndStopPropagationIntent(),
+            // Pressing Escape clears focus and removes the outline
+            const SingleActivator(LogicalKeyboardKey.escape): const ClearFocusIntent(),
+          },
+          actions: {
+            ...WidgetsApp.defaultActions,
+            // Completely disable directional 2D focus traversal across the app
+            DirectionalFocusIntent: CallbackAction<DirectionalFocusIntent>(
+              onInvoke: (intent) => null,
+            ),
+            ClearFocusIntent: CallbackAction<ClearFocusIntent>(
+              onInvoke: (intent) {
+                FocusManager.instance.primaryFocus?.unfocus();
+                return null;
+              },
+            ),
+          },
           supportedLocales: FLocalizations.supportedLocales,
           localizationsDelegates: [
             ...FLocalizations.localizationsDelegates,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
           ],
           debugShowCheckedModeBanner: false,
           title: 'Document summarizer',
@@ -144,7 +171,7 @@ class MyApp extends StatelessWidget {
                 color: currentTheme.colors.background,
                 child: Column(
                   children: [
-                    const CustomWindowTitleBar(),
+                    const ExcludeFocus(child: CustomWindowTitleBar()),
                     Expanded(child: child ?? const SizedBox.shrink()),
                   ],
                 ),
