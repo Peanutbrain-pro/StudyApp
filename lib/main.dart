@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:flutter_localizations/flutter_localizations.dart' hide GlobalMaterialLocalizations;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -43,8 +45,8 @@ void main() async {
 
   windowManager.waitUntilReadyToShow(windowOptions, () async {
     await windowManager.setMinimumSize(const Size(960, 450));
-    if (hasValidPosition) {
-      await windowManager.setPosition(Offset(x, y));
+    if (hasValidPosition && !Platform.isLinux) {
+      await windowManager.setPosition(Offset(x!, y!));
     }
     if (wasMaximized) {
       await windowManager.maximize();

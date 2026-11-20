@@ -1,5 +1,6 @@
-import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:forui/forui.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:studyapp/ui/app/cubits/app_cubit.dart';
 
 class FirstLaunchView extends StatelessWidget {
@@ -7,66 +8,93 @@ class FirstLaunchView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
+    final colors = context.theme.colors;
+
+    return FScaffold(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            const Text(
+            Text(
               "Welcome",
-              style: TextStyle(fontSize: 42, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 42,
+                fontWeight: FontWeight.bold,
+                color: colors.foreground,
+              ),
             ),
-            Container(
-              decoration:
-                  BoxDecoration(border: Border.all(width: 2), borderRadius: BorderRadius.circular(15)),
-              constraints: const BoxConstraints(maxWidth: 500),
-              child: Padding(
-                padding: const EdgeInsets.all(18.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  spacing: 20,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Expanded(flex: 3, child: Text("App save location: ")),
-                        Expanded(
-                          flex: 4,
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            spacing: 12,
-                            children: [
-                              Expanded(
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: FCard(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            "App save location: ",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                              color: colors.foreground,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                Expanded(
                                   child: FutureBuilder(
                                     future: context.read<AppCubit>().getDefaultAppSaveLocation(),
                                     builder: (context, asyncSnapshot) {
-                                      return SelectableText(asyncSnapshot.data ?? "");
-                                    }
-                                  )),
-                              IconButton(
-                                  icon: const Icon(Icons.folder),
-                                  onPressed: context.read<AppCubit>().changeSaveLocation),
-                            ],
+                                      return SelectableText(
+                                        asyncSnapshot.data ?? "",
+                                        textAlign: TextAlign.end,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: colors.mutedForeground,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                FButton.icon(
+                                  variant: .outline,
+                                  onPress: context.read<AppCubit>().changeSaveLocation,
+                                  child: const Icon(FLucideIcons.folder, size: 18),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                    OutlinedButton(
-                      style: ButtonStyle(
-                        shape: WidgetStateProperty.all(RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)))
+                        ],
                       ),
-                      child: const Text("Done"),
-                      onPressed: () => context.read<AppCubit>().onFirstConfigFinished(),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+                      FButton(
+                        variant: .primary,
+                        onPress: () => context.read<AppCubit>().onFirstConfigFinished(),
+                        child: const Text("Done"),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            TextButton(
-                onPressed: () {
-                  context.read<AppCubit>().setDefaultFirstLaunch();
-                },
-                child: const Text("Set default First launch settings."))
+            FButton(
+              variant: .ghost,
+              onPress: () {
+                context.read<AppCubit>().setDefaultFirstLaunch();
+              },
+              child: Text(
+                "Set default First launch settings.",
+                style: TextStyle(color: colors.mutedForeground),
+              ),
+            ),
           ],
         ),
       ),
