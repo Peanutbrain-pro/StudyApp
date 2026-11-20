@@ -50,3 +50,7 @@ app.*.map.json
 tiptap_editor_source/node_modules/
 tiptap_editor_source/dist/
 
+# Web editor build bundle
+assets/editor_bundle/*
+!assets/editor_bundle/.gitkeep
+
