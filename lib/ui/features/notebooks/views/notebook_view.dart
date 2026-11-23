@@ -48,22 +48,30 @@ class _NotebookViewState extends State<NotebookView> with SingleTickerProviderSt
       builder: (context, state) {
         // final bool nameTooLong = state.notebookName.length > 35;
 
+        final typography = context.theme.typography;
+        final colors = context.theme.colors;
+
         return FScaffold(
           header: MainAppBar(
             title: Row(
               children: [
                 TabHeader(tabController: _tabController),
-                const SizedBox(width: 40),
+                const SizedBox(width: 28),
                 Expanded(
-                  // Make the gradient disappear when near the end of the text
-                  child: Text(state.notebookName, overflow: .ellipsis),
+                  child: Text(
+                    state.notebookName,
+                    overflow: TextOverflow.ellipsis,
+                    style: typography.display.sm.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: colors.foreground,
+                    ),
+                  ),
                 ),
-                // const SizedBox(width: 40),
               ],
             ),
             prefixes: [
               FButton.icon(
-                size: .lg,
+                size: .md,
                 variant: .ghost,
                 onPress: () => context.pop(),
                 child: const Icon(FLucideIcons.chevronLeft),
@@ -108,27 +116,35 @@ class TabHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
+    final typography = context.theme.typography;
+
     return Container(
-      height: 40,
-      width: 300,
-      decoration: BoxDecoration(color: colors.secondary, borderRadius: .circular(15)),
+      height: 36,
+      width: 270,
+      decoration: BoxDecoration(
+        color: colors.secondary,
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: TabBar(
         labelColor: colors.primaryForeground,
         unselectedLabelColor: colors.mutedForeground,
-        splashBorderRadius: .circular(15),
-        tabAlignment: .start,
+        labelStyle: typography.body.sm.copyWith(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: typography.body.sm,
+        splashBorderRadius: BorderRadius.circular(10),
+        tabAlignment: TabAlignment.start,
         isScrollable: true,
         controller: _tabController,
         dividerColor: Colors.transparent,
-        // indicatorPadding: .all(3),
-        // indicatorPadding: .only(left: 4, right: 4),
-        indicatorSize: .tab,
-        labelPadding: .zero,
-        indicator: BoxDecoration(color: colors.primary, borderRadius: BorderRadius.circular(15)),
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelPadding: EdgeInsets.zero,
+        indicator: BoxDecoration(
+          color: colors.primary,
+          borderRadius: BorderRadius.circular(10),
+        ),
         tabs: const [
-          SizedBox(width: 100, child: Tab(text: "Index")),
-          SizedBox(width: 100, child: Tab(text: 'Notes')),
-          SizedBox(width: 100, child: Tab(text: 'PYQs')),
+          SizedBox(width: 90, child: Tab(text: "Index")),
+          SizedBox(width: 90, child: Tab(text: 'Notes')),
+          SizedBox(width: 90, child: Tab(text: 'PYQs')),
         ],
       ),
     );

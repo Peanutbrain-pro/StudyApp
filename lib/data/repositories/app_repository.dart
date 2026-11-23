@@ -23,7 +23,10 @@ class AppRepository {
     final String? saveLocation = _prefs.getString(keySaveLocation);
 
     // If firstLaunch flag is true/unset, or saveLocation is missing or was deleted from disk
-    if (firstLaunch == null || firstLaunch == true || saveLocation == null || !Directory(saveLocation).existsSync()) {
+    if (firstLaunch == null ||
+        firstLaunch == true ||
+        saveLocation == null ||
+        !Directory(saveLocation).existsSync()) {
       _prefs.setBool(keyFirstLaunch, true);
       return AppInitStatus.firstLaunch;
     }
@@ -67,5 +70,18 @@ class AppRepository {
   Future<AppDatabase> getAppDatabase() async {
     final saveLocation = getSaveLocation();
     return AppDatabase(saveLocation!);
+  }
+
+  bool getShowTitleBar() {
+    bool? status = _prefs.getBool(keyShowTitleBar);
+    if (status == null) {
+      _prefs.setBool(keyShowTitleBar, true);
+      status = true;
+    }
+    return status;
+  }
+
+  void setShowTitleBar(bool value) {
+    _prefs.setBool(keyShowTitleBar, value);
   }
 }

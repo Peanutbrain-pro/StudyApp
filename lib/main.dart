@@ -107,7 +107,8 @@ class MyApp extends StatelessWidget {
     return BlocBuilder<AppCubit, AppState>(
       buildWhen: (previous, current) {
         if (previous is AppReady && current is AppReady) {
-          return previous.appFont != current.appFont;
+          // build when app font changes or titlebar toggles
+          return previous.appFont != current.appFont || previous.showTitleBar != current.showTitleBar;
         }
         return true;
       },
@@ -140,9 +141,7 @@ class MyApp extends StatelessWidget {
           actions: {
             ...WidgetsApp.defaultActions,
             // Completely disable directional 2D focus traversal across the app
-            DirectionalFocusIntent: CallbackAction<DirectionalFocusIntent>(
-              onInvoke: (intent) => null,
-            ),
+            DirectionalFocusIntent: CallbackAction<DirectionalFocusIntent>(onInvoke: (intent) => null),
             ClearFocusIntent: CallbackAction<ClearFocusIntent>(
               onInvoke: (intent) {
                 FocusManager.instance.primaryFocus?.unfocus();
@@ -162,18 +161,34 @@ class MyApp extends StatelessWidget {
           darkTheme: darkMat,
           themeMode: ThemeMode.system,
           builder: (context, child) {
-            final isDark = MediaQuery.platformBrightnessOf(context) == Brightness.dark;
+            final mediaQuery = MediaQuery.of(context);
+            final clampedTextScaler = mediaQuery.textScaler.clamp(
+              minScaleFactor: 0.85,
+              maxScaleFactor: 1.15,
+            );
+            final isDark = mediaQuery.platformBrightness == Brightness.dark;
             final currentTheme = isDark ? customDarkTheme : customLightTheme;
 
-            return FTheme(
-              data: currentTheme,
-              child: Material(
-                color: currentTheme.colors.background,
-                child: Column(
-                  children: [
-                    const ExcludeFocus(child: CustomWindowTitleBar()),
-                    Expanded(child: child ?? const SizedBox.shrink()),
-                  ],
+            return MediaQuery(
+              data: mediaQuery.copyWith(textScaler: clampedTextScaler),
+              child: FTheme(
+                data: currentTheme,
+                child: Material(
+                  color: currentTheme.colors.background,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      if (constraints.maxHeight < 32) {
+                        return const SizedBox.shrink();
+                      }
+                      final showTitleBar = (state is AppReady) ? state.showTitleBar : true;
+                      return Column(
+                        children: [
+                          if (showTitleBar) const ExcludeFocus(child: CustomWindowTitleBar()),
+                          Expanded(child: child ?? const SizedBox.shrink()),
+                        ],
+                      );
+                    },
+                  ),
                 ),
               ),
             );

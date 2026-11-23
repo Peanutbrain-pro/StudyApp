@@ -4,8 +4,10 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   fullscreen_window
+  pasteboard
   restart_app
   screen_retriever_windows
+  url_launcher_windows
   webview_win_floating
   window_manager
 )

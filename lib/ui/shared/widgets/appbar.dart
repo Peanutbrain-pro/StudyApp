@@ -18,7 +18,11 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
         spacing: 10,
         mainAxisSize: .min,
         children: [
-          if (prefixes.isNotEmpty) Row(children: prefixes),
+          if (prefixes.isNotEmpty)
+            Padding(
+              padding: const .only(top: 14),
+              child: Row(children: prefixes),
+            ),
           Expanded(child: title),
         ],
       ),

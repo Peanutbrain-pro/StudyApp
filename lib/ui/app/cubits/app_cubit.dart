@@ -11,25 +11,20 @@ import 'package:path/path.dart' as p;
 // import 'package:studyapp/ui/shared/utilities/dialog_helper.dart';
 import 'package:window_manager/window_manager.dart';
 
-sealed class AppState {
-  // final String savePath;
-  // AppState({required this.savePath});
-}
+sealed class AppState {}
 
-class AppLoading extends AppState {
-  // AppLoading({required super.savePath});
-}
+class AppLoading extends AppState {}
 
-class AppFirstLaunch extends AppState {
-  // AppFirstLaunch({required super.savePath});
-}
+class AppFirstLaunch extends AppState {}
 
 class AppReady extends AppState {
   final bool requiresRestart;
   final String appFont;
   final String editorFont;
+  final bool showTitleBar;
 
   AppReady({
+    this.showTitleBar = true,
     this.requiresRestart = false,
     this.appFont = 'System Default',
     this.editorFont = 'System Default',
@@ -39,10 +34,7 @@ class AppReady extends AppState {
 class AppCubit extends Cubit<AppState> {
   final AppRepository _appRepository;
 
-  AppCubit({
-    required AppRepository appRepository,
-  })  : _appRepository = appRepository,
-        super(AppLoading()) {
+  AppCubit({required AppRepository appRepository}) : _appRepository = appRepository, super(AppLoading()) {
     _initialize();
   }
 
@@ -59,10 +51,11 @@ class AppCubit extends Cubit<AppState> {
         final saveLocation = _appRepository.getSaveLocation();
         final appFont = _appRepository.getAppFont();
         final editorFont = _appRepository.getEditorFont();
+        final showTitleBar = _appRepository.getShowTitleBar();
 
         print("Save location is set to : $saveLocation");
         print("The app is ready (supposedly)");
-        emit(AppReady(appFont: appFont, editorFont: editorFont));
+        emit(AppReady(appFont: appFont, editorFont: editorFont, showTitleBar: showTitleBar));
     }
   }
 
@@ -76,7 +69,7 @@ class AppCubit extends Cubit<AppState> {
     print("The save location is saved to the default");
     onFirstConfigFinished();
   }
-  
+
   Future<String> getDefaultAppSaveLocation() async {
     final Directory documentsDirectory = await getApplicationDocumentsDirectory();
     final String saveLocation = p.join(documentsDirectory.path, appName);
@@ -88,11 +81,12 @@ class AppCubit extends Cubit<AppState> {
   }
 
   Future<void> changeSaveLocation() async {
-    String? selectedDirectoryPath = await FilePicker.getDirectoryPath();
-    if (selectedDirectoryPath == null) {
+    final uri = await FilePicker.pickDirectory();
+    if (uri == null) {
       print("Directory selection canceled by user");
       return;
     }
+    final selectedDirectoryPath = uri.toFilePath();
 
     _appRepository.setSaveLocation(selectedDirectoryPath);
     print("Save location set to: $selectedDirectoryPath");
@@ -120,11 +114,9 @@ class AppCubit extends Cubit<AppState> {
   void setRequiresRestart() {
     final currentState = state;
     if (currentState is AppReady) {
-      emit(AppReady(
-        requiresRestart: true,
-        appFont: currentState.appFont,
-        editorFont: currentState.editorFont,
-      ));
+      emit(
+        AppReady(requiresRestart: true, appFont: currentState.appFont, editorFont: currentState.editorFont),
+      );
     } else {
       emit(AppReady(requiresRestart: true));
     }
@@ -134,11 +126,13 @@ class AppCubit extends Cubit<AppState> {
     await _appRepository.setAppFont(font);
     final currentState = state;
     if (currentState is AppReady) {
-      emit(AppReady(
-        requiresRestart: currentState.requiresRestart,
-        appFont: font,
-        editorFont: currentState.editorFont,
-      ));
+      emit(
+        AppReady(
+          requiresRestart: currentState.requiresRestart,
+          appFont: font,
+          editorFont: currentState.editorFont,
+        ),
+      );
     } else {
       emit(AppReady(appFont: font));
     }
@@ -148,13 +142,33 @@ class AppCubit extends Cubit<AppState> {
     await _appRepository.setEditorFont(font);
     final currentState = state;
     if (currentState is AppReady) {
-      emit(AppReady(
-        requiresRestart: currentState.requiresRestart,
-        appFont: currentState.appFont,
-        editorFont: font,
-      ));
+      emit(
+        AppReady(
+          requiresRestart: currentState.requiresRestart,
+          appFont: currentState.appFont,
+          editorFont: font,
+        ),
+      );
     } else {
       emit(AppReady(editorFont: font));
     }
+  }
+
+  void toggleTitleBar() {
+    if (state case AppReady s) {
+      _appRepository.setShowTitleBar(!s.showTitleBar);
+      emit(
+        AppReady(
+          showTitleBar: !s.showTitleBar,
+          requiresRestart: s.requiresRestart,
+          appFont: s.appFont,
+          editorFont: s.editorFont,
+        ),
+      );
+    }
+  }
+
+  bool getShowTitleBar() {
+    return _appRepository.getShowTitleBar();
   }
 }

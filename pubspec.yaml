@@ -36,6 +36,30 @@ dependencies:
   webview_win_floating: ^3.0.3
   webview_flutter_platform_interface: ^2.10.0
 
+  super_editor:
+    git:
+      url: https://github.com/Flutter-Bounty-Hunters/super_editor.git
+      path: super_editor
+      ref: stable
+  pasteboard: ^0.6.2
+
+dependency_overrides:
+  super_editor:
+    git:
+      url: https://github.com/Flutter-Bounty-Hunters/super_editor.git
+      path: super_editor
+      ref: stable
+  super_text_layout:
+    git:
+      url: https://github.com/Flutter-Bounty-Hunters/super_editor.git
+      path: super_text_layout
+      ref: stable
+  attributed_text:
+    git:
+      url: https://github.com/Flutter-Bounty-Hunters/super_editor.git
+      path: attributed_text
+      ref: stable
+
 dev_dependencies:
   build_runner: ^2.16.1
   drift_dev: ^2.35.1
@@ -49,3 +73,15 @@ flutter:
   assets:
     - assets/pdf_icon.png
     - assets/editor_bundle/
+    - assets/fonts/inter/
+    - assets/fonts/jetbrains_mono/
+
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/inter/Inter-Variable.ttf
+    - family: JetBrains Mono
+      fonts:
+        - asset: assets/fonts/jetbrains_mono/JetBrainsMono-Variable.ttf
+        - asset: assets/fonts/jetbrains_mono/JetBrainsMono-Italic-Variable.ttf
+          style: italic

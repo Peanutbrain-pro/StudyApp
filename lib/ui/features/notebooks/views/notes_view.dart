@@ -3,8 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
 import 'package:studyapp/data/repositories/app_repository.dart';
 import 'package:studyapp/data/repositories/note_repository.dart';
+import 'package:studyapp/ui/app/cubits/app_cubit.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/note_cubit.dart';
-import 'package:studyapp/ui/shared/widgets/milkdown_editor.dart';
+import 'package:studyapp/ui/shared/widgets/super_editor/super_editor_screen.dart';
 
 class NotesPage extends StatelessWidget {
   final int notebookId;
@@ -40,8 +41,9 @@ class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixi
   @override
   Widget build(BuildContext context) {
     super.build(context);
-    final colors = context.theme.colors;
     final noteCubit = context.read<NoteCubit>();
+    final appState = context.watch<AppCubit>().state;
+    final editorFont = appState is AppReady ? appState.editorFont : null;
 
     return BlocBuilder<NoteCubit, NoteState>(
       buildWhen: (previous, current) => previous.isLoading != current.isLoading,
@@ -57,18 +59,14 @@ class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixi
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: colors.card,
-                    border: Border.all(width: 1.5, color: colors.border),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                child: FCard(
                   clipBehavior: Clip.antiAlias,
-                  child: MilkdownFileEditorScreen(
-                    key: ValueKey('milkdown_${noteCubit.notebookId}'),
+                  child: SuperEditorNoteScreen(
+                    key: ValueKey('super_editor_${noteCubit.notebookId}'),
                     notebookId: noteCubit.notebookId,
                     noteFilePath: noteCubit.notePath(),
                     sourcesDirectoryPath: noteCubit.sourcesDirectory(),
+                    fontFamily: editorFont,
                     onContentChanged: (markdown) {
                       noteCubit.saveMarkdown(markdown);
                     },

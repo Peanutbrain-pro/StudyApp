@@ -87,9 +87,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                                 decoration: .delta([
                                   .base(const .boxDelta(color: Colors.green)),
                                   .exact({.hovered}, const .boxDelta(color: Colors.green)),
-                                  .match({
-                                    .disabled,
-                                  }, const .boxDelta(color: Colors.green)),
+                                  .match({.disabled}, const .boxDelta(color: Colors.green)),
                                 ]),
                               ),
                               size: .lg,
@@ -123,53 +121,66 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                     minScale: 0.3,
                     maxScale: 3.5,
                     scaleFactor: 900,
-                    child: Column(
-                      children: [
-                        Container(
-                          constraints: const BoxConstraints(minHeight: 1000),
-                          decoration: BoxDecoration(
-                            color: colors.card,
-                            border: Border.all(width: 2, color: colors.border),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(72.0),
-                                child: Text(
-                                  "Index",
-                                  style: typography.display.xl7.copyWith(color: colors.foreground),
-                                ),
+                    child: MediaQuery(
+                      // Isolate document page text scaling from ambient UI/OS scaling
+                      data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
+                      child: Padding(
+                        padding: const EdgeInsets.all(48.0),
+                        child: Column(
+                          children: [
+                            Container(
+                              constraints: const BoxConstraints(minWidth: 800, minHeight: 1050),
+                              decoration: BoxDecoration(
+                                color: colors.card,
+                                border: Border.all(width: 1.5, color: colors.border),
+                                borderRadius: BorderRadius.circular(10),
+                                boxShadow: const [
+                                  BoxShadow(color: Color(0x33000000), blurRadius: 16, offset: Offset(0, 4)),
+                                ],
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 48, left: 48, right: 48),
-                                child: IndexContent(
-                                  content: state.content,
-                                  checkAndSetActive: checkAndSetActive,
-                                  removeActive: removeActive,
-                                  noOfColumns: state.noOfColumns,
-                                  tableWidth: 1100,
-                                  headers: state.headers,
-                                  columnWidths: state.columnWidths,
-                                  notebookId: widget.notebookId,
-                                ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(40, 40, 40, 24),
+                                    child: Text(
+                                      "Index",
+                                      style: typography.display.xl3.copyWith(
+                                        color: colors.foreground,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.fromLTRB(40, 0, 40, 32),
+                                    child: IndexContent(
+                                      content: state.content,
+                                      checkAndSetActive: checkAndSetActive,
+                                      removeActive: removeActive,
+                                      noOfColumns: state.noOfColumns,
+                                      tableWidth: 1100,
+                                      headers: state.headers,
+                                      columnWidths: state.columnWidths,
+                                      notebookId: widget.notebookId,
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 40, bottom: 40),
+                                    child: FButton(
+                                      variant: .destructive,
+                                      onPress: () {
+                                        context.read<IndexCubit>().deleteAllItems();
+                                      },
+                                      child: const Text("Delete everything"),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 48),
-                                child: FButton(
-                                  variant: .destructive,
-                                  onPress: () {
-                                    context.read<IndexCubit>().deleteAllItems();
-                                  },
-                                  child: const Text("Delete everything"),
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                            const SizedBox(height: 150),
+                          ],
                         ),
-                        const SizedBox(height: 150),
-                      ],
+                      ),
                     ),
                   ),
                 ],
@@ -271,7 +282,11 @@ class _IndexContentState extends State<IndexContent> {
                           },
                           child: TextField(
                             readOnly: !inEditMode,
-                            decoration: const InputDecoration(border: InputBorder.none),
+                            decoration: const InputDecoration(
+                              border: InputBorder.none,
+                              isDense: true,
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                            ),
                             controller: TextEditingController.fromValue(TextEditingValue(text: header ?? "")),
                             onSubmitted: (value) {
                               context.read<IndexCubit>().editHeader(widget.notebookId, value, index);
@@ -282,7 +297,11 @@ class _IndexContentState extends State<IndexContent> {
                             onTapOutside: (event) {
                               context.read<IndexCubit>().editHeader(widget.notebookId, currentHeader, index);
                             },
-                            style: TextStyle(fontWeight: FontWeight.bold, color: foregroundColor),
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: foregroundColor,
+                            ),
                           ),
                         ),
                         Positioned(

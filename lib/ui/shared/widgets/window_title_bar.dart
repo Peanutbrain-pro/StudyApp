@@ -87,45 +87,53 @@ class _CustomWindowTitleBarState extends State<CustomWindowTitleBar> with Window
     final brightness = Theme.of(context).brightness;
     final isDark = brightness == Brightness.dark;
 
-    return SizedBox(
-      height: 32,
-      child: Row(
-        children: [
-          Expanded(
-            child: DragToMoveArea(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 12),
-                  const FlutterLogo(size: 16),
-                  const SizedBox(width: 12),
-                  Text(
-                    'StudyApp',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                      color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1E1E1E),
-                    ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 150) {
+          return const SizedBox(height: 32);
+        }
+
+        return SizedBox(
+          height: 32,
+          child: Row(
+            children: [
+              Expanded(
+                child: DragToMoveArea(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      const SizedBox(width: 12),
+                      const FlutterLogo(size: 16),
+                      const SizedBox(width: 12),
+                      Text(
+                        'StudyApp',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w400,
+                          color: isDark ? const Color(0xFFE0E0E0) : const Color(0xFF1E1E1E),
+                        ),
+                      ),
+                      const Spacer(),
+                    ],
                   ),
-                  const Spacer(),
-                ],
+                ),
               ),
-            ),
+              WindowCaptionButton.minimize(
+                brightness: brightness,
+                onPressed: () async => await windowManager.minimize(),
+              ),
+              if (_isMaximized)
+                WindowCaptionButton.unmaximize(brightness: brightness, onPressed: _toggleMaximize)
+              else
+                WindowCaptionButton.maximize(brightness: brightness, onPressed: _toggleMaximize),
+              WindowCaptionButton.close(
+                brightness: brightness,
+                onPressed: () async => await windowManager.close(),
+              ),
+            ],
           ),
-          WindowCaptionButton.minimize(
-            brightness: brightness,
-            onPressed: () async => await windowManager.minimize(),
-          ),
-          if (_isMaximized)
-            WindowCaptionButton.unmaximize(brightness: brightness, onPressed: _toggleMaximize)
-          else
-            WindowCaptionButton.maximize(brightness: brightness, onPressed: _toggleMaximize),
-          WindowCaptionButton.close(
-            brightness: brightness,
-            onPressed: () async => await windowManager.close(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

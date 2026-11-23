@@ -35,7 +35,7 @@ class _HomeViewState extends State<HomeView> {
   Widget build(BuildContext context) {
     return FScaffold(
       header: MainAppBar(
-        title: const Text("Notebooks"),
+        title: const Padding(padding: .only(left: 12), child: Text("Notebooks")),
         actions: [
           FTooltip(
             tipAnchor: .topRight,
@@ -159,10 +159,7 @@ class NotebookItem extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Center(
-                  child: Text(
-                    notebook.name,
-                    style: TextStyle(color: colors.foreground),
-                  ),
+                  child: Text(notebook.name, style: TextStyle(color: colors.foreground)),
                 ),
               ),
               Padding(
