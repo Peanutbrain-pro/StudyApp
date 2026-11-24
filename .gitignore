@@ -12,17 +12,23 @@
 .swiftpm/
 migrate_working_dir/
 
-# IntelliJ related
+# Editors & IDEs
 *.iml
 *.ipr
 *.iws
 .idea/
+.vscode/
+.zed/
+.cursor/
+.fleet/
+*.sublime-project
+*.sublime-workspace
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Testing & temporary
 testing/
+*.tmp
+*.bak
+*.local
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -34,7 +40,7 @@ testing/
 .pub/
 /build/
 .fdemon/
-.zed/
+
 # Symbolication related
 app.*.symbols
 
@@ -45,4 +51,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
