@@ -47,12 +47,6 @@ class _NotesViewState extends State<NotesView> with AutomaticKeepAliveClientMixi
 
     return BlocBuilder<NoteCubit, NoteState>(
       buildWhen: (previous, current) => previous.isLoading != current.isLoading,
-      // listenWhen: (previous, current) => previous.markdown != current.markdown && !_tiptapController.isReady,
-      // listener: (context, state) {
-      //   if (state.markdown.isNotEmpty) {
-      //     // _tiptapController.setMarkdown(state.markdown);
-      //   }
-      // },
       builder: (context, state) {
         return Column(
           children: [

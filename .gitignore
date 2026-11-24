@@ -46,11 +46,3 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# TipTap web editor source
-tiptap_editor_source/node_modules/
-tiptap_editor_source/dist/
-
-# Web editor build bundle
-assets/editor_bundle/*
-!assets/editor_bundle/.gitkeep
-

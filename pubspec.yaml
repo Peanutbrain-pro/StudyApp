@@ -31,9 +31,6 @@ dependencies:
   # trina_grid removed — never imported anywhere in the codebase
   window_manager: ^0.5.2
   material_ui: ^1.5.0
-  # webview: webview_win_floating covers Windows + Linux (via webkit2gtk)
-  webview_win_floating: ^3.0.3
-  webview_flutter_platform_interface: ^2.10.0
 
   super_editor:
     git:
@@ -71,7 +68,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/pdf_icon.png
-    - assets/editor_bundle/
     - assets/fonts/inter/
     - assets/fonts/jetbrains_mono/
 

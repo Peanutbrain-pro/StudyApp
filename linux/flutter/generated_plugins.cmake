@@ -3,12 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  fullscreen_window
   pasteboard
   restart_app
   screen_retriever_linux
   url_launcher_linux
-  webview_win_floating
   window_manager
 )
 
