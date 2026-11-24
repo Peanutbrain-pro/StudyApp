@@ -132,6 +132,14 @@ class _ResizableImageComponentState extends State<ResizableImageComponent> {
     }
     if (oldWidget.alignment != widget.alignment) {
       _currentAlignment = widget.alignment;
+    } else if (oldWidget.imageUrl != widget.imageUrl) {
+      if (widget.imageUrl.contains('#left')) {
+        _currentAlignment = 'left';
+      } else if (widget.imageUrl.contains('#right')) {
+        _currentAlignment = 'right';
+      } else if (widget.alignment == 'center') {
+        _currentAlignment = 'center';
+      }
     }
 
     final isNowSelected = widget.selection != null && !widget.selection!.isCollapsed;
@@ -606,7 +614,14 @@ class ResizableImageComponentBuilder implements ComponentBuilder {
       return null;
     }
 
-    final align = node.metadata['textAlign'] as String? ?? 'center';
+    String align = 'center';
+    if (node.imageUrl.contains('#left')) {
+      align = 'left';
+    } else if (node.imageUrl.contains('#right')) {
+      align = 'right';
+    } else if (node.metadata['textAlign'] is String) {
+      align = node.metadata['textAlign'] as String;
+    }
 
     return ResizableImageComponentViewModel(
       nodeId: node.id,

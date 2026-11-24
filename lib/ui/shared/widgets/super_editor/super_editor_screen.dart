@@ -115,15 +115,27 @@ class _SuperEditorNoteScreenState extends State<SuperEditorNoteScreen> {
           );
         } else {
           // Restore image alignment from URL hash fragments if present
-          for (final node in doc) {
+          for (int i = 0; i < doc.nodeCount; i++) {
+            final node = doc.getNodeAt(i);
             if (node is ImageNode) {
-              if (node.imageUrl.endsWith('#left')) {
-                node.metadata['textAlign'] = 'left';
-              } else if (node.imageUrl.endsWith('#right')) {
-                node.metadata['textAlign'] = 'right';
-              } else {
-                node.metadata['textAlign'] = 'center';
+              String align = 'center';
+              if (node.imageUrl.contains('#left')) {
+                align = 'left';
+              } else if (node.imageUrl.contains('#right')) {
+                align = 'right';
               }
+              final meta = Map<String, dynamic>.from(node.metadata);
+              meta['textAlign'] = align;
+              doc.replaceNodeById(
+                node.id,
+                ImageNode(
+                  id: node.id,
+                  imageUrl: node.imageUrl,
+                  altText: node.altText,
+                  expectedBitmapSize: node.expectedBitmapSize,
+                  metadata: meta,
+                ),
+              );
             }
           }
         }
@@ -214,11 +226,15 @@ class _SuperEditorNoteScreenState extends State<SuperEditorNoteScreen> {
 
     try {
       final markdown = serializeDocumentToMarkdown(_document!);
-      final file = File(widget.noteFilePath);
-      if (!file.parent.existsSync()) {
-        file.parent.createSync(recursive: true);
+      if (markdown != _lastSavedMarkdown) {
+        _lastSavedMarkdown = markdown;
+        final file = File(widget.noteFilePath);
+        if (!file.parent.existsSync()) {
+          file.parent.createSync(recursive: true);
+        }
+        file.writeAsStringSync(markdown);
+        widget.onContentChanged?.call(markdown);
       }
-      file.writeAsStringSync(markdown);
     } catch (e) {
       debugPrint('Error sync-saving markdown note file: $e');
     }
@@ -250,7 +266,7 @@ class _SuperEditorNoteScreenState extends State<SuperEditorNoteScreen> {
     final oldNode = _document!.getNodeById(nodeId);
     if (oldNode is! ImageNode) return;
 
-    final cleanUrl = oldNode.imageUrl.split('#').first;
+    final cleanUrl = oldNode.imageUrl.replaceAll(RegExp(r'#(left|right|center)$'), '');
     final newUrl = alignment == 'center' ? cleanUrl : '$cleanUrl#$alignment';
 
     final updatedMetadata = Map<String, dynamic>.from(oldNode.metadata);
@@ -646,7 +662,7 @@ class _SuperEditorNoteScreenState extends State<SuperEditorNoteScreen> {
   }
 
   Widget _buildCustomImage(BuildContext context, String imageUrl) {
-    final effectivePath = imageUrl.split('#').first;
+    final effectivePath = imageUrl.replaceAll(RegExp(r'#(left|right|center)$'), '');
     Widget imageWidget;
     if (effectivePath.startsWith('http://') || effectivePath.startsWith('https://')) {
       imageWidget = Image.network(
