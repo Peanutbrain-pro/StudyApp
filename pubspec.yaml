@@ -17,7 +17,6 @@ dependencies:
   drift: ^2.35.1
   drift_flutter: ^0.3.1
   file_picker: ^13.1.0
-  fleather: ^1.28.0
   flutter_bloc: ^9.1.1
   # flutter_expandable_fab removed — never imported anywhere in the codebase
   forui: ^0.27.4

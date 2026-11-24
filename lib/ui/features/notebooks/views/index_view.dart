@@ -1,17 +1,14 @@
-import 'dart:convert';
 import 'package:collection/collection.dart';
-import 'package:fleather/fleather.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:forui/forui.dart' hide Delta;
+import 'package:forui/forui.dart';
 import 'package:interactive_viewer_2/interactive_viewer_2.dart';
 import 'package:studyapp/data/repositories/index_repository.dart';
 import 'package:studyapp/data/repositories/ui_preferences_repository.dart';
+import 'package:studyapp/ui/app/cubits/app_cubit.dart';
 import 'package:studyapp/ui/features/notebooks/cubits/index_cubit.dart';
-import 'package:studyapp/ui/shared/widgets/fleather_editor.dart';
-import 'package:studyapp/ui/shared/widgets/fleather_context_toolbar.dart';
-import 'package:studyapp/ui/shared/widgets/fleather_viewer.dart';
+import 'package:studyapp/ui/shared/widgets/super_text_field/editable_super_text_cell.dart';
 
 class IndexPage extends StatelessWidget {
   final int notebookId;
@@ -43,9 +40,13 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
   bool activeEditor = false;
   VoidCallback? activeSaveCallback;
 
-  bool checkAndSetActive(VoidCallback saveFunction) {
-    if (activeEditor == true) {
-      return false;
+  bool requestCellActivation(VoidCallback saveFunction) {
+    if (activeEditor && activeSaveCallback != null) {
+      // Flush previous cell save immediately before activating the new one
+      final previousSave = activeSaveCallback!;
+      activeSaveCallback = null;
+      activeEditor = false;
+      previousSave();
     }
     activeEditor = true;
     activeSaveCallback = saveFunction;
@@ -155,7 +156,7 @@ class _IndexViewState extends State<IndexView> with AutomaticKeepAliveClientMixi
                                     padding: const EdgeInsets.fromLTRB(40, 0, 40, 32),
                                     child: IndexContent(
                                       content: state.content,
-                                      checkAndSetActive: checkAndSetActive,
+                                      requestActivation: requestCellActivation,
                                       removeActive: removeActive,
                                       noOfColumns: state.noOfColumns,
                                       tableWidth: 1100,
@@ -199,13 +200,13 @@ class IndexContent extends StatefulWidget {
   final List<double> columnWidths;
   final double tableWidth;
   final int noOfColumns;
-  final bool Function(VoidCallback saveFunction) checkAndSetActive;
+  final bool Function(VoidCallback saveFunction) requestActivation;
   final void Function() removeActive;
 
   const IndexContent({
     super.key,
     required this.content,
-    required this.checkAndSetActive,
+    required this.requestActivation,
     required this.removeActive,
     required this.noOfColumns,
     required this.tableWidth,
@@ -380,6 +381,10 @@ class _IndexContentState extends State<IndexContent> {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final inEditMode = context.read<IndexCubit>().readyState.inEditMode;
+    final appState = context.watch<AppCubit>().state;
+    final editorFont = (appState is AppReady && appState.editorFont != 'System Default')
+        ? appState.editorFont
+        : null;
 
     return ValueListenableBuilder<List<double>>(
       valueListenable: widthsNotifier,
@@ -429,17 +434,9 @@ class _IndexContentState extends State<IndexContent> {
                                             crossAxisAlignment: CrossAxisAlignment.stretch,
                                             children: List.generate(widget.noOfColumns, (columnIndex) {
                                               if (columnIndex >= row.data.length) {
-                                                row.data.add(jsonEncode(Delta()..insert('\n')));
+                                                row.data.add("");
                                               }
                                               final rowData = row.data[columnIndex] ?? "";
-                                              final List<dynamic> rawDelta = jsonDecode(
-                                                rowData.isNotEmpty
-                                                    ? rowData
-                                                    : jsonEncode(Delta()..insert('\n')),
-                                              );
-                                              final Delta dataDelta = rawDelta.isNotEmpty
-                                                  ? Delta.fromJson(rawDelta)
-                                                  : ParchmentDocument().toDelta();
 
                                               return ValueListenableBuilder<List<double>>(
                                                 valueListenable: widthsNotifier,
@@ -453,18 +450,21 @@ class _IndexContentState extends State<IndexContent> {
                                                             : BorderSide.none,
                                                       ),
                                                     ),
-                                                    child: EditableFleatherCell(
-                                                      initialDelta: dataDelta,
-                                                      saveData: (delta) {
+                                                    child: EditableSuperTextCell(
+                                                      id: row.id,
+                                                      columnIndex: columnIndex,
+                                                      initialData: rowData,
+                                                      saveData: (serializedMarkdown) {
                                                         context.read<IndexCubit>().editUnitData(
                                                           row.id,
                                                           columnIndex,
-                                                          jsonEncode(delta),
+                                                          serializedMarkdown,
                                                         );
                                                       },
-                                                      checkAndSetActive: widget.checkAndSetActive,
+                                                      requestActivation: widget.requestActivation,
                                                       removeActive: widget.removeActive,
-                                                      id: row.id,
+                                                      inEditMode: inEditMode,
+                                                      fontFamily: editorFont,
                                                     ),
                                                   );
                                                 },
@@ -573,90 +573,6 @@ class _IndexContentState extends State<IndexContent> {
         );
       },
     );
-  }
-}
-
-class EditableFleatherCell extends StatefulWidget {
-  final int id;
-  final Function(Delta delta) saveData;
-  final Delta initialDelta;
-  final bool Function(VoidCallback saveFunction) checkAndSetActive;
-  final void Function() removeActive;
-
-  const EditableFleatherCell({
-    super.key,
-    required this.initialDelta,
-    required this.saveData,
-    required this.checkAndSetActive,
-    required this.removeActive,
-    required this.id,
-  });
-
-  @override
-  State<EditableFleatherCell> createState() => EditableFleatherCellState();
-}
-
-class EditableFleatherCellState extends State<EditableFleatherCell> {
-  FleatherController? controller;
-  bool isEditing = false;
-  late Delta currentDelta;
-
-  @override
-  void initState() {
-    super.initState();
-    currentDelta = widget.initialDelta;
-  }
-
-  @override
-  void didUpdateWidget(covariant EditableFleatherCell oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    currentDelta = widget.initialDelta;
-  }
-
-  void save() {
-    widget.removeActive();
-    currentDelta = controller!.document.toDelta();
-    widget.saveData(currentDelta);
-    controller!.dispose();
-    controller = null;
-    setState(() {
-      isEditing = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (isEditing) {
-      return CustomFleatherEditor(
-        controller: controller!,
-        contextMenuBuilder: (context, editorState) {
-          final anchors = editorState.contextMenuAnchors;
-          return Transform.translate(
-            offset: Offset(anchors.primaryAnchor.dx - 351, anchors.primaryAnchor.dy - 410),
-            child: UnconstrainedBox(child: CustomFleatherContextToolbar(controller: controller!)),
-          );
-        },
-        save: save,
-      );
-    } else {
-      if (context.read<IndexCubit>().readyState.inEditMode) {
-        return GestureDetector(
-          behavior: HitTestBehavior.opaque,
-          onTap: () {
-            if (!widget.checkAndSetActive(save)) {
-              return;
-            }
-            controller = FleatherController(document: ParchmentDocument.fromDelta(currentDelta));
-            setState(() {
-              isEditing = true;
-            });
-          },
-          child: IgnorePointer(child: FleatherViewer(delta: currentDelta)),
-        );
-      } else {
-        return FleatherViewer(delta: currentDelta);
-      }
-    }
   }
 }
 

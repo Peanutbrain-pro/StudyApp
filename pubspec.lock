@@ -218,14 +218,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.8"
-  csslib:
-    dependency: transitive
-    description:
-      name: csslib
-      sha256: "09bad715f418841f976c77db72d5398dc1253c21fb9c0c7f0b0b985860b2d58e"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.2"
   cupertino_ui:
     dependency: transitive
     description:
@@ -370,14 +362,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.1"
-  fleather:
-    dependency: "direct main"
-    description:
-      name: fleather
-      sha256: "0226c9d4bc0d57a0abc60a7b6a2ab007efed6f5d4b19d8735c44d2d53b031cff"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.28.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -526,14 +510,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  html:
-    dependency: transitive
-    description:
-      name: html
-      sha256: "43b67b8f43321ab066817dfac5619596c98bb1b61624e77203bb4351785f9699"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.15.7"
   http:
     dependency: transitive
     description:
@@ -782,22 +758,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.0"
-  parchment:
-    dependency: transitive
-    description:
-      name: parchment
-      sha256: "1af4dd4a39034452aecabac2baf4cb2a5248fc4467b6ba48cd5e11e533e00875"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.27.0"
-  parchment_delta:
-    dependency: transitive
-    description:
-      name: parchment_delta
-      sha256: "8b360d0138eb591c7fe193670e2d05466e482792af9c5b4d3f568c5c61530f08"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.0"
   pasteboard:
     dependency: "direct main"
     description:
