@@ -1,47 +1,45 @@
-# Project Status and Issues Report
+# Project Status and Architecture Report
 
-**Last Updated:** 2026-11-20  
-**Branch:** `develop` (Tracking `origin/develop`)
+**Last Updated:** 2026-11-24  
+**Branch:** `main` (Default branch)
 
 ---
 
 ## 1. Executive Summary
 
-**studyapp** is a Flutter desktop application for notebook management, rich markdown note-taking, and past year question (PYQ) tracking.
+**StudyApp** is a desktop-first study companion, notebook manager, and document workspace built with Flutter.
 
-All compile-time blockers and critical issues have been resolved:
-1. **Milkdown Crepe Editor Migration Completed:** `MilkdownEditor.dart` renamed to `milkdown_editor.dart` and migrated to `webview_win_floating` (`WinWebViewController` & `WinWebViewWidget`) with full communication over the `FlutterBridge` channel.
-2. **Linux Font Support Implemented:** `FontService` now queries `fc-list : family` on Linux desktops with zero extra dependencies and graceful fallback.
-3. **Compilation & Warning Cleanup:**
-   - 0 Errors, 0 Warnings across the entire project in `flutter analyze`.
-   - `note_repository.dart` unused imports and fields eliminated.
-   - `colors.dart` and `icons.dart` `const` constructor warnings fixed.
-   - Decoupled Material UI (`package:material_ui`) active across all views.
+The codebase has transitioned away from webview-based editors and legacy text engines to a **100% native Flutter editor architecture** powered by `super_editor` and `super_text_field`.
 
 ---
 
-## 2. Recent Progress & Changes Completed
+## 2. Key Architecture & Features
 
-### A. Milkdown Crepe Webview Migration (`lib/ui/shared/widgets/milkdown_editor.dart`)
-- Refactored away from `flutter_inappwebview` to `webview_win_floating` (`WinWebViewController` / `WinWebViewWidget`).
-- Replaced non-standard `file_names` (`MilkdownEditor.dart` -> `milkdown_editor.dart`) and updated all import call sites (`notes_view.dart`).
-- Configured bi-directional bridge communication via `FlutterBridge`:
-  - `ready` -> loads document content, applies current app theme, font family, and saved editor width.
-  - `auto_save` -> debounced note content persistence.
-  - `upload_image` / `pick_image` -> saves images locally to notebook sources folder.
-- Configured dialog overlay safety:
-  - Invokes `_webViewController.setVisibility(false)` when opening dialogs (e.g. document width tuner) and restores visibility on close to prevent native HWND/WebKit z-index clipping.
-  - Placed the width tuning header button in a dedicated top bar above the floating webview.
+### A. Native Document Editor (`NotesView` & `super_editor`)
+- Replaced webview-based editors with native `super_editor` pinned to upstream `stable`.
+- **Theme & Overlays**: Styled with `forui` color tokens (`FThemeData`) and theme-aware custom carets that suppress blinking carets on non-text elements.
+- **Image Management**:
+  - Interactive corner drag handles for real-time resizing.
+  - Floating `FPopover` toolbar for width presets (25%, 50%, 75%, 100%), alignment (Left, Center, Right), and deletion.
+  - Zero-layout-shift popover positioning directly over the text layer.
+  - URL hash fragment architecture (`#left`, `#right`) ensuring alignment persists directly through Markdown serialization on disk.
+  - Safe RegEx cleaning that preserves filenames containing `#`.
+- **Clipboard & Media**: Native clipboard pasteboard support (`pasteboard: ^0.6.2`) for immediate pasting of screenshots, image files, and URLs.
+- **Keyboard Shortcuts & Reactions**: History undo/redo (`Ctrl+Z`, `Ctrl+Shift+Z` / `Ctrl+Y`), headings (`Ctrl+Alt+1..3`), quote/code conversions, and trailing paragraph guarantees.
 
-### B. Linux Font Service (`lib/services/font_service.dart`)
-- Added native Linux desktop font querying via `fc-list : family` using `Process.run`.
-- Automatically parses and deduplicates system, package, and user font families (`/usr/share/fonts`, `~/.local/share/fonts`, `~/.fonts`).
-- Falls back to `defaultFallbackFonts` if `fc-list` is unavailable or errors.
+### B. Inline Table Editor (`IndexView` & `super_text_field`)
+- Replaced legacy editors with `SuperTextField`-backed inline table cells.
+- **Dual-Mode Architecture**:
+  - *Viewer Mode*: Renders lightweight `Text.rich(computeInlineSpan(...))` with zero controllers, focus nodes, or tickers for smooth 60–120 FPS panning and zooming in `InteractiveViewer2`.
+  - *Editor Mode*: Sharp, flush container (`BorderRadius.zero`) with integrated top formatting toolbar and auto-expanding line height (`minLines: _lineCount`).
+- **Markdown Serialization**: Lightweight line-by-line Markdown serializer and deserializer (`cell_content_serializer.dart`) that prevents multi-line formatting tokens from leaking.
+- **Auto-Save & Safe Disposal**: 600ms debounced persistence to SQLite, blur/done auto-commit, and deferred microtask disposal to prevent active ticker assertions.
 
-### C. Dependency & Code Cleanup
-- Cleaned unused imports and fields in `lib/data/repositories/note_repository.dart`.
-- Converted `Color(...)` instantiations in `lib/theme/colors.dart` to `const Color(...)` and unified `FIcons` in `lib/theme/icons.dart`.
-- Ensured all pub dependencies are cross-platform and support both Windows and Linux.
+### C. Cross-Platform Desktop Typography & Theming
+- Bundled offline `Inter` and `JetBrains Mono` variable fonts in `assets/fonts/`.
+- High-performance asynchronous system font discovery (`FontService` with `fc-list` on Linux and Registry on Windows).
+- Desktop typography tokens with clamped text scaling to ensure uniform sizing across Wayland, X11, and Windows.
+- Independent Index document canvas scaling inside `InteractiveViewer2`.
 
 ---
 
@@ -49,17 +47,18 @@ All compile-time blockers and critical issues have been resolved:
 
 | Package / Module | Windows | Linux | Implementation Details |
 |---|---|---|---|
-| **`webview_win_floating`** | ✅ Supported | ✅ Supported | WebView2 on Windows, WebKit2GTK on Linux. |
-| **`window_manager`** | ✅ Supported | ✅ Supported | Native window control on both. |
-| **`drift` / `drift_flutter`** | ✅ Supported | ✅ Supported | Sqlite3 across all desktop platforms. |
-| **`FontService`** | ✅ Supported | ✅ Supported | Windows Registry query on Windows; `fc-list` on Linux. |
-| **`file_picker`** | ✅ Supported | ✅ Supported | Win32 on Windows; Zenity/Portal on Linux. |
-| **`path_provider`** | ✅ Supported | ✅ Supported | AppData on Windows; XDG on Linux. |
-| **`restart_app`** | ✅ Supported | ✅ Supported | Native desktop executable restart. |
+| **`super_editor`** | ✅ Supported | ✅ Supported | 100% native Flutter document editor; zero webview dependencies. |
+| **`super_text_field`** | ✅ Supported | ✅ Supported | Native rich text editing in Index table cells. |
+| **`drift` / `drift_flutter`** | ✅ Supported | ✅ Supported | High-performance SQLite database. |
+| **`window_manager`** | ✅ Supported | ✅ Supported | Custom frameless window title bar with native drag and window controls. |
+| **`FontService`** | ✅ Supported | ✅ Supported | Windows Registry query on Windows; `fc-list` on Linux with lazy rasterization. |
+| **`file_picker`** | ✅ Supported | ✅ Supported | `FilePicker.pickDirectory()` returning system paths via `uri.toFilePath()`. |
+| **`pasteboard`** | ✅ Supported | ✅ Supported | Direct clipboard image pasting from OS desktop clipboard. |
 
 ---
 
-## 4. Current Static Analysis Status
+## 4. Quality & Verification Status
 
-`flutter analyze` reports **0 errors** and **0 warnings**.
-Remaining items are non-blocking informational `avoid_print` statements in legacy logging call sites.
+- **Automated Tests**: All unit tests passing (`test/services/`, `test/widgets/`).
+- **Static Analysis**: `dart analyze` reports **0 errors** and **0 warnings**.
+- **Desktop Builds**: Verified debug build on Linux (`flutter build linux --debug`).

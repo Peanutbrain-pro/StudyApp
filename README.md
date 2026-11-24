@@ -1,15 +1,26 @@
 # StudyApp (WIP)
 
-An AI-powered centralized note-taking and note-generation app for dealing with messy, unorganized notes.
+A desktop-first study companion, notebook manager, and document workspace built with Flutter.
+
+---
+
+## Features
+
+- **Desktop-First UX**: Native custom title bar, keyboard shortcuts, and clean window management for Linux and Windows.
+- **Rich Document Notes**: 100% native Flutter editor powered by `super_editor` with rich text formatting (headings, lists, blockquotes, code blocks), clipboard paste (screenshots, copied image files), and resizable, alignable images (Left, Center, Right, custom width presets, corner drag handles).
+- **Multi-Column Index Grid**: Interactive table with inline `super_text_field` rich text editing, auto-expanding heights, integrated formatting toolbars, and auto-save.
+- **Cross-Platform Typography**: Guaranteed consistency across platforms with bundled `Inter` and `JetBrains Mono` fonts, plus high-performance native system font discovery (`fc-list` on Linux, Registry on Windows).
+- **Local SQLite Persistence**: Fully offline, high-performance local database powered by [Drift](https://drift.simonbinder.eu/) with file-backed Markdown synchronization.
+- **Forui Design System**: Dark-mode-first aesthetic with refined tokens, responsive scaling, and zero webview bloat.
 
 ---
 
 ## Prerequisites
 
-* **[Flutter SDK](https://flutter.dev/docs/get-started/install)** (Stable channel)
-* **[Node.js](https://nodejs.org/)** (v18+) & **[pnpm](https://pnpm.io/)** (or npm)
+* **[Flutter SDK](https://flutter.dev/docs/get-started/install)** (Stable channel, Flutter 3.29+)
 
 ### Desktop Toolchain
+
 * **Linux:** Standard C++ build tools and GTK development libraries:
   ```bash
   # Debian / Ubuntu:
@@ -25,44 +36,50 @@ An AI-powered centralized note-taking and note-generation app for dealing with m
 
 ## Getting Started
 
-### 1. Clone the repository (with submodules)
+### 1. Clone the repository
 
 ```bash
-git clone --recurse-submodules https://github.com/Peanutbrain-pro/StudyApp.git
+git clone https://github.com/Peanutbrain-pro/StudyApp.git
 cd StudyApp
 ```
 
-> **Note for existing clones:** If you cloned without `--recurse-submodules`, initialize them with:
-> ```bash
-> git submodule update --init --recursive
-> ```
+### 2. Fetch Dependencies
 
-### 2. Build the Web Editor Bundle
-
-The in-app editor is built as a single-file bundle from the `editor` submodule:
-
-```bash
-cd editor
-pnpm install
-pnpm build
-cd ..
-```
-*(This compiles and outputs the bundle into `assets/editor_bundle/index.html`)*.
-
-### 3. Run the App
-
-Fetch Flutter dependencies:
 ```bash
 flutter pub get
 ```
 
-Launch the app:
-* **Linux:** `flutter run -d linux`
-* **Windows:** `flutter run -d windows`
+### 3. Run the App
 
-### (Optional) Code Generation
+* **Linux:**
+  ```bash
+  flutter run -d linux
+  ```
+* **Windows:**
+  ```bash
+  flutter run -d windows
+  ```
 
-If you modify database tables or models:
+---
+
+## Database & Code Generation
+
+If you modify Drift database tables (`lib/data/database/tables/`):
+
 ```bash
 dart run build_runner build --delete-conflicting-outputs
+```
+
+---
+
+## Testing & Verification
+
+Run automated tests:
+```bash
+flutter test
+```
+
+Run static analysis:
+```bash
+dart analyze
 ```
