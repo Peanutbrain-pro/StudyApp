@@ -84,4 +84,16 @@ class AppRepository {
   void setShowTitleBar(bool value) {
     _prefs.setBool(keyShowTitleBar, value);
   }
+
+  String? getGeminiApiKey() {
+    return _prefs.getString(keyGeminiApiKey);
+  }
+
+  void setGeminiApiKey(String text) {
+    if (text != '') {
+      _prefs.setString(keyGeminiApiKey, text);
+    } else {
+      _prefs.remove(keyGeminiApiKey);
+    }
+  }
 }

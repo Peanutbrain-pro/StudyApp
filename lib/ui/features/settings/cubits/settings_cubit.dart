@@ -13,6 +13,7 @@ class SettingsState {
   final String editorFont;
   final List<String> availableFonts;
   final bool isLoadingFonts;
+  final String geminiApiKey;
 
   const SettingsState({
     required this.saveLocation,
@@ -20,6 +21,7 @@ class SettingsState {
     this.editorFont = 'System Default',
     this.availableFonts = const ['System Default'],
     this.isLoadingFonts = false,
+    this.geminiApiKey = '',
   });
 
   SettingsState copyWith({
@@ -28,6 +30,7 @@ class SettingsState {
     String? editorFont,
     List<String>? availableFonts,
     bool? isLoadingFonts,
+    String? geminiApiKey,
   }) {
     return SettingsState(
       saveLocation: saveLocation ?? this.saveLocation,
@@ -35,6 +38,7 @@ class SettingsState {
       editorFont: editorFont ?? this.editorFont,
       availableFonts: availableFonts ?? this.availableFonts,
       isLoadingFonts: isLoadingFonts ?? this.isLoadingFonts,
+      geminiApiKey: geminiApiKey ?? this.geminiApiKey,
     );
   }
 }
@@ -50,6 +54,7 @@ class SettingsCubit extends Cubit<SettingsState> {
           appFont: appRepository.getAppFont(),
           editorFont: appRepository.getEditorFont(),
           availableFonts: FontService.cachedFonts,
+          geminiApiKey: appRepository.getGeminiApiKey() ?? '',
         ),
       ) {
     _loadSettings();
@@ -181,5 +186,10 @@ class SettingsCubit extends Cubit<SettingsState> {
 
   bool getShowTitleBar(BuildContext context) {
     return context.read<AppCubit>().getShowTitleBar();
+  }
+
+  void setGeminiApiKey(String text) {
+    appRepository.setGeminiApiKey(text);
+    emit(state.copyWith(geminiApiKey: text));
   }
 }

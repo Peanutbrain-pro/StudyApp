@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:forui/forui.dart';
@@ -96,160 +97,168 @@ class SettingsView extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Typography & Appearance
-                  FTileGroup(
-                    label: const Text("Typography & Appearance"),
-                    children: [
-                      FTile(
-                        title: const Text("App UI Font"),
-                        details: Text(
-                          state.appFont.isEmpty ? "System Default" : state.appFont,
-                          style: TextStyle(
-                            fontFamily: state.appFont != "System Default" ? state.appFont : null,
-                            color: colors.mutedForeground,
+                        FTileGroup(
+                          label: const Text("Typography & Appearance"),
+                          children: [
+                            FTile(
+                              title: const Text("App UI Font"),
+                              details: Text(
+                                state.appFont.isEmpty ? "System Default" : state.appFont,
+                                style: TextStyle(
+                                  fontFamily: state.appFont != "System Default" ? state.appFont : null,
+                                  color: colors.mutedForeground,
+                                ),
+                              ),
+                              suffix: Padding(
+                                padding: const EdgeInsets.only(left: 16.0),
+                                child: FButton(
+                                  variant: .outline,
+                                  mainAxisSize: .min,
+                                  child: const Text("Select Font"),
+                                  onPress: () {
+                                    _openFontPicker(
+                                      context: context,
+                                      title: "Select App UI Font",
+                                      currentFont: state.appFont,
+                                      availableFonts: state.availableFonts,
+                                      onSelected: (font) {
+                                        context.read<SettingsCubit>().setAppFont(context, font);
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            FTile(
+                              title: const Text("Editor Font"),
+                              details: Text(
+                                state.editorFont.isEmpty ? "System Default" : state.editorFont,
+                                style: TextStyle(
+                                  fontFamily: state.editorFont != "System Default" ? state.editorFont : null,
+                                  color: colors.mutedForeground,
+                                ),
+                              ),
+                              suffix: Padding(
+                                padding: const EdgeInsets.only(left: 16.0),
+                                child: FButton(
+                                  variant: .outline,
+                                  mainAxisSize: .min,
+                                  child: const Text("Select Font"),
+                                  onPress: () {
+                                    _openFontPicker(
+                                      context: context,
+                                      title: "Select Editor Font",
+                                      currentFont: state.editorFont,
+                                      availableFonts: state.availableFonts,
+                                      onSelected: (font) {
+                                        context.read<SettingsCubit>().setEditorFont(context, font);
+                                      },
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Storage & Data
+                        FTileGroup(
+                          label: const Text("Storage & Data"),
+                          children: [
+                            FTile(
+                              title: const Text("Notebooks Save Location"),
+                              details: ConstrainedBox(
+                                constraints: const BoxConstraints(maxWidth: 380),
+                                child: SelectableText(state.saveLocation),
+                              ),
+                              suffix: Padding(
+                                padding: const EdgeInsets.only(left: 16.0),
+                                child: FButton.icon(
+                                  variant: .outline,
+                                  child: const Icon(FLucideIcons.folder),
+                                  onPress: () => context.read<SettingsCubit>().changeSaveLocation(context),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // UI options
+                        FTileGroup(
+                          label: const Text("UI Options"),
+                          children: [
+                            FTile(
+                              title: const Text("Show Title Bar"),
+                              suffix: FCheckbox(
+                                value: showTitleBar,
+                                onChange: (value) => context.read<SettingsCubit>().toggleTitleBar(context),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        //Integrations
+                        FTileGroup(
+                          label: const Text("Integrations"),
+                          children: [FTile.raw(child: ApiField())],
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        // Danger Zone
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12.0),
+                          child: Text(
+                            "Danger Zone",
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: colors.destructive,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
-                        suffix: Padding(
-                          padding: const EdgeInsets.only(left: 16.0),
-                          child: FButton(
-                            variant: .outline,
-                            mainAxisSize: .min,
-                            child: const Text("Select Font"),
-                            onPress: () {
-                              _openFontPicker(
-                                context: context,
-                                title: "Select App UI Font",
-                                currentFont: state.appFont,
-                                availableFonts: state.availableFonts,
-                                onSelected: (font) {
-                                  context.read<SettingsCubit>().setAppFont(context, font);
-                                },
-                              );
-                            },
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            FButton(
+                              variant: .destructive,
+                              mainAxisSize: .min,
+                              child: const Text("Reset Settings"),
+                              onPress: () => context.read<SettingsCubit>().resetSettings(context),
+                            ),
+                            const SizedBox(height: 10),
+                            FButton(
+                              variant: .destructive,
+                              mainAxisSize: .min,
+                              child: const Text("Delete All Data"),
+                              onPress: () => context.read<SettingsCubit>().deleteAppData(context),
+                            ),
+                            const SizedBox(height: 10),
+                            FButton(
+                              variant: .destructive,
+                              mainAxisSize: .min,
+                              child: const Text("Reset and Delete Everything"),
+                              onPress: () => context.read<SettingsCubit>().completeReset(context),
+                            ),
+                          ],
                         ),
-                      ),
-                      FTile(
-                        title: const Text("Editor Font"),
-                        details: Text(
-                          state.editorFont.isEmpty ? "System Default" : state.editorFont,
-                          style: TextStyle(
-                            fontFamily: state.editorFont != "System Default" ? state.editorFont : null,
-                            color: colors.mutedForeground,
-                          ),
-                        ),
-                        suffix: Padding(
-                          padding: const EdgeInsets.only(left: 16.0),
-                          child: FButton(
-                            variant: .outline,
-                            mainAxisSize: .min,
-                            child: const Text("Select Font"),
-                            onPress: () {
-                              _openFontPicker(
-                                context: context,
-                                title: "Select Editor Font",
-                                currentFont: state.editorFont,
-                                availableFonts: state.availableFonts,
-                                onSelected: (font) {
-                                  context.read<SettingsCubit>().setEditorFont(context, font);
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // Storage & Data
-                  FTileGroup(
-                    label: const Text("Storage & Data"),
-                    children: [
-                      FTile(
-                        title: const Text("Notebooks Save Location"),
-                        details: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 380),
-                          child: SelectableText(state.saveLocation),
-                        ),
-                        suffix: Padding(
-                          padding: const EdgeInsets.only(left: 16.0),
-                          child: FButton.icon(
-                            variant: .outline,
-                            child: const Icon(FLucideIcons.folder),
-                            onPress: () => context.read<SettingsCubit>().changeSaveLocation(context),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // UI options
-                  FTileGroup(
-                    label: const Text("UI options"),
-                    children: [
-                      FTile(
-                        title: const Text("Show title bar?"),
-                        suffix: FCheckbox(
-                          value: showTitleBar,
-                          onChange: (value) => context.read<SettingsCubit>().toggleTitleBar(context),
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 28),
-
-                  // Danger Zone
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12.0),
-                    child: Text(
-                      "Danger Zone",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: colors.destructive,
-                        letterSpacing: 0.5,
-                      ),
+                        const SizedBox(height: 16),
+                      ],
                     ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      FButton(
-                        variant: .destructive,
-                        mainAxisSize: .min,
-                        child: const Text("Reset Settings"),
-                        onPress: () => context.read<SettingsCubit>().resetSettings(context),
-                      ),
-                      const SizedBox(height: 10),
-                      FButton(
-                        variant: .destructive,
-                        mainAxisSize: .min,
-                        child: const Text("Delete All Data"),
-                        onPress: () => context.read<SettingsCubit>().deleteAppData(context),
-                      ),
-                      const SizedBox(height: 10),
-                      FButton(
-                        variant: .destructive,
-                        mainAxisSize: .min,
-                        child: const Text("Reset and Delete Everything"),
-                        onPress: () => context.read<SettingsCubit>().completeReset(context),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
-    ),
-  ),
-),
     );
   }
 }
@@ -356,7 +365,11 @@ class _FontPickerDialogState extends State<_FontPickerDialog> {
                       children: [
                         Text(
                           widget.title,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: colors.foreground),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: colors.foreground,
+                          ),
                         ),
                         IconButton(
                           icon: Icon(FLucideIcons.x, size: 16, color: colors.mutedForeground),
@@ -536,6 +549,57 @@ class _FontItemTileState extends State<_FontItemTile> with AutomaticKeepAliveCli
             if (widget.isSelected) Icon(FLucideIcons.check, size: 16, color: widget.colors.primary),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class ApiField extends StatefulWidget {
+  const ApiField({super.key});
+
+  @override
+  State<ApiField> createState() => _ApiFieldState();
+}
+
+class _ApiFieldState extends State<ApiField> {
+  final TextEditingController _controller = .new();
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.text = context.read<SettingsCubit>().state.geminiApiKey;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FTappableGroup.isolate(
+      child: Row(
+        spacing: 10,
+        children: [
+          const Text("Gemini API Key"),
+          Expanded(
+            child: FTextField.password(label: null, control: .managed(controller: _controller)),
+          ),
+          ListenableBuilder(
+            listenable: _controller,
+            builder: (context, child) {
+              final apiUnchanged = context.watch<SettingsCubit>().state.geminiApiKey == _controller.text;
+              return FButton.icon(
+                onPress: apiUnchanged
+                    ? null
+                    : () => context.read<SettingsCubit>().setGeminiApiKey(_controller.text),
+                child: child,
+              );
+            },
+            child: const Icon(FLucideIcons.save),
+          ),
+        ],
       ),
     );
   }
